@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router-dom'
 import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
+import { HomePage } from '@/pages/user'
 
 /**
  * Application routing skeleton.
@@ -53,7 +54,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'home',
-        element: <Outlet />,
+        element: <HomePage />,
       },
       {
         path: 'communities',

@@ -3,10 +3,7 @@ import tailwindcssAnimate from 'tailwindcss-animate'
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ['class'],
-  content: [
-    './index.html',
-    './src/**/*.{ts,tsx}',
-  ],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     container: {
       center: true,
@@ -50,6 +47,18 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // FPT University official brand colors extracted from Logo SVG
+        brand: {
+          primary: '#0F172A',
+          'primary-hover': '#1E293B',
+          'primary-light': '#F1F5F9',
+          secondary: '#2563EB',
+          'secondary-hover': '#1D4ED8',
+          'secondary-light': '#EFF6FF',
+          accent: '#10B981',
+          'accent-hover': '#059669',
+          'accent-light': '#ECFDF5',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -74,3 +83,5 @@ export default {
   },
   plugins: [tailwindcssAnimate],
 }
+
+
