@@ -98,7 +98,7 @@ export const StatusBadge: FC<StatusBadgeProps> = ({ status, label, className }) 
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide min-w-[88px]',
+        'inline-flex items-center justify-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide whitespace-nowrap min-w-[90px]',
         config.bg,
         config.text,
         config.border,
@@ -106,7 +106,7 @@ export const StatusBadge: FC<StatusBadgeProps> = ({ status, label, className }) 
       )}
     >
       <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', config.dot)} />
-      <span>{label || config.defaultLabel}</span>
+      <span className="shrink-0">{label || config.defaultLabel}</span>
     </span>
   )
 }

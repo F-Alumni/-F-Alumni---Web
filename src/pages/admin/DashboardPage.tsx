@@ -194,12 +194,14 @@ export const DashboardPage: FC = () => {
     {
       key: 'status',
       header: 'Status',
-      className: 'text-center w-32',
+      className: 'text-center w-36',
       render: (item) => (
-        <StatusBadge
-          status={item.status}
-          label={item.status === 'urgent' ? 'Urgent Action' : 'Pending'}
-        />
+        <div className="flex items-center justify-center">
+          <StatusBadge
+            status={item.status}
+            label={item.status === 'urgent' ? 'Urgent' : 'Pending'}
+          />
+        </div>
       ),
     },
     {
