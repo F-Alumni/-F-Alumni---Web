@@ -94,10 +94,16 @@ export const LoginForm: FC = () => {
           type="button"
           onClick={handleGoogleLogin}
           disabled={isLoading}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {/* Official Google Multi-color Logo */}
-          <svg className="h-4.5 w-4.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+          {/* Official Google Multi-color Logo - fixed exact 20px size */}
+          <svg
+            className="w-5 h-5 shrink-0"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -155,7 +161,7 @@ export const LoginForm: FC = () => {
             </span>
           </div>
           <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
               <IconMail size={18} stroke={1.8} />
             </div>
             <input
@@ -167,7 +173,7 @@ export const LoginForm: FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@fpt.edu.vn"
               required
-              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-9.5 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-10 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
             />
           </div>
         </div>
@@ -186,7 +192,7 @@ export const LoginForm: FC = () => {
             </Link>
           </div>
           <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
               <IconLock size={18} stroke={1.8} />
             </div>
             <input
@@ -198,13 +204,13 @@ export const LoginForm: FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your security password"
               required
-              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-9.5 pr-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+              className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
             >
               {showPassword ? <IconEyeOff size={18} stroke={1.8} /> : <IconEye size={18} stroke={1.8} />}
             </button>
