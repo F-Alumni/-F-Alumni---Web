@@ -131,13 +131,13 @@ export const AlumniVerificationPage: FC = () => {
     {
       key: 'actions',
       header: 'Decision',
-      className: 'text-right',
+      className: 'text-right w-64',
       render: (r) => (
         <div className="flex items-center justify-end gap-1.5">
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs border-slate-200 hover:text-brand-primary"
+            className="h-7 w-[68px] text-xs border-slate-200 hover:text-brand-primary justify-center shrink-0"
             title="Preview credentials"
           >
             <Eye className="h-3 w-3 mr-1" />
@@ -148,7 +148,7 @@ export const AlumniVerificationPage: FC = () => {
               <Button
                 size="sm"
                 onClick={() => handleApprove(r.id)}
-                className="h-7 rounded-md bg-brand-accent px-2.5 text-xs font-semibold text-white hover:bg-emerald-600 shadow-xs"
+                className="h-7 w-[84px] rounded-md bg-brand-accent px-2 text-xs font-semibold text-white hover:bg-emerald-600 shadow-xs justify-center shrink-0"
                 title="Verify and grant Alumni badge"
               >
                 <Check className="h-3 w-3 mr-1" />
@@ -158,7 +158,7 @@ export const AlumniVerificationPage: FC = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => handleReject(r.id)}
-                className="h-7 rounded-md border-rose-200 px-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                className="h-7 w-[76px] rounded-md border-rose-200 px-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 justify-center shrink-0"
                 title="Reject verification request"
               >
                 <X className="h-3 w-3 mr-1" />

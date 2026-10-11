@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { UserCheck, Shield, Filter, UserX } from 'lucide-react'
+import { UserCheck, Shield, Filter, UserX, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
@@ -135,13 +135,13 @@ export const UsersManagementPage: FC = () => {
     {
       key: 'actions',
       header: 'Actions',
-      className: 'text-right',
+      className: 'text-right w-52',
       render: (u) => (
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center justify-end gap-2">
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs border-slate-200 hover:text-brand-primary"
+            className="h-7 w-[72px] text-xs border-slate-200 hover:text-brand-primary justify-center shrink-0"
             title="Inspect record"
           >
             Details
@@ -150,15 +150,16 @@ export const UsersManagementPage: FC = () => {
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs border-slate-200 text-emerald-600 hover:bg-emerald-50"
+              className="h-7 w-[96px] text-xs border-slate-200 text-emerald-600 hover:bg-emerald-50 justify-center shrink-0"
             >
+              <RotateCcw className="h-3 w-3 mr-1" />
               Reactivate
             </Button>
           ) : (
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs border-slate-200 text-rose-600 hover:bg-rose-50"
+              className="h-7 w-[96px] text-xs border-slate-200 text-rose-600 hover:bg-rose-50 justify-center shrink-0"
             >
               <UserX className="h-3 w-3 mr-1" />
               Suspend
