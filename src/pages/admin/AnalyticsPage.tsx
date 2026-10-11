@@ -1,5 +1,11 @@
 import type { FC } from 'react'
-import { Users, GraduationCap, TrendingUp, Award, Building2 } from 'lucide-react'
+import {
+  IconUsers,
+  IconSchool,
+  IconTrendingUp,
+  IconAward,
+  IconBuildingCommunity,
+} from '@tabler/icons-react'
 import { Card } from '@/components/ui/card'
 import { PageHeader, StatCard } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
@@ -38,7 +44,7 @@ export const AnalyticsPage: FC = () => {
           title="Total Alumni Network"
           value="40,285"
           description="Cumulative across all 5 campuses"
-          icon={<GraduationCap className="h-5 w-5" />}
+          icon={<IconSchool size={20} stroke={1.8} />}
           trend={{ value: '14.2% YoY', isPositive: true }}
           variant="secondary"
         />
@@ -46,7 +52,7 @@ export const AnalyticsPage: FC = () => {
           title="Verification Rate"
           value="85.4%"
           description="Alumni with verified degree records"
-          icon={<Award className="h-5 w-5" />}
+          icon={<IconAward size={20} stroke={1.8} />}
           trend={{ value: '3.1% this quarter', isPositive: true }}
           variant="accent"
         />
@@ -54,7 +60,7 @@ export const AnalyticsPage: FC = () => {
           title="Career Placements"
           value="1,450"
           description="OJT and graduate jobs facilitated"
-          icon={<TrendingUp className="h-5 w-5" />}
+          icon={<IconTrendingUp size={20} stroke={1.8} />}
           trend={{ value: '8.7% MoM', isPositive: true }}
           variant="primary"
         />
@@ -62,7 +68,7 @@ export const AnalyticsPage: FC = () => {
           title="Community Discussions"
           value="12,890"
           description="Active mentorship & knowledge posts"
-          icon={<Users className="h-5 w-5" />}
+          icon={<IconUsers size={20} stroke={1.8} />}
           trend={{ value: '19.5% MoM', isPositive: true }}
           variant="neutral"
         />
@@ -95,7 +101,7 @@ export const AnalyticsPage: FC = () => {
                 {campusStats.map((c) => (
                   <tr key={c.campus} className="hover:bg-slate-50">
                     <td className="py-3 px-3 font-semibold text-slate-900 flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-brand-secondary" />
+                      <IconBuildingCommunity size={16} stroke={1.8} className="text-brand-secondary shrink-0" />
                       <span>{c.campus}</span>
                     </td>
                     <td className="py-3 px-3 text-slate-600">{c.students.toLocaleString()}</td>

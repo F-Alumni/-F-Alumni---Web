@@ -1,21 +1,21 @@
 import { useState, useCallback, type FC } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  GraduationCap,
-  UserCheck,
-  Clock,
-  AlertTriangle,
-  FileText,
-  Briefcase,
-  Award,
-  Building2,
-  ArrowRight,
-  Eye,
-  RotateCcw,
-  CheckCircle2,
-  Shield,
-  Layers,
-} from 'lucide-react'
+  IconSchool,
+  IconUserCheck,
+  IconClockHour4,
+  IconAlertTriangle,
+  IconArticle,
+  IconBriefcase,
+  IconAward,
+  IconBuildingCommunity,
+  IconArrowRight,
+  IconEye,
+  IconRefresh,
+  IconCircleCheck,
+  IconShieldCheck,
+  IconStack2,
+} from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { PageHeader, StatCard, StatusBadge, DataTable, type Column } from '@/components/admin'
@@ -149,22 +149,22 @@ export const DashboardPage: FC = () => {
         const types = {
           ALUMNI_VERIFY: {
             label: 'Alumni Verification',
-            icon: UserCheck,
+            icon: IconUserCheck,
             style: 'text-brand-secondary bg-sky-50 border-sky-200',
           },
           REPORTED_CONTENT: {
             label: 'Content Moderation',
-            icon: AlertTriangle,
+            icon: IconAlertTriangle,
             style: 'text-rose-600 bg-rose-50 border-rose-200',
           },
           OPPORTUNITY_REVIEW: {
             label: 'Opportunity Review',
-            icon: Briefcase,
+            icon: IconBriefcase,
             style: 'text-amber-700 bg-amber-50 border-amber-200',
           },
           NEW_COMMUNITY: {
             label: 'Community Request',
-            icon: Building2,
+            icon: IconBuildingCommunity,
             style: 'text-brand-accent bg-emerald-50 border-emerald-200',
           },
         }
@@ -174,7 +174,7 @@ export const DashboardPage: FC = () => {
           <span
             className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-semibold ${config.style}`}
           >
-            <Icon className="h-3 w-3 shrink-0" />
+            <Icon size={14} stroke={1.8} className="shrink-0" />
             <span>{config.label}</span>
           </span>
         )
@@ -186,7 +186,7 @@ export const DashboardPage: FC = () => {
       className: 'text-center w-36',
       render: (item) => (
         <span className="inline-flex items-center gap-1 text-slate-500 font-mono text-[11px]">
-          <Clock className="h-3 w-3 text-slate-400 shrink-0" />
+          <IconClockHour4 size={14} stroke={1.8} className="text-slate-400 shrink-0" />
           <span>{item.submittedDate}</span>
         </span>
       ),
@@ -217,7 +217,7 @@ export const DashboardPage: FC = () => {
             className="h-7 text-xs border-slate-200 hover:border-brand-primary hover:text-brand-primary"
             title="Open comprehensive review workspace"
           >
-            <Eye className="h-3 w-3 mr-1" />
+            <IconEye size={14} stroke={1.8} className="mr-1" />
             <span>Review</span>
           </Button>
 
@@ -227,7 +227,7 @@ export const DashboardPage: FC = () => {
             className="h-7 text-xs bg-emerald-50 text-brand-accent hover:bg-brand-accent hover:text-white border border-emerald-200 transition-colors"
             title="Mark as verified/resolved"
           >
-            <CheckCircle2 className="h-3 w-3 mr-1" />
+            <IconCircleCheck size={14} stroke={1.8} className="mr-1" />
             <span>Resolve</span>
           </Button>
         </div>
@@ -257,7 +257,7 @@ export const DashboardPage: FC = () => {
       {toastMessage && (
         <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-800 shadow-sm animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-brand-accent shrink-0" />
+            <IconCircleCheck size={16} stroke={1.8} className="text-brand-accent shrink-0" />
             <span>{toastMessage}</span>
           </div>
           <button
@@ -273,7 +273,7 @@ export const DashboardPage: FC = () => {
       {isError && (
         <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-800">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+            <IconAlertTriangle size={16} stroke={1.8} className="text-rose-600 shrink-0" />
             <span>Unable to synchronize current administration metrics. Check network connection.</span>
           </div>
           <Button
@@ -282,7 +282,7 @@ export const DashboardPage: FC = () => {
             onClick={handleRefresh}
             className="h-7 border-rose-300 text-rose-700 bg-white hover:bg-rose-100"
           >
-            <RotateCcw className="h-3 w-3 mr-1" />
+            <IconRefresh size={14} stroke={1.8} className="mr-1" />
             <span>Retry</span>
           </Button>
         </div>
@@ -301,13 +301,13 @@ export const DashboardPage: FC = () => {
               disabled={isLoading}
               className="h-9 rounded-lg border-slate-200 text-slate-700 hover:border-brand-primary hover:text-brand-primary"
             >
-              <RotateCcw className={`mr-1.5 h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              <IconRefresh size={14} stroke={1.8} className={`mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
               <span>Refresh Data</span>
             </Button>
 
             <Link to={ROUTES.ADMIN.ALUMNI_VERIFICATION}>
               <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover">
-                <UserCheck className="mr-1.5 h-3.5 w-3.5" />
+                <IconUserCheck size={16} stroke={1.8} className="mr-1.5" />
                 <span>Verify Alumni</span>
               </Button>
             </Link>
@@ -319,7 +319,7 @@ export const DashboardPage: FC = () => {
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-brand-secondary" />
+            <IconShieldCheck size={16} stroke={1.8} className="text-brand-secondary" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
               Member Verification & Trust Governance
             </h2>
@@ -332,7 +332,7 @@ export const DashboardPage: FC = () => {
             title="Enrolled Students"
             value="32,450"
             description="Active students across 5 campuses"
-            icon={<GraduationCap className="h-5 w-5" />}
+            icon={<IconSchool size={20} stroke={1.8} />}
             trend={{ value: '8.4% YoY', isPositive: true }}
             variant="secondary"
             isLoading={isLoading}
@@ -342,7 +342,7 @@ export const DashboardPage: FC = () => {
             title="Verified Alumni"
             value="7,835"
             description="Certified alumni in directory"
-            icon={<UserCheck className="h-5 w-5" />}
+            icon={<IconUserCheck size={20} stroke={1.8} />}
             trend={{ value: '14.2% YoY', isPositive: true }}
             variant="accent"
             isLoading={isLoading}
@@ -352,7 +352,7 @@ export const DashboardPage: FC = () => {
             title="Pending Verification"
             value={alumniVerifyCount}
             description="Alumni awaiting degree audit"
-            icon={<Clock className="h-5 w-5" />}
+            icon={<IconClockHour4 size={20} stroke={1.8} />}
             trend={{ value: alumniVerifyCount > 0 ? 'Requires action' : 'All clear', isPositive: alumniVerifyCount === 0 }}
             variant="primary"
             isLoading={isLoading}
@@ -362,7 +362,7 @@ export const DashboardPage: FC = () => {
             title="Pending Reports"
             value={reportsCount}
             description="Flagged content & account reports"
-            icon={<AlertTriangle className="h-5 w-5" />}
+            icon={<IconAlertTriangle size={20} stroke={1.8} />}
             trend={{ value: reportsCount > 0 ? 'Requires review' : 'Zero flags', isPositive: reportsCount === 0 }}
             variant="neutral"
             isLoading={isLoading}
@@ -374,7 +374,7 @@ export const DashboardPage: FC = () => {
       <div className="space-y-2.5 pt-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-brand-primary" />
+            <IconStack2 size={16} stroke={1.8} className="text-brand-primary" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
               Content & Opportunity Ecosystem
             </h2>
@@ -387,7 +387,7 @@ export const DashboardPage: FC = () => {
             title="Community Posts"
             value="1,240"
             description="Active academic & career discussions"
-            icon={<FileText className="h-5 w-5" />}
+            icon={<IconArticle size={20} stroke={1.8} />}
             trend={{ value: '24 new today', isPositive: true }}
             variant="secondary"
             isLoading={isLoading}
@@ -397,7 +397,7 @@ export const DashboardPage: FC = () => {
             title="Job Opportunities"
             value="86"
             description="Full-time & internship vacancies"
-            icon={<Briefcase className="h-5 w-5" />}
+            icon={<IconBriefcase size={20} stroke={1.8} />}
             trend={{ value: '12 closing soon', isPositive: true }}
             variant="primary"
             isLoading={isLoading}
@@ -407,7 +407,7 @@ export const DashboardPage: FC = () => {
             title="Scholarships"
             value="15"
             description="Fellowships & global grants"
-            icon={<Award className="h-5 w-5" />}
+            icon={<IconAward size={20} stroke={1.8} />}
             trend={{ value: '3 active grants', isPositive: true }}
             variant="accent"
             isLoading={isLoading}
@@ -417,7 +417,7 @@ export const DashboardPage: FC = () => {
             title="Active Communities"
             value="46"
             description="Campus & academic interest chapters"
-            icon={<Building2 className="h-5 w-5" />}
+            icon={<IconBuildingCommunity size={20} stroke={1.8} />}
             trend={{ value: '5 campus hubs', isPositive: true }}
             variant="neutral"
             isLoading={isLoading}
@@ -440,7 +440,7 @@ export const DashboardPage: FC = () => {
             className="text-xs font-semibold text-brand-secondary hover:text-brand-primary transition-colors flex items-center gap-1"
           >
             <span>{viewAllInfo.label}</span>
-            <ArrowRight className="h-3 w-3" />
+            <IconArrowRight size={14} stroke={1.8} />
           </Link>
         </div>
 
@@ -465,7 +465,7 @@ export const DashboardPage: FC = () => {
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            <UserCheck className="h-3.5 w-3.5" />
+            <IconUserCheck size={14} stroke={1.8} />
             <span>Alumni Verification ({alumniVerifyCount})</span>
           </button>
 
@@ -477,7 +477,7 @@ export const DashboardPage: FC = () => {
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            <AlertTriangle className="h-3.5 w-3.5" />
+            <IconAlertTriangle size={14} stroke={1.8} />
             <span>Reports ({reportsCount})</span>
           </button>
 
@@ -489,7 +489,7 @@ export const DashboardPage: FC = () => {
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            <Briefcase className="h-3.5 w-3.5" />
+            <IconBriefcase size={14} stroke={1.8} />
             <span>Opportunities ({oppsCount})</span>
           </button>
 
@@ -501,7 +501,7 @@ export const DashboardPage: FC = () => {
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            <Building2 className="h-3.5 w-3.5" />
+            <IconBuildingCommunity size={14} stroke={1.8} />
             <span>Communities ({communitiesCount})</span>
           </button>
         </div>
@@ -528,7 +528,7 @@ export const DashboardPage: FC = () => {
         <Card className="p-4.5 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-50 text-brand-secondary">
-              <GraduationCap className="h-5 w-5" />
+              <IconSchool size={20} stroke={1.8} />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">User Management</h3>
@@ -541,7 +541,7 @@ export const DashboardPage: FC = () => {
               className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1"
             >
               <span>Manage Directory</span>
-              <ArrowRight className="h-3 w-3" />
+              <IconArrowRight size={14} stroke={1.8} />
             </Link>
           </div>
         </Card>
@@ -549,7 +549,7 @@ export const DashboardPage: FC = () => {
         <Card className="p-4.5 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-brand-accent">
-              <Building2 className="h-5 w-5" />
+              <IconBuildingCommunity size={20} stroke={1.8} />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">Community Chapters</h3>
@@ -562,7 +562,7 @@ export const DashboardPage: FC = () => {
               className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1"
             >
               <span>Manage Chapters</span>
-              <ArrowRight className="h-3 w-3" />
+              <IconArrowRight size={14} stroke={1.8} />
             </Link>
           </div>
         </Card>
@@ -570,7 +570,7 @@ export const DashboardPage: FC = () => {
         <Card className="p-4.5 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-              <AlertTriangle className="h-5 w-5" />
+              <IconAlertTriangle size={20} stroke={1.8} />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">Content Moderation</h3>
@@ -583,7 +583,7 @@ export const DashboardPage: FC = () => {
               className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1"
             >
               <span>View Moderation Queue</span>
-              <ArrowRight className="h-3 w-3" />
+              <IconArrowRight size={14} stroke={1.8} />
             </Link>
           </div>
         </Card>

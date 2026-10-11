@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect, type FC } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Menu,
-  Bell,
-  Search,
-  LogOut,
-  Shield,
-  ChevronDown,
-  User,
-  Settings,
-} from 'lucide-react'
+  IconMenu2,
+  IconBell,
+  IconSearch,
+  IconLogout,
+  IconShield,
+  IconChevronDown,
+  IconUser,
+  IconSettings,
+} from '@tabler/icons-react'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
@@ -49,12 +49,12 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
           className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
           aria-label="Open navigation menu"
         >
-          <Menu className="h-5 w-5" />
+          <IconMenu2 size={20} stroke={1.8} />
         </button>
 
         {/* Global Admin Search */}
         <div className="relative hidden w-full sm:block max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <IconSearch size={18} stroke={1.8} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search alumni, posts, verification requests..."
@@ -71,8 +71,9 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
             type="button"
             className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
             title="Notifications"
+            aria-label="Notifications"
           >
-            <Bell className="h-4.5 w-4.5" />
+            <IconBell size={20} stroke={1.8} />
             <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-primary animate-pulse" />
           </button>
         </div>
@@ -97,12 +98,14 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
                 Administrator
               </span>
               <span className="flex items-center gap-1 text-[10px] font-medium text-brand-primary">
-                <Shield className="h-2.5 w-2.5" />
+                <IconShield size={12} stroke={2} />
                 FPT Super Admin
               </span>
             </div>
-            <ChevronDown
-              className={`h-3.5 w-3.5 text-slate-400 transition-transform ${
+            <IconChevronDown
+              size={16}
+              stroke={1.8}
+              className={`text-slate-400 transition-transform ${
                 isDropdownOpen ? 'rotate-180' : ''
               }`}
             />
@@ -123,7 +126,7 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
                 }}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
               >
-                <Settings className="h-3.5 w-3.5 text-slate-500" />
+                <IconSettings size={16} stroke={1.8} className="text-slate-500" />
                 <span>Portal Settings</span>
               </button>
 
@@ -135,7 +138,7 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
                 }}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
               >
-                <User className="h-3.5 w-3.5 text-slate-500" />
+                <IconUser size={16} stroke={1.8} className="text-slate-500" />
                 <span>Staff & Roles</span>
               </button>
 
@@ -146,7 +149,7 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
                 onClick={handleLogout}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors"
               >
-                <LogOut className="h-3.5 w-3.5 text-rose-500" />
+                <IconLogout size={16} stroke={1.8} className="text-rose-500" />
                 <span>Sign Out</span>
               </button>
             </div>

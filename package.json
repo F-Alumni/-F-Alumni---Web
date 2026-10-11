@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.25",
+    "@tabler/icons-react": "^3.49.0",
     "@tanstack/react-query": "^5.104.1",
     "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",

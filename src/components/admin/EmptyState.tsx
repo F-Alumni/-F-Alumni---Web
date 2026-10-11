@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react'
-import { Inbox } from 'lucide-react'
+import { IconInbox } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 
 export interface EmptyStateProps {
@@ -25,7 +25,7 @@ export const EmptyState: FC<EmptyStateProps> = ({
       )}
     >
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-        {icon || <Inbox className="h-6 w-6" />}
+        {icon || <IconInbox size={24} stroke={1.8} />}
       </div>
       <h3 className="mt-3 text-sm font-semibold text-slate-800">{title}</h3>
       {description && (

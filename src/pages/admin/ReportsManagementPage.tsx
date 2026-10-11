@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { Ban, Eye } from 'lucide-react'
+import { IconBan, IconEye } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
@@ -128,7 +128,7 @@ export const ReportsManagementPage: FC = () => {
             variant="outline"
             className="h-7 text-xs border-slate-200 hover:text-brand-primary"
           >
-            <Eye className="h-3 w-3 mr-1" />
+            <IconEye size={14} stroke={1.8} className="mr-1" />
             Inspect
           </Button>
           {r.status === 'pending' && (
@@ -139,7 +139,7 @@ export const ReportsManagementPage: FC = () => {
                 className="h-7 rounded-md bg-rose-600 px-2.5 text-xs font-semibold text-white hover:bg-rose-700"
                 title="Remove content or sanction user"
               >
-                <Ban className="h-3 w-3 mr-1" />
+                <IconBan size={14} stroke={1.8} className="mr-1" />
                 Sanction
               </Button>
               <Button

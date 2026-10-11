@@ -1,5 +1,13 @@
 import { useState, type FC } from 'react'
-import { UserCheck, Shield, Filter, UserX, RotateCcw, GraduationCap, BookOpen } from 'lucide-react'
+import {
+  IconSchool,
+  IconUserCheck,
+  IconBook,
+  IconShield,
+  IconFilter,
+  IconUserX,
+  IconRefresh,
+} from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
@@ -106,10 +114,10 @@ export const UsersManagementPage: FC = () => {
         }
         return (
           <span className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[11px] font-bold min-w-[92px] ${roleStyles[u.role]}`}>
-            {u.role === 'STUDENT' && <GraduationCap className="h-3 w-3 shrink-0" />}
-            {u.role === 'ALUMNI' && <UserCheck className="h-3 w-3 shrink-0" />}
-            {u.role === 'FACULTY' && <BookOpen className="h-3 w-3 shrink-0" />}
-            {u.role === 'ADMIN' && <Shield className="h-3 w-3 shrink-0" />}
+            {u.role === 'STUDENT' && <IconSchool size={13} stroke={1.8} className="shrink-0" />}
+            {u.role === 'ALUMNI' && <IconUserCheck size={13} stroke={1.8} className="shrink-0" />}
+            {u.role === 'FACULTY' && <IconBook size={13} stroke={1.8} className="shrink-0" />}
+            {u.role === 'ADMIN' && <IconShield size={13} stroke={1.8} className="shrink-0" />}
             <span>{u.role}</span>
           </span>
         )
@@ -158,7 +166,7 @@ export const UsersManagementPage: FC = () => {
               variant="outline"
               className="h-7 w-[96px] text-xs border-slate-200 text-emerald-600 hover:bg-emerald-50 justify-center shrink-0"
             >
-              <RotateCcw className="h-3 w-3 mr-1" />
+              <IconRefresh size={14} stroke={1.8} className="mr-1" />
               Reactivate
             </Button>
           ) : (
@@ -167,7 +175,7 @@ export const UsersManagementPage: FC = () => {
               variant="outline"
               className="h-7 w-[96px] text-xs border-slate-200 text-rose-600 hover:bg-rose-50 justify-center shrink-0"
             >
-              <UserX className="h-3 w-3 mr-1" />
+              <IconUserX size={14} stroke={1.8} className="mr-1" />
               Suspend
             </Button>
           )}
@@ -200,7 +208,7 @@ export const UsersManagementPage: FC = () => {
         filterSlot={
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <Filter className="h-3.5 w-3.5" />
+              <IconFilter size={14} stroke={1.8} />
               <span>Role:</span>
             </div>
             <select

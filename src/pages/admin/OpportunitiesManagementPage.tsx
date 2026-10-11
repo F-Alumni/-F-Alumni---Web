@@ -1,5 +1,13 @@
 import { useState, type FC } from 'react'
-import { Plus, Briefcase, GraduationCap, MapPin, Building, Eye, Check } from 'lucide-react'
+import {
+  IconPlus,
+  IconBriefcase,
+  IconSchool,
+  IconBuilding,
+  IconMapPin,
+  IconEye,
+  IconCheck,
+} from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
@@ -61,7 +69,7 @@ export const OpportunitiesManagementPage: FC = () => {
         <div className="flex flex-col">
           <span className="font-bold text-slate-900">{o.title}</span>
           <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
-            <Building className="h-3 w-3 text-slate-400" />
+            <IconBuilding size={14} stroke={1.8} className="text-slate-400" />
             {o.company}
           </span>
         </div>
@@ -72,15 +80,15 @@ export const OpportunitiesManagementPage: FC = () => {
       header: 'Type',
       render: (o) => {
         const types = {
-          JOB: { label: 'Full-time Job', icon: Briefcase, color: 'text-brand-primary bg-orange-50' },
-          INTERNSHIP: { label: 'OJT / Internship', icon: Building, color: 'text-brand-secondary bg-sky-50' },
-          SCHOLARSHIP: { label: 'Scholarship', icon: GraduationCap, color: 'text-brand-accent bg-emerald-50' },
+          JOB: { label: 'Full-time Job', icon: IconBriefcase, color: 'text-brand-primary bg-orange-50' },
+          INTERNSHIP: { label: 'OJT / Internship', icon: IconBuilding, color: 'text-brand-secondary bg-sky-50' },
+          SCHOLARSHIP: { label: 'Scholarship', icon: IconSchool, color: 'text-brand-accent bg-emerald-50' },
         }
         const cfg = types[o.type]
         const Icon = cfg.icon
         return (
           <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${cfg.color}`}>
-            <Icon className="h-3 w-3" />
+            <Icon size={14} stroke={1.8} />
             {cfg.label}
           </span>
         )
@@ -91,7 +99,7 @@ export const OpportunitiesManagementPage: FC = () => {
       header: 'Location',
       render: (o) => (
         <span className="inline-flex items-center gap-1 text-slate-600">
-          <MapPin className="h-3 w-3 text-slate-400" />
+          <IconMapPin size={14} stroke={1.8} className="text-slate-400" />
           <span>{o.location}</span>
         </span>
       ),
@@ -124,7 +132,7 @@ export const OpportunitiesManagementPage: FC = () => {
             variant="outline"
             className="h-7 text-xs border-slate-200 hover:text-brand-primary"
           >
-            <Eye className="h-3 w-3 mr-1" />
+            <IconEye size={14} stroke={1.8} className="mr-1" />
             View
           </Button>
           {o.status === 'pending' && (
@@ -139,7 +147,7 @@ export const OpportunitiesManagementPage: FC = () => {
               }
               className="h-7 rounded-md bg-brand-accent px-2.5 text-xs font-semibold text-white hover:bg-emerald-600"
             >
-              <Check className="h-3 w-3 mr-1" />
+              <IconCheck size={14} stroke={1.8} className="mr-1" />
               Approve
             </Button>
           )}
@@ -159,7 +167,7 @@ export const OpportunitiesManagementPage: FC = () => {
         ]}
         actions={
           <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover">
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <IconPlus size={16} stroke={1.8} className="mr-1.5" />
             <span>Post Opportunity</span>
           </Button>
         }

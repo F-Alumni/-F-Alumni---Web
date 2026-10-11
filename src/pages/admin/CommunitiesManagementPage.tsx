@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { Plus, Users, Globe, Lock } from 'lucide-react'
+import { IconPlus, IconUsers, IconWorld, IconLock } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
@@ -108,7 +108,7 @@ export const CommunitiesManagementPage: FC = () => {
       header: 'Members',
       render: (c) => (
         <span className="inline-flex items-center gap-1 font-semibold text-slate-800">
-          <Users className="h-3 w-3 text-slate-400" />
+          <IconUsers size={14} stroke={1.8} className="text-slate-400" />
           <span>{c.membersCount.toLocaleString()}</span>
         </span>
       ),
@@ -118,7 +118,7 @@ export const CommunitiesManagementPage: FC = () => {
       header: 'Visibility',
       render: (c) => (
         <span className="inline-flex items-center gap-1 text-[11px] text-slate-600">
-          {c.isPrivate ? <Lock className="h-3 w-3 text-amber-500" /> : <Globe className="h-3 w-3 text-slate-400" />}
+          {c.isPrivate ? <IconLock size={14} stroke={1.8} className="text-amber-500" /> : <IconWorld size={14} stroke={1.8} className="text-slate-400" />}
           <span>{c.isPrivate ? 'Private' : 'Public'}</span>
         </span>
       ),
@@ -167,7 +167,7 @@ export const CommunitiesManagementPage: FC = () => {
         ]}
         actions={
           <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover">
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <IconPlus size={16} stroke={1.8} className="mr-1.5" />
             <span>Create Community</span>
           </Button>
         }

@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { IconChevronRight } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 
 export interface BreadcrumbItem {
@@ -43,7 +43,7 @@ export const PageHeader: FC<PageHeaderProps> = ({
                     {item.label}
                   </span>
                 )}
-                {!isLast && <ChevronRight className="h-3 w-3 text-slate-400" />}
+                {!isLast && <IconChevronRight size={14} stroke={1.8} className="text-slate-400" />}
               </span>
             )
           })}

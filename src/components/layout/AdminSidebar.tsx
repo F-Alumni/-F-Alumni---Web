@@ -1,18 +1,19 @@
 import type { FC } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard,
-  Users,
-  UserCheck,
-  Building2,
-  FileText,
-  Briefcase,
-  AlertTriangle,
-  BarChart3,
-  Settings,
-  X,
-  Shield,
-} from 'lucide-react'
+  IconLayoutDashboard,
+  IconUsers,
+  IconUserCheck,
+  IconBuildingCommunity,
+  IconArticle,
+  IconBriefcase,
+  IconFlag,
+  IconChartBar,
+  IconSettings,
+  IconX,
+  IconShield,
+  type Icon as TablerIcon,
+} from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
 import fptLogo from '@/assets/fpt-logo.svg'
 import { cn } from '@/lib/utils'
@@ -27,7 +28,7 @@ interface NavSection {
   items: {
     label: string
     to: string
-    icon: typeof LayoutDashboard
+    icon: TablerIcon
     badge?: string
     badgeColor?: string
   }[]
@@ -38,26 +39,26 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
     {
       title: 'OVERVIEW',
       items: [
-        { label: 'Dashboard', to: ROUTES.ADMIN.DASHBOARD, icon: LayoutDashboard },
+        { label: 'Dashboard', to: ROUTES.ADMIN.DASHBOARD, icon: IconLayoutDashboard },
       ],
     },
     {
       title: 'USER MANAGEMENT',
       items: [
-        { label: 'Users', to: ROUTES.ADMIN.USERS, icon: Users },
+        { label: 'Users', to: ROUTES.ADMIN.USERS, icon: IconUsers },
         {
           label: 'Alumni Verification',
           to: ROUTES.ADMIN.ALUMNI_VERIFICATION,
-          icon: UserCheck,
+          icon: IconUserCheck,
         },
       ],
     },
     {
       title: 'CONTENT MANAGEMENT',
       items: [
-        { label: 'Communities', to: ROUTES.ADMIN.COMMUNITIES, icon: Building2 },
-        { label: 'Posts', to: ROUTES.ADMIN.POSTS, icon: FileText },
-        { label: 'Opportunities', to: ROUTES.ADMIN.OPPORTUNITIES, icon: Briefcase },
+        { label: 'Communities', to: ROUTES.ADMIN.COMMUNITIES, icon: IconBuildingCommunity },
+        { label: 'Posts', to: ROUTES.ADMIN.POSTS, icon: IconArticle },
+        { label: 'Opportunities', to: ROUTES.ADMIN.OPPORTUNITIES, icon: IconBriefcase },
       ],
     },
     {
@@ -66,20 +67,20 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
         {
           label: 'Reports',
           to: ROUTES.ADMIN.REPORTS,
-          icon: AlertTriangle,
+          icon: IconFlag,
         },
       ],
     },
     {
       title: 'INSIGHTS',
       items: [
-        { label: 'Analytics', to: ROUTES.ADMIN.ANALYTICS, icon: BarChart3 },
+        { label: 'Analytics', to: ROUTES.ADMIN.ANALYTICS, icon: IconChartBar },
       ],
     },
     {
       title: 'SYSTEM',
       items: [
-        { label: 'Settings', to: ROUTES.ADMIN.SETTINGS, icon: Settings },
+        { label: 'Settings', to: ROUTES.ADMIN.SETTINGS, icon: IconSettings },
       ],
     },
   ]
@@ -110,7 +111,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
                 Alumni Connect
               </span>
               <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-brand-primary">
-                <Shield className="h-2.5 w-2.5" />
+                <IconShield size={12} stroke={2} />
                 Administration
               </span>
             </div>
@@ -121,7 +122,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:hidden"
               aria-label="Close sidebar"
             >
-              <X className="h-5 w-5" />
+              <IconX size={20} stroke={1.8} />
             </button>
           )}
         </div>
@@ -151,7 +152,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
                       }
                     >
                       <div className="flex items-center gap-2.5">
-                        <Icon className="h-4 w-4 shrink-0" />
+                        <Icon size={20} stroke={1.8} className="shrink-0" />
                         <span>{item.label}</span>
                       </div>
                       {item.badge && (

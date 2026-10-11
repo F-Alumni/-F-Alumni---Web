@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { Check, X, FileCheck, Eye, Download } from 'lucide-react'
+import { IconCheck, IconX, IconFileCheck, IconEye, IconDownload } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
@@ -112,9 +112,9 @@ export const AlumniVerificationPage: FC = () => {
       header: 'Verification Document',
       render: (r) => (
         <div className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1 text-xs text-slate-700 hover:border-brand-primary">
-          <FileCheck className="h-3.5 w-3.5 text-brand-secondary shrink-0" />
+          <IconFileCheck size={15} stroke={1.8} className="text-brand-secondary shrink-0" />
           <span className="max-w-[140px] truncate font-medium text-[11px]">{r.documentName}</span>
-          <Download className="h-3 w-3 text-slate-400 hover:text-slate-600 cursor-pointer" />
+          <IconDownload size={14} stroke={1.8} className="text-slate-400 hover:text-slate-600 cursor-pointer" />
         </div>
       ),
     },
@@ -140,7 +140,7 @@ export const AlumniVerificationPage: FC = () => {
             className="h-7 w-[68px] text-xs border-slate-200 hover:text-brand-primary justify-center shrink-0"
             title="Preview credentials"
           >
-            <Eye className="h-3 w-3 mr-1" />
+            <IconEye size={14} stroke={1.8} className="mr-1" />
             View
           </Button>
           {r.status === 'pending' && (
@@ -151,7 +151,7 @@ export const AlumniVerificationPage: FC = () => {
                 className="h-7 w-[84px] rounded-md bg-brand-accent px-2 text-xs font-semibold text-white hover:bg-emerald-600 shadow-xs justify-center shrink-0"
                 title="Verify and grant Alumni badge"
               >
-                <Check className="h-3 w-3 mr-1" />
+                <IconCheck size={14} stroke={1.8} className="mr-1" />
                 Approve
               </Button>
               <Button
@@ -161,7 +161,7 @@ export const AlumniVerificationPage: FC = () => {
                 className="h-7 w-[76px] rounded-md border-rose-200 px-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 justify-center shrink-0"
                 title="Reject verification request"
               >
-                <X className="h-3 w-3 mr-1" />
+                <IconX size={14} stroke={1.8} className="mr-1" />
                 Reject
               </Button>
             </>

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { IconSearch, IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from './EmptyState'
 import { cn } from '@/lib/utils'
@@ -62,7 +62,7 @@ export function DataTable<T>({
           <div className="flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center">
             {searchable && (
               <div className="relative w-full max-w-xs">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <IconSearch size={16} stroke={1.8} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -165,8 +165,9 @@ export function DataTable<T>({
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               className="h-7 w-7 p-0 rounded-md border-slate-200"
+              aria-label="Previous page"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <IconChevronLeft size={16} stroke={1.8} />
             </Button>
             <span className="px-2 text-xs font-semibold text-slate-700">
               {currentPage} / {totalPages}
@@ -178,8 +179,9 @@ export function DataTable<T>({
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               className="h-7 w-7 p-0 rounded-md border-slate-200"
+              aria-label="Next page"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <IconChevronRight size={16} stroke={1.8} />
             </Button>
           </div>
         </div>

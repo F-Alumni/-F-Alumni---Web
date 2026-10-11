@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { Eye, Trash2, Heart, MessageSquare } from 'lucide-react'
+import { IconEye, IconTrash, IconHeart, IconMessageCircle } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
@@ -97,11 +97,11 @@ export const PostsManagementPage: FC = () => {
       render: (p) => (
         <div className="flex items-center gap-3 text-slate-500 text-xs">
           <span className="flex items-center gap-1">
-            <Heart className="h-3 w-3 text-rose-500" />
+            <IconHeart size={14} stroke={1.8} className="text-rose-500" />
             {p.likesCount}
           </span>
           <span className="flex items-center gap-1">
-            <MessageSquare className="h-3 w-3 text-sky-500" />
+            <IconMessageCircle size={14} stroke={1.8} className="text-sky-500" />
             {p.commentsCount}
           </span>
         </div>
@@ -133,7 +133,7 @@ export const PostsManagementPage: FC = () => {
             variant="outline"
             className="h-7 text-xs border-slate-200 hover:text-brand-primary"
           >
-            <Eye className="h-3 w-3 mr-1" />
+            <IconEye size={14} stroke={1.8} className="mr-1" />
             View
           </Button>
           <Button
@@ -142,8 +142,9 @@ export const PostsManagementPage: FC = () => {
             onClick={() => handleDelete(p.id)}
             className="h-7 text-xs border-slate-200 text-rose-600 hover:bg-rose-50"
             title="Remove post"
+            aria-label="Remove post"
           >
-            <Trash2 className="h-3 w-3" />
+            <IconTrash size={14} stroke={1.8} />
           </Button>
         </div>
       ),
