@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
+import { useAuthStore } from '@/stores/authStore'
 import fptLogo from '@/assets/fpt-logo.svg'
 
 type Step = 1 | 2 | 3 | 4
@@ -26,6 +27,7 @@ type AccountType = 'STUDENT' | 'ALUMNI'
 
 export const RegisterForm: FC = () => {
   const navigate = useNavigate()
+  const setToken = useAuthStore((state) => state.setToken)
   const [step, setStep] = useState<Step>(1)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -185,7 +187,10 @@ export const RegisterForm: FC = () => {
 
         <div className="space-y-3 pt-2">
           <Button
-            onClick={() => navigate(ROUTES.APP.HOME)}
+            onClick={() => {
+              setToken('fpt-registered-token-' + Date.now())
+              navigate(ROUTES.APP.HOME)
+            }}
             className="w-full py-6 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-base font-semibold text-white shadow-md shadow-brand-secondary/20"
           >
             Enter Community Feed &rarr;

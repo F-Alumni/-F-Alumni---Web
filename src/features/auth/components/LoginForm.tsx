@@ -3,18 +3,22 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
+import { useAuthStore } from '@/stores/authStore'
 import fptLogo from '@/assets/fpt-logo.svg'
 
 export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
+  const setToken = useAuthStore((state) => state.setToken)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setToken('fpt-session-token-' + Date.now())
     navigate(ROUTES.APP.HOME)
   }
 
   const handleGoogleLogin = () => {
+    setToken('fpt-google-session-token-' + Date.now())
     navigate(ROUTES.APP.HOME)
   }
 

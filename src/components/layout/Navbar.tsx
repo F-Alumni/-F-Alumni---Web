@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type FC } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/stores/authStore'
 import {
   Search,
   PlusCircle,
@@ -70,6 +71,14 @@ const CampusDropdown = () => {
 }
 
 export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
+  const navigate = useNavigate()
+  const clearAuth = useAuthStore((state) => state.clearAuth)
+
+  const handleLogout = () => {
+    clearAuth()
+    navigate(ROUTES.AUTH.LOGIN)
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
@@ -181,13 +190,14 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
           </Link>
 
           {/* Sign Out Button */}
-          <Link
-            to={ROUTES.AUTH.LOGIN}
+          <button
+            type="button"
+            onClick={handleLogout}
             className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-red-500 shrink-0"
             title="Sign Out"
           >
             <LogOut className="h-5 w-5 shrink-0" />
-          </Link>
+          </button>
         </div>
       </div>
     </header>
