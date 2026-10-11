@@ -1,9 +1,21 @@
-import { useState, type FC } from 'react'
+import { useState, type FC, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Mail, Lock, Shield, ArrowRight, Zap, CheckCircle2 } from 'lucide-react'
+import {
+  IconMail,
+  IconLock,
+  IconEye,
+  IconEyeOff,
+  IconShieldCheck,
+  IconArrowRight,
+  IconLoader2,
+  IconAlertCircle,
+  IconSparkles,
+  IconCircleCheck,
+} from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
+import { env } from '@/app/config/env'
 import fptLogo from '@/assets/fpt-logo.svg'
 
 export const LoginForm: FC = () => {
@@ -17,7 +29,7 @@ export const LoginForm: FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleLogin = (e?: React.FormEvent) => {
+  const handleLogin = (e?: FormEvent) => {
     if (e) e.preventDefault()
     setError(null)
 
@@ -55,36 +67,37 @@ export const LoginForm: FC = () => {
   }
 
   return (
-    <div className="w-full space-y-7 animate-in fade-in duration-300">
-      {/* Brand & Page Header */}
-      <div className="space-y-3">
+    <div className="w-full space-y-5 animate-in fade-in duration-300">
+      {/* 1. Brand Identity & Header */}
+      <div className="space-y-2.5">
         <div className="inline-flex items-center gap-2">
-          <img src={fptLogo} alt="FPT Logo" className="h-8 w-auto object-contain" />
-          <span className="flex items-center gap-1 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary">
-            <Shield className="h-3 w-3" />
+          <img src={fptLogo} alt="FPT Education Logo" className="h-8 w-auto object-contain" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
+            <IconShieldCheck size={14} stroke={2} />
             Administration Portal
           </span>
         </div>
 
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Administrator Sign In
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Sign in to Admin Portal
           </h1>
-          <p className="mt-1.5 text-xs sm:text-sm text-slate-500 leading-relaxed">
+          <p className="mt-1 text-xs text-slate-500 leading-normal">
             Enter your official university staff credentials to manage alumni community operations.
           </p>
         </div>
       </div>
 
-      {/* Google Workspace SSO Button */}
+      {/* 2. Google Workspace SSO */}
       <div>
         <button
           type="button"
           onClick={handleGoogleLogin}
           disabled={isLoading}
-          className="flex w-full items-center justify-center space-x-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs sm:text-sm font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
+          {/* Official Google Multi-color Logo */}
+          <svg className="h-4.5 w-4.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -106,133 +119,162 @@ export const LoginForm: FC = () => {
         </button>
       </div>
 
-      {/* Divider */}
+      {/* 3. Divider */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-slate-200" />
         </div>
-        <div className="relative flex justify-center text-[11px] uppercase">
-          <span className="bg-white px-3 font-semibold text-slate-400">
-            Or sign in with staff account
+        <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
+          <span className="bg-white px-3 text-slate-400">
+            Or continue with staff email
           </span>
         </div>
       </div>
 
-      {/* Error Alert */}
+      {/* 4. Error Alert */}
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-700 animate-in fade-in">
-          {error}
+        <div
+          className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 animate-in fade-in"
+          role="alert"
+        >
+          <IconAlertCircle size={16} stroke={2} className="shrink-0 mt-0.5 text-rose-600" />
+          <div className="font-medium leading-normal">{error}</div>
         </div>
       )}
 
-      {/* Form */}
-      <form onSubmit={handleLogin} className="space-y-4">
-        {/* Email */}
+      {/* 5. Authentication Form */}
+      <form onSubmit={handleLogin} className="space-y-3.5">
+        {/* Email Field */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-700">STAFF / ADMIN EMAIL</label>
-            <span className="text-[10px] font-medium text-brand-secondary">
+            <label htmlFor="staff-email" className="text-xs font-semibold text-slate-700">
+              Staff Email
+            </label>
+            <span className="text-[11px] font-medium text-slate-400">
               @fpt.edu.vn or @fe.edu.vn
             </span>
           </div>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-              <Mail className="h-4 w-4" />
+              <IconMail size={18} stroke={1.8} />
             </div>
             <input
+              id="staff-email"
+              name="email"
               type="email"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@fpt.edu.vn"
-              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-9 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
               required
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-9.5 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
             />
           </div>
         </div>
 
-        {/* Password */}
+        {/* Password Field */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-700">PASSWORD</label>
+            <label htmlFor="staff-password" className="text-xs font-semibold text-slate-700">
+              Password
+            </label>
             <Link
-              to="/auth/forgot-password"
-              className="text-xs font-semibold text-brand-secondary hover:text-brand-primary transition-colors"
+              to={ROUTES.AUTH.FORGOT_PASSWORD}
+              className="text-xs font-semibold text-brand-secondary hover:text-brand-primary transition-colors focus:outline-none focus:underline"
             >
               Forgot password?
             </Link>
           </div>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-              <Lock className="h-4 w-4" />
+              <IconLock size={18} stroke={1.8} />
             </div>
             <input
+              id="staff-password"
+              name="password"
               type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your security password"
-              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-9 pr-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
               required
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-9.5 pr-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition-colors"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <IconEyeOff size={18} stroke={1.8} /> : <IconEye size={18} stroke={1.8} />}
             </button>
           </div>
         </div>
 
-        {/* Remember me */}
-        <div className="flex items-center justify-between pt-1">
-          <label className="flex items-center cursor-pointer">
+        {/* Remember Device Option */}
+        <div className="flex items-center justify-between pt-0.5">
+          <label htmlFor="remember-device" className="flex items-center gap-2 cursor-pointer select-none">
             <input
+              id="remember-device"
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
+              className="h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary focus:ring-offset-0"
             />
-            <span className="ml-2 text-xs text-slate-600">Remember this administrative device</span>
+            <span className="text-xs text-slate-600">Remember this administrative device</span>
           </label>
         </div>
 
-        {/* Primary CTA Submit */}
+        {/* Primary CTA */}
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full py-5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-sm font-bold text-white shadow-md shadow-brand-primary/20 transition-all flex items-center justify-center gap-2"
+          className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          <span>{isLoading ? 'Verifying Credentials...' : 'Access Admin Portal'}</span>
-          <ArrowRight className="h-4 w-4" />
+          {isLoading ? (
+            <>
+              <IconLoader2 size={18} className="animate-spin" />
+              <span>Verifying Credentials...</span>
+            </>
+          ) : (
+            <>
+              <span>Sign in to Admin Portal</span>
+              <IconArrowRight size={18} stroke={2} />
+            </>
+          )}
         </Button>
       </form>
 
-      {/* Quick Demo Pre-Fill Action */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-slate-600">
-          <Zap className="h-4 w-4 text-brand-primary shrink-0" />
-          <span className="text-[11px]">Testing demo environment?</span>
+      {/* 6. Optional Demo Access (Restricted to Development Mode) */}
+      {env.isDev && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-slate-600">
+            <IconSparkles size={16} stroke={1.8} className="text-brand-primary shrink-0" />
+            <span className="text-[11px] font-medium text-slate-500">Development Demo Mode</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleQuickDemoFill}
+            className="text-xs font-semibold text-brand-secondary hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 focus:outline-none"
+          >
+            <span>Auto-fill Demo</span>
+            <IconCircleCheck size={14} stroke={1.8} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleQuickDemoFill}
-          className="text-xs font-bold text-brand-secondary hover:text-brand-primary hover:underline transition-colors flex items-center gap-1"
-        >
-          <span>Auto-fill Admin</span>
-          <CheckCircle2 className="h-3 w-3" />
-        </button>
-      </div>
+      )}
 
-      {/* Security Notice & Footer */}
-      <div className="text-center pt-2 space-y-3">
+      {/* 7. Minimal Footer & Security Notice */}
+      <div className="pt-2 text-center space-y-2.5">
         <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm mx-auto">
-          Authorized personnel only. Access sessions and governance actions are monitored under FPT University security regulations.
+          Authorized personnel only. Access sessions and administrative actions are governed under FPT University security regulations.
         </p>
 
-        <div className="flex items-center justify-center space-x-5 text-[11px] font-medium text-slate-400 pt-2 border-t border-slate-100">
-          <a href="#" className="hover:text-slate-600">Privacy Policy</a>
-          <a href="#" className="hover:text-slate-600">Security Regulations</a>
-          <a href="#" className="hover:text-slate-600">IT Helpdesk</a>
+        <div className="flex items-center justify-center gap-4 text-[11px] font-medium text-slate-400 pt-1.5 border-t border-slate-100">
+          <a href="#" className="hover:text-slate-600 transition-colors">IT Helpdesk</a>
+          <span className="text-slate-300">•</span>
+          <a href="#" className="hover:text-slate-600 transition-colors">Security Policy</a>
+          <span className="text-slate-300">•</span>
+          <a href="#" className="hover:text-slate-600 transition-colors">Privacy Notice</a>
         </div>
       </div>
     </div>
