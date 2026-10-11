@@ -96,6 +96,7 @@ export const UsersManagementPage: FC = () => {
     {
       key: 'role',
       header: 'Role',
+      className: 'text-center w-36',
       render: (u) => {
         const roleStyles = {
           STUDENT: 'bg-sky-50 text-brand-secondary border-sky-200',
@@ -104,7 +105,7 @@ export const UsersManagementPage: FC = () => {
           ADMIN: 'bg-purple-50 text-purple-700 border-purple-200',
         }
         return (
-          <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-bold ${roleStyles[u.role]}`}>
+          <span className={`inline-flex items-center justify-center gap-1 rounded-md border px-2.5 py-0.5 text-[11px] font-bold min-w-[84px] ${roleStyles[u.role]}`}>
             {u.role === 'ADMIN' && <Shield className="h-3 w-3" />}
             {u.role === 'ALUMNI' && <UserCheck className="h-3 w-3" />}
             <span>{u.role}</span>
@@ -115,6 +116,7 @@ export const UsersManagementPage: FC = () => {
     {
       key: 'campus',
       header: 'Campus / Major',
+      className: 'w-60',
       render: (u) => (
         <div className="flex flex-col">
           <span className="font-medium text-slate-800">{u.campus} Campus</span>
@@ -125,19 +127,21 @@ export const UsersManagementPage: FC = () => {
     {
       key: 'status',
       header: 'Status',
+      className: 'text-center w-36',
       render: (u) => <StatusBadge status={u.status} />,
     },
     {
       key: 'joinedDate',
       header: 'Joined Date',
-      render: (u) => <span className="text-slate-500">{u.joinedDate}</span>,
+      className: 'text-center w-36',
+      render: (u) => <span className="font-mono text-slate-500 text-[11px]">{u.joinedDate}</span>,
     },
     {
       key: 'actions',
       header: 'Actions',
-      className: 'text-right w-52',
+      className: 'text-center w-56',
       render: (u) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-center gap-2">
           <Button
             size="sm"
             variant="outline"
