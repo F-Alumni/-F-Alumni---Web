@@ -49,15 +49,15 @@ export default {
         },
         // FPT University official brand colors extracted from Logo SVG
         brand: {
-          primary: '#0F172A',
-          'primary-hover': '#1E293B',
-          'primary-light': '#F1F5F9',
-          secondary: '#2563EB',
-          'secondary-hover': '#1D4ED8',
-          'secondary-light': '#EFF6FF',
-          accent: '#10B981',
-          'accent-hover': '#059669',
-          'accent-light': '#ECFDF5',
+          primary: '#F27024',
+          'primary-hover': '#d95d16',
+          'primary-light': '#fff3ec',
+          secondary: '#0066B2',
+          'secondary-hover': '#00528e',
+          'secondary-light': '#e8f3fc',
+          accent: '#0DB04B',
+          'accent-hover': '#098a3a',
+          'accent-light': '#eaf9f0',
         },
       },
       borderRadius: {
@@ -83,5 +83,6 @@ export default {
   },
   plugins: [tailwindcssAnimate],
 }
+
 
 

@@ -52,7 +52,7 @@ export const LeftSidebar: FC = () => {
         {/* Banner with subtle FPT gradient */}
         <div className="relative h-16 w-full bg-gradient-to-r from-brand-primary via-slate-800 to-slate-700" />
 
-        <div className="-mt-8 px-4 pb-4 pt-0">
+        <div className="relative z-10 -mt-8 px-4 pb-4 pt-0">
           <div className="mb-3 flex items-end justify-between">
             <Avatar
               src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256"
@@ -62,14 +62,11 @@ export const LeftSidebar: FC = () => {
               isOnline
               className="border-2 border-white shadow-sm"
             />
-            <Badge variant="brand-secondary" className="gap-1 text-[11px] font-semibold">
-              <CheckCircle2 className="h-3 w-3" />
-              VERIFIED ALUMNI
-            </Badge>
+            
           </div>
 
           <div>
-            <h2 className="text-base font-bold leading-snug text-slate-900">Maya Lin</h2>
+            <h2 className="text-base font-bold leading-snug text-slate-900 flex items-center gap-1.5">Maya Lin <Badge variant="brand-accent" className="h-4 w-4 p-0 flex items-center justify-center rounded-full" title="Verified Alumni"><CheckCircle2 className="h-3 w-3" /></Badge></h2>
             <p className="text-xs font-medium text-slate-600">Software Engineering (SE)</p>
             <p className="mt-0.5 text-[11px] text-slate-400">Cohort 17 • Class of &apos;25</p>
           </div>
@@ -193,6 +190,11 @@ export const LeftSidebar: FC = () => {
     </aside>
   )
 }
+
+
+
+
+
 
 
 

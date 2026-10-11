@@ -3,6 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
 import { HomePage } from '@/pages/user'
+import { LoginPage, RegisterPage } from '@/pages/auth'
 
 /**
  * Application routing skeleton.
@@ -26,11 +27,11 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'login',
-        element: <Outlet />,
+        element: <LoginPage />,
       },
       {
         path: 'register',
-        element: <Outlet />,
+        element: <RegisterPage />,
       },
       {
         path: 'verify-email',
@@ -181,3 +182,4 @@ export const routes: RouteObject[] = [
     element: <Navigate to={ROUTES.APP.HOME} replace />,
   },
 ]
+
