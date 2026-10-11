@@ -43,6 +43,7 @@ export const ROUTES = {
   // Admin routes (/admin/*)
   ADMIN: {
     ROOT: '/admin',
+    DASHBOARD: '/admin/dashboard',
     USERS: '/admin/users',
     ALUMNI_VERIFICATION: '/admin/alumni-verification',
     COMMUNITIES: '/admin/communities',

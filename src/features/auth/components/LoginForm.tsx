@@ -14,12 +14,12 @@ export const LoginForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setToken('fpt-session-token-' + Date.now())
-    navigate(ROUTES.APP.HOME)
+    navigate(ROUTES.ADMIN.DASHBOARD)
   }
 
   const handleGoogleLogin = () => {
     setToken('fpt-google-session-token-' + Date.now())
-    navigate(ROUTES.APP.HOME)
+    navigate(ROUTES.ADMIN.DASHBOARD)
   }
 
   return (
@@ -28,15 +28,15 @@ export const LoginForm = () => {
       <div className="space-y-3">
         <div className="inline-flex items-center space-x-2">
           <img src={fptLogo} alt="FPT Logo" className="h-8 w-auto object-contain" />
-          <span className="text-sm font-semibold tracking-wider text-slate-500">
-            ALUMNI & STUDENT NETWORK
+          <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+            ADMINISTRATION PORTAL
           </span>
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          Welcome back, FPTers!
+          Admin Portal Sign In
         </h1>
         <p className="text-sm text-slate-500">
-          Sign in with your @fpt.edu.vn or @fe.edu.vn email to connect with 40,000+ alumni and students.
+          Sign in with your staff or administrator credentials to manage alumni community operations.
         </p>
       </div>
 
@@ -140,33 +140,21 @@ export const LoginForm = () => {
         </div>
 
         <Button type="submit" className="w-full py-6 rounded-xl bg-gradient-to-r from-brand-primary to-orange-400 hover:from-orange-500 hover:to-orange-400 text-base font-semibold shadow-md shadow-brand-primary/20">
-          Sign in to network &rarr;
+          Sign in to Admin Portal &rarr;
         </Button>
-
-        <div className="pt-1">
-          <Link
-            to={ROUTES.AUTH.REGISTER}
-            className="flex w-full items-center justify-center py-3.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm"
-          >
-            Create new account
-          </Link>
-        </div>
       </form>
 
       {/* Footer Links */}
       <div className="text-center pt-2 space-y-2">
-        <p className="text-sm text-slate-600">
-          Don&apos;t have an account?{' '}
-          <Link to={ROUTES.AUTH.REGISTER} className="font-semibold text-brand-primary hover:underline">
-            Register here &rarr;
-          </Link>
+        <p className="text-xs text-slate-500">
+          Authorized personnel only. Access is logged and monitored under FPT University security regulations.
         </p>
       </div>
 
       <div className="flex items-center justify-center space-x-6 pt-8 text-xs font-medium text-slate-400">
-        <Link to="#" className="hover:text-slate-600">Privacy</Link>
-        <Link to="#" className="hover:text-slate-600">Network Terms</Link>
-        <Link to="#" className="hover:text-slate-600">Support</Link>
+        <Link to="#" className="hover:text-slate-600">Privacy Policy</Link>
+        <Link to="#" className="hover:text-slate-600">Security Regulations</Link>
+        <Link to="#" className="hover:text-slate-600">IT Support</Link>
       </div>
     </div>
   )

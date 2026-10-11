@@ -1,23 +1,33 @@
 import type { RouteObject } from 'react-router-dom'
 import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
-import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
-import { HomePage } from '@/pages/user'
+import { AdminLayout, AuthLayout } from '@/layouts'
 import { LoginPage, RegisterPage } from '@/pages/auth'
+import {
+  DashboardPage,
+  UsersManagementPage,
+  AlumniVerificationPage,
+  CommunitiesManagementPage,
+  PostsManagementPage,
+  OpportunitiesManagementPage,
+  ReportsManagementPage,
+  AnalyticsPage,
+  SettingsPage,
+} from '@/pages/admin'
 import { ProtectedRoute, PublicRoute, RootRedirect } from './guards'
 
 /**
- * Application routing tree with authentication guards.
- * Unauthenticated users are strictly guarded from entering application feeds.
+ * Application routing tree for FPT Alumni Administration Portal.
+ * Enforces admin layout structure, route guards, and governance management modules.
  */
 export const routes: RouteObject[] = [
-  // Root Redirect (Dynamic based on auth status)
+  // 1. Dynamic Root Redirect (Authenticated -> Admin Dashboard | Guest -> Login)
   {
     path: ROUTES.ROOT,
     element: <RootRedirect />,
   },
 
-  // Guest Only Auth Section (/auth/*)
+  // 2. Authentication Section (/auth/* & /admin/login)
   {
     element: <PublicRoute />,
     children: [
@@ -47,103 +57,15 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-    ],
-  },
-
-  // Student & Alumni Main Protected Application Section (/app/*)
-  {
-    element: <ProtectedRoute />,
-    children: [
+      // Convenience alias for /admin/login
       {
-        path: ROUTES.APP.ROOT,
-        element: <UserLayout />,
-        children: [
-          {
-            index: true,
-            element: <Navigate to={ROUTES.APP.HOME} replace />,
-          },
-          {
-            path: 'home',
-            element: <HomePage />,
-          },
-          {
-            path: 'communities',
-            element: <Outlet />,
-          },
-          {
-            path: 'communities/:communityId',
-            element: <Outlet />,
-          },
-          {
-            path: 'posts/create',
-            element: <Outlet />,
-          },
-          {
-            path: 'posts/:postId',
-            element: <Outlet />,
-          },
-          {
-            path: 'alumni',
-            element: <Outlet />,
-          },
-          {
-            path: 'alumni/:userId',
-            element: <Outlet />,
-          },
-          {
-            path: 'jobs',
-            element: <Outlet />,
-          },
-          {
-            path: 'jobs/:jobId',
-            element: <Outlet />,
-          },
-          {
-            path: 'internships',
-            element: <Outlet />,
-          },
-          {
-            path: 'scholarships',
-            element: <Outlet />,
-          },
-          {
-            path: 'scholarships/:scholarshipId',
-            element: <Outlet />,
-          },
-          {
-            path: 'search',
-            element: <Outlet />,
-          },
-          {
-            path: 'chat',
-            element: <Outlet />,
-          },
-          {
-            path: 'notifications',
-            element: <Outlet />,
-          },
-          {
-            path: 'ai',
-            element: <Outlet />,
-          },
-          {
-            path: 'saved',
-            element: <Outlet />,
-          },
-          {
-            path: 'profile',
-            element: <Outlet />,
-          },
-          {
-            path: 'settings',
-            element: <Outlet />,
-          },
-        ],
+        path: '/admin/login',
+        element: <Navigate to={ROUTES.AUTH.LOGIN} replace />,
       },
     ],
   },
 
-  // Admin Section (/admin/*)
+  // 3. Web Administration Portal Section (/admin/*)
   {
     element: <ProtectedRoute />,
     children: [
@@ -153,46 +75,57 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <Outlet />,
+            element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
+          },
+          {
+            path: 'dashboard',
+            element: <DashboardPage />,
           },
           {
             path: 'users',
-            element: <Outlet />,
+            element: <UsersManagementPage />,
           },
           {
             path: 'alumni-verification',
-            element: <Outlet />,
+            element: <AlumniVerificationPage />,
           },
           {
             path: 'communities',
-            element: <Outlet />,
+            element: <CommunitiesManagementPage />,
           },
           {
             path: 'posts',
-            element: <Outlet />,
+            element: <PostsManagementPage />,
           },
           {
             path: 'opportunities',
-            element: <Outlet />,
+            element: <OpportunitiesManagementPage />,
           },
           {
             path: 'reports',
-            element: <Outlet />,
+            element: <ReportsManagementPage />,
           },
           {
             path: 'analytics',
-            element: <Outlet />,
+            element: <AnalyticsPage />,
           },
           {
             path: 'settings',
-            element: <Outlet />,
+            element: <SettingsPage />,
           },
         ],
       },
     ],
   },
 
-  // Fallback Wildcard Route
+  // 4. Legacy End-User App Routes Redirect
+  // (Student/Alumni mobile app scope redirects to Admin Dashboard on web)
+  {
+    path: `${ROUTES.APP.ROOT}/*`,
+    element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
+  },
+
+  // 5. Fallback Wildcard Route
   {
     path: '*',
     element: <RootRedirect />,

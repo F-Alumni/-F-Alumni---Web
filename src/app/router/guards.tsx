@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
 
 /**
- * Route guard for authenticated areas (/app/*, /admin/*).
+ * Route guard for authenticated admin areas (/admin/*).
  * Redirects unauthenticated visitors directly to the Login page.
  */
 export const ProtectedRoute: FC = () => {
@@ -19,13 +19,13 @@ export const ProtectedRoute: FC = () => {
 
 /**
  * Route guard for guest-only areas (/auth/*).
- * Redirects already authenticated users away from Login/Register into Home Feed.
+ * Redirects already authenticated administrators into Admin Dashboard.
  */
 export const PublicRoute: FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   if (isAuthenticated) {
-    return <Navigate to={ROUTES.APP.HOME} replace />
+    return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />
   }
 
   return <Outlet />
@@ -33,10 +33,10 @@ export const PublicRoute: FC = () => {
 
 /**
  * Dynamic Root Redirector (for path "/").
- * Automatically directs authenticated users to Home Feed and unauthenticated guests to Login.
+ * Automatically directs authenticated administrators to Dashboard and guests to Login.
  */
 export const RootRedirect: FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
-  return <Navigate to={isAuthenticated ? ROUTES.APP.HOME : ROUTES.AUTH.LOGIN} replace />
+  return <Navigate to={isAuthenticated ? ROUTES.ADMIN.DASHBOARD : ROUTES.AUTH.LOGIN} replace />
 }
