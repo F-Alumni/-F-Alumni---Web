@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { UserCheck, Shield, Filter, UserX, RotateCcw } from 'lucide-react'
+import { UserCheck, Shield, Filter, UserX, RotateCcw, GraduationCap, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
@@ -105,9 +105,11 @@ export const UsersManagementPage: FC = () => {
           ADMIN: 'bg-purple-50 text-purple-700 border-purple-200',
         }
         return (
-          <span className={`inline-flex items-center justify-center gap-1 rounded-md border px-2.5 py-0.5 text-[11px] font-bold min-w-[84px] ${roleStyles[u.role]}`}>
-            {u.role === 'ADMIN' && <Shield className="h-3 w-3" />}
-            {u.role === 'ALUMNI' && <UserCheck className="h-3 w-3" />}
+          <span className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[11px] font-bold min-w-[92px] ${roleStyles[u.role]}`}>
+            {u.role === 'STUDENT' && <GraduationCap className="h-3 w-3 shrink-0" />}
+            {u.role === 'ALUMNI' && <UserCheck className="h-3 w-3 shrink-0" />}
+            {u.role === 'FACULTY' && <BookOpen className="h-3 w-3 shrink-0" />}
+            {u.role === 'ADMIN' && <Shield className="h-3 w-3 shrink-0" />}
             <span>{u.role}</span>
           </span>
         )
