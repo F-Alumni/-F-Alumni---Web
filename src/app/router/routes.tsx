@@ -1,7 +1,8 @@
 import type { RouteObject } from 'react-router-dom'
 import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
-import { AdminLayout, AuthLayout } from '@/layouts'
+import { ROLES } from '@/constants/roles'
+import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
 import { LoginPage, RegisterPage } from '@/pages/auth'
 import {
   DashboardPage,
@@ -14,14 +15,16 @@ import {
   AnalyticsPage,
   SettingsPage,
 } from '@/pages/admin'
-import { ProtectedRoute, PublicRoute, RootRedirect } from './guards'
+import { HomePage } from '@/pages/user'
+import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
 
 /**
- * Application routing tree for FPT Alumni Administration Portal.
- * Enforces admin layout structure, route guards, and governance management modules.
+ * Application routing tree for FPT Alumni Community Platform.
+ * Implements dual-layout routing: /admin/* (AdminLayout) and /app/* (UserLayout),
+ * with granular role-based route guards and safe fallback redirection.
  */
 export const routes: RouteObject[] = [
-  // 1. Dynamic Root Redirect (Authenticated -> Admin Dashboard | Guest -> Login)
+  // 1. Dynamic Root Redirect (Authenticated -> Role Destination | Guest -> Login)
   {
     path: ROUTES.ROOT,
     element: <RootRedirect />,
@@ -65,13 +68,17 @@ export const routes: RouteObject[] = [
     ],
   },
 
-  // 3. Web Administration Portal Section (/admin/*)
+  // 3. Web Administration & Governance Portal Section (/admin/*)
   {
     element: <ProtectedRoute />,
     children: [
       {
         path: ROUTES.ADMIN.ROOT,
-        element: <AdminLayout />,
+        element: (
+          <RoleGuard allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR, 'FACULTY']}>
+            <AdminLayout />
+          </RoleGuard>
+        ),
         children: [
           {
             index: true,
@@ -79,50 +86,174 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'dashboard',
-            element: <DashboardPage />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR, 'FACULTY']}>
+                <DashboardPage />
+              </RoleGuard>
+            ),
           },
+
+          // Safety Governance & Moderation (Admin & Moderator)
           {
-            path: 'users',
-            element: <UsersManagementPage />,
-          },
-          {
-            path: 'alumni-verification',
-            element: <AlumniVerificationPage />,
-          },
-          {
-            path: 'communities',
-            element: <CommunitiesManagementPage />,
+            path: 'reports',
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]}>
+                <ReportsManagementPage />
+              </RoleGuard>
+            ),
           },
           {
             path: 'posts',
-            element: <PostsManagementPage />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]}>
+                <PostsManagementPage />
+              </RoleGuard>
+            ),
+          },
+
+          // Academic Coordination & Chapters (Admin & Faculty)
+          {
+            path: 'communities',
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, 'FACULTY']}>
+                <CommunitiesManagementPage />
+              </RoleGuard>
+            ),
           },
           {
             path: 'opportunities',
-            element: <OpportunitiesManagementPage />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, 'FACULTY']}>
+                <OpportunitiesManagementPage />
+              </RoleGuard>
+            ),
           },
           {
-            path: 'reports',
-            element: <ReportsManagementPage />,
+            path: 'users',
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, 'FACULTY']}>
+                <UsersManagementPage />
+              </RoleGuard>
+            ),
+          },
+
+          // System Administration Only (Admin)
+          {
+            path: 'alumni-verification',
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+                <AlumniVerificationPage />
+              </RoleGuard>
+            ),
           },
           {
             path: 'analytics',
-            element: <AnalyticsPage />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+                <AnalyticsPage />
+              </RoleGuard>
+            ),
           },
           {
             path: 'settings',
-            element: <SettingsPage />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+                <SettingsPage />
+              </RoleGuard>
+            ),
           },
         ],
       },
     ],
   },
 
-  // 4. Legacy End-User App Routes Redirect
-  // (Student/Alumni mobile app scope redirects to Admin Dashboard on web)
+  // 4. End-User Social & Academic Community Platform (/app/*)
   {
-    path: `${ROUTES.APP.ROOT}/*`,
-    element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: ROUTES.APP.ROOT,
+        element: <UserLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.APP.HOME} replace />,
+          },
+          {
+            path: 'home',
+            element: <HomePage />,
+          },
+          {
+            path: 'communities',
+            element: <Outlet />,
+          },
+          {
+            path: 'communities/:communityId',
+            element: <Outlet />,
+          },
+          {
+            path: 'posts/create',
+            element: <Outlet />,
+          },
+          {
+            path: 'posts/:postId',
+            element: <Outlet />,
+          },
+          {
+            path: 'alumni',
+            element: <Outlet />,
+          },
+          {
+            path: 'alumni/:userId',
+            element: <Outlet />,
+          },
+          {
+            path: 'jobs',
+            element: <Outlet />,
+          },
+          {
+            path: 'jobs/:jobId',
+            element: <Outlet />,
+          },
+          {
+            path: 'internships',
+            element: <Outlet />,
+          },
+          {
+            path: 'scholarships',
+            element: <Outlet />,
+          },
+          {
+            path: 'search',
+            element: <Outlet />,
+          },
+          {
+            path: 'chat',
+            element: <Outlet />,
+          },
+          {
+            path: 'notifications',
+            element: <Outlet />,
+          },
+          {
+            path: 'ai',
+            element: <Outlet />,
+          },
+          {
+            path: 'saved',
+            element: <Outlet />,
+          },
+          {
+            path: 'profile',
+            element: <Outlet />,
+          },
+          {
+            path: 'settings',
+            element: <Outlet />,
+          },
+        ],
+      },
+    ],
   },
 
   // 5. Fallback Wildcard Route

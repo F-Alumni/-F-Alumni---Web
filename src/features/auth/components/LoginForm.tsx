@@ -10,17 +10,23 @@ import {
   IconLoader2,
   IconAlertCircle,
   IconSparkles,
-  IconCircleCheck,
+  IconCheck,
+  IconSchool,
+  IconUserCheck,
+  IconBook,
+  IconShield,
+  IconFlag,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
+import { ROLES } from '@/constants/roles'
 import { useAuthStore } from '@/stores/authStore'
-import { env } from '@/app/config/env'
+import { DEMO_USERS, getDemoUserByEmail, type DemoUserConfig } from '@/constants/demoUsers'
 import fptLogo from '@/assets/fpt-logo.svg'
 
 export const LoginForm: FC = () => {
   const navigate = useNavigate()
-  const setToken = useAuthStore((state) => state.setToken)
+  const setAuth = useAuthStore((state) => state.setAuth)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,6 +34,23 @@ export const LoginForm: FC = () => {
   const [rememberMe, setRememberMe] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedDemoKey, setSelectedDemoKey] = useState<string | null>(null)
+
+  const completeLoginWithUser = (user: DemoUserConfig) => {
+    setIsLoading(true)
+    setError(null)
+    setTimeout(() => {
+      const token = `fpt-auth-token-${user.role.toLowerCase()}-${user.userType.toLowerCase()}-${Date.now()}`
+      setAuth({ token, user })
+      setIsLoading(false)
+
+      if (user.role === ROLES.ADMIN || user.role === ROLES.MODERATOR) {
+        navigate(ROUTES.ADMIN.DASHBOARD)
+      } else {
+        navigate(ROUTES.APP.HOME)
+      }
+    }, 350)
+  }
 
   const handleLogin = (e?: FormEvent) => {
     if (e) e.preventDefault()
@@ -43,28 +66,108 @@ export const LoginForm: FC = () => {
       return
     }
 
-    setIsLoading(true)
-    setTimeout(() => {
-      setToken('fpt-admin-session-token-' + Date.now())
-      setIsLoading(false)
-      navigate(ROUTES.ADMIN.DASHBOARD)
-    }, 400)
+    // Match with known demo account or determine best role
+    const matchedUser = getDemoUserByEmail(email)
+    if (matchedUser) {
+      completeLoginWithUser(matchedUser)
+      return
+    }
+
+    // Default heuristic for custom email login
+    const isMod = email.toLowerCase().includes('mod')
+    const isFaculty = email.toLowerCase().includes('faculty') || email.toLowerCase().includes('fe.edu.vn')
+    const isAlumni = email.toLowerCase().includes('alumni')
+
+    let resolvedUser: DemoUserConfig = DEMO_USERS.STUDENT
+    if (email.toLowerCase().includes('admin')) {
+      resolvedUser = DEMO_USERS.ADMIN
+    } else if (isMod) {
+      resolvedUser = DEMO_USERS.MODERATOR
+    } else if (isFaculty) {
+      resolvedUser = DEMO_USERS.FACULTY
+    } else if (isAlumni) {
+      resolvedUser = DEMO_USERS.ALUMNI
+    }
+
+    completeLoginWithUser({
+      ...resolvedUser,
+      id: `USR-CUSTOM-${Date.now()}`,
+      name: email.split('@')[0] || 'User',
+      email: email.trim(),
+    })
   }
 
   const handleGoogleLogin = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setToken('fpt-google-admin-token-' + Date.now())
-      setIsLoading(false)
-      navigate(ROUTES.ADMIN.DASHBOARD)
-    }, 400)
+    completeLoginWithUser(DEMO_USERS.ADMIN)
   }
 
-  const handleQuickDemoFill = () => {
-    setEmail('admin@fpt.edu.vn')
+  const handleSelectDemoActor = (key: keyof typeof DEMO_USERS, autoLogin: boolean = true) => {
+    const demoUser = DEMO_USERS[key]
+    setSelectedDemoKey(key)
+    setEmail(demoUser.email)
     setPassword('FPTUniversity2026!@#')
     setError(null)
+
+    if (autoLogin) {
+      completeLoginWithUser(demoUser)
+    }
   }
+
+  const demoRolesList: {
+    key: keyof typeof DEMO_USERS
+    title: string
+    subtitle: string
+    email: string
+    icon: typeof IconShield
+    badgeColor: string
+    targetPath: string
+  }[] = [
+    {
+      key: 'ADMIN',
+      title: 'Admin',
+      subtitle: 'System Admin',
+      email: DEMO_USERS.ADMIN.email,
+      icon: IconShield,
+      badgeColor: 'bg-purple-100 text-purple-800 border-purple-200',
+      targetPath: '/admin/dashboard',
+    },
+    {
+      key: 'MODERATOR',
+      title: 'Moderator',
+      subtitle: 'Content & Safety',
+      email: DEMO_USERS.MODERATOR.email,
+      icon: IconFlag,
+      badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',
+      targetPath: '/admin/dashboard',
+    },
+    {
+      key: 'FACULTY',
+      title: 'Faculty',
+      subtitle: 'Academic Staff',
+      email: DEMO_USERS.FACULTY.email,
+      icon: IconBook,
+      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      targetPath: '/app/home',
+    },
+    {
+      key: 'STUDENT',
+      title: 'Student',
+      subtitle: 'K17 Enrolled',
+      email: DEMO_USERS.STUDENT.email,
+      icon: IconSchool,
+      badgeColor: 'bg-sky-100 text-sky-800 border-sky-200',
+      targetPath: '/app/home',
+    },
+    {
+      key: 'ALUMNI',
+      title: 'Alumni',
+      subtitle: 'K14 Verified',
+      email: DEMO_USERS.ALUMNI.email,
+      icon: IconUserCheck,
+      badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+      targetPath: '/app/home',
+    },
+  ]
 
   return (
     <div className="w-full space-y-5 animate-in fade-in duration-300">
@@ -74,29 +177,79 @@ export const LoginForm: FC = () => {
           <img src={fptLogo} alt="FPT Education Logo" className="h-8 w-auto object-contain" />
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
             <IconShieldCheck size={14} stroke={2} />
-            Administration Portal
+            Alumni Connect Portal
           </span>
         </div>
 
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Sign in to Admin Portal
+            Sign in to Alumni Connect
           </h1>
           <p className="mt-1 text-xs text-slate-500 leading-normal">
-            Enter your official university staff credentials to manage alumni community operations.
+            Select a role below for fast demo testing, or sign in with your official university credentials.
           </p>
         </div>
       </div>
 
-      {/* 2. Google Workspace SSO */}
+      {/* 2. Quick Demo Role Selection (All 5 Platform Actors) */}
+      <div className="rounded-2xl border border-brand-primary/20 bg-gradient-to-br from-orange-50/60 to-slate-50 p-3.5 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <IconSparkles size={16} stroke={2} className="text-brand-primary shrink-0" />
+            <span className="text-xs font-bold text-slate-800">
+              Quick Demo Role Testing
+            </span>
+          </div>
+          <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            1-Click Sign In
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {demoRolesList.map((demo) => {
+            const Icon = demo.icon
+            const isSelected = selectedDemoKey === demo.key
+            return (
+              <button
+                key={demo.key}
+                type="button"
+                onClick={() => handleSelectDemoActor(demo.key, true)}
+                disabled={isLoading}
+                title={`Sign in immediately as ${demo.title} (${demo.email})`}
+                className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all ${
+                  isSelected
+                    ? 'border-brand-primary bg-white shadow-xs ring-2 ring-brand-primary/20'
+                    : 'border-slate-200 bg-white/90 hover:border-brand-primary/40 hover:bg-white hover:shadow-xs'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold border ${demo.badgeColor}`}>
+                    <Icon size={12} stroke={2} />
+                    {demo.title}
+                  </span>
+                  {isSelected && <IconCheck size={14} className="text-brand-primary" stroke={2.5} />}
+                </div>
+                <span className="mt-1 text-[11px] font-semibold text-slate-900 leading-tight">
+                  {demo.subtitle}
+                </span>
+                <span className="text-[10px] text-slate-400 truncate max-w-full">
+                  {demo.email.split('@')[0]}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 3. Google Workspace SSO */}
       <div>
         <button
           type="button"
           onClick={handleGoogleLogin}
           disabled={isLoading}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {/* Official Google Multi-color Logo - fixed exact 20px size */}
+          {/* Official Google Multi-color Logo */}
           <svg
             className="w-5 h-5 shrink-0"
             width="20"
@@ -125,19 +278,19 @@ export const LoginForm: FC = () => {
         </button>
       </div>
 
-      {/* 3. Divider */}
+      {/* 4. Divider */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
           <span className="bg-white px-3 text-slate-400">
-            Or continue with staff email
+            Or sign in with email & password
           </span>
         </div>
       </div>
 
-      {/* 4. Error Alert */}
+      {/* 5. Error Alert */}
       {error && (
         <div
           className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 animate-in fade-in"
@@ -148,13 +301,13 @@ export const LoginForm: FC = () => {
         </div>
       )}
 
-      {/* 5. Authentication Form */}
+      {/* 6. Authentication Form */}
       <form onSubmit={handleLogin} className="space-y-3.5">
         {/* Email Field */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label htmlFor="staff-email" className="text-xs font-semibold text-slate-700">
-              Staff Email
+              University Email
             </label>
             <span className="text-[11px] font-medium text-slate-400">
               @fpt.edu.vn or @fe.edu.vn
@@ -227,7 +380,7 @@ export const LoginForm: FC = () => {
               onChange={(e) => setRememberMe(e.target.checked)}
               className="h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary focus:ring-offset-0"
             />
-            <span className="text-xs text-slate-600">Remember this administrative device</span>
+            <span className="text-xs text-slate-600">Remember this session on device</span>
           </label>
         </div>
 
@@ -240,39 +393,21 @@ export const LoginForm: FC = () => {
           {isLoading ? (
             <>
               <IconLoader2 size={18} className="animate-spin" />
-              <span>Verifying Credentials...</span>
+              <span>Signing in...</span>
             </>
           ) : (
             <>
-              <span>Sign in to Admin Portal</span>
+              <span>Sign in to Account</span>
               <IconArrowRight size={18} stroke={2} />
             </>
           )}
         </Button>
       </form>
 
-      {/* 6. Optional Demo Access (Restricted to Development Mode) */}
-      {env.isDev && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 text-slate-600">
-            <IconSparkles size={16} stroke={1.8} className="text-brand-primary shrink-0" />
-            <span className="text-[11px] font-medium text-slate-500">Development Demo Mode</span>
-          </div>
-          <button
-            type="button"
-            onClick={handleQuickDemoFill}
-            className="text-xs font-semibold text-brand-secondary hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 focus:outline-none"
-          >
-            <span>Auto-fill Demo</span>
-            <IconCircleCheck size={14} stroke={1.8} />
-          </button>
-        </div>
-      )}
-
       {/* 7. Minimal Footer & Security Notice */}
       <div className="pt-2 text-center space-y-2.5">
         <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm mx-auto">
-          Authorized personnel only. Access sessions and administrative actions are governed under FPT University security regulations.
+          FPT University Alumni Community Platform. All session operations are secured under university data governance regulations.
         </p>
 
         <div className="flex items-center justify-center gap-4 text-[11px] font-medium text-slate-400 pt-1.5 border-t border-slate-100">
@@ -280,7 +415,7 @@ export const LoginForm: FC = () => {
           <span className="text-slate-300">•</span>
           <a href="#" className="hover:text-slate-600 transition-colors">Security Policy</a>
           <span className="text-slate-300">•</span>
-          <a href="#" className="hover:text-slate-600 transition-colors">Privacy Notice</a>
+          <a href="#" className="hover:text-slate-600 transition-colors">FPT Identity</a>
         </div>
       </div>
     </div>

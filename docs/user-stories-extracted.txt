@@ -1,0 +1,68 @@
+==============================
+SHEET: User Service
+==============================
+R1: ID | User Story | Ưu tiên
+R2: US-01 | Là người dùng, tôi muốn đăng nhập bằng email và mật khẩu để truy cập hệ thống. | P0
+R3: US-02 | Là người dùng, tôi muốn đăng nhập bằng Google để tiết kiệm thời gian. | P0
+R4: US-03 | Là người dùng, tôi muốn xác minh email để chứng minh mình sở hữu địa chỉ email đăng ký. | P0
+R5: US-04 | Là người dùng, tôi muốn cập nhật hồ sơ cá nhân gồm tên, avatar, campus, chuyên ngành, khóa và giới thiệu bản thân. | P0
+R6: US-05 | Là người dùng, tôi muốn xem hồ sơ của sinh viên/cựu sinh viên khác để biết thêm về họ. | P1
+R7: US-06 | Là người dùng, tôi muốn tìm kiếm thành viên theo tên, campus, chuyên ngành để kết nối. | P1
+R8: US-07 | Là người dùng, tôi muốn thay đổi hoặc đặt lại mật khẩu để bảo vệ tài khoản. | P1
+R9: US-08 | Là người dùng, tôi muốn đăng xuất khỏi hệ thống và hết phiên đăng nhập khi token không còn hợp lệ. | P1
+R10: US-09 | Là người dùng, tôi muốn tùy chỉnh thông tin nào được hiển thị công khai trên profile. | P1
+R11: US-10 | Là người dùng, tôi muốn chặn tài khoản khác để hạn chế tương tác không mong muốn. | P1
+==============================
+SHEET: Chat Service
+==============================
+R1: ID | User Story | Ưu tiên
+R2: CH-01 | Là người dùng, tôi muốn bắt đầu cuộc trò chuyện với sinh viên hoặc cựu sinh viên khác. | 
+R3: CH-02 | Là người dùng, tôi muốn gửi và nhận tin nhắn theo thời gian thực. | 
+R4: CH-03 | Là người dùng, tôi muốn xem danh sách các cuộc trò chuyện gần đây. | 
+R5: CH-04 | Là người dùng, tôi muốn xem lại lịch sử tin nhắn khi mở cuộc trò chuyện. | 
+R6: CH-05 | Là người dùng, tôi muốn biết tin nhắn đã được gửi hoặc đã được xem. | 
+R7: CH-06 | Là người dùng, tôi muốn nhìn thấy khi người kia đang nhập tin nhắn. | 
+R8: CH-07 | Là người dùng, tôi muốn gửi ảnh trong cuộc trò chuyện. | 
+R9: CH-08 | Là người dùng, tôi muốn tìm kiếm tin nhắn trong cuộc trò chuyện. | 
+R10: CH-09 | Là người dùng, tôi muốn tắt thông báo hoặc ẩn cuộc trò chuyện. | 
+R11: CH-10 | Là người dùng Mobile, tôi muốn nhận push notification khi có tin nhắn mới. | 
+==============================
+SHEET: Forum Service
+==============================
+R1: ID | User Story | Ưu tiên
+R2: FO-01 | Là sinh viên, tôi muốn tạo bài viết để hỏi đáp hoặc chia sẻ kinh nghiệm học tập. | P0
+R3: FO-02 | Là người dùng, tôi muốn khi tạo bài viết phải được đánh dấu nó thuộc loại bài đăng nào (Hỏi đáp, Chia sẻ, Tuyển dụng), ngành nào hoặc dành cho tất cả sinh viên | P0
+R4: FO-03 | Là người dùng, tôi muốn đính kèm hình ảnh trong bài viết để minh họa nội dung. | P0
+R5: FO-04 | Là người dùng, tôi muốn chỉnh sửa hoặc xóa bài viết của mình. | P0
+R6: FO-05 | Là người dùng, tôi muốn xem bảng tin gồm các bài viết từ cộng đồng FPTU. | P0
+R7: FO-06 | Là người dùng, tôi muốn bình luận dưới bài viết để trao đổi với tác giả. | P1
+R8: FO-07 | Là người dùng, tôi muốn trả lời bình luận để tiếp tục cuộc thảo luận. | P1
+R9: FO-08 | Là người dùng, tôi muốn like hoặc unlike bài viết để thể hiện sự quan tâm. | P1
+R10: FO-09 | Là người dùng, tôi muốn lưu bài viết để có thể đọc lại sau. | P1
+R11: FO-10 | Là người dùng, tôi muốn xem các bài viết do mình đã đăng. | P1
+R12: FO-11 | Là người dùng, tôi muốn báo cáo bài viết hoặc bình luận vi phạm. | P2
+R13: FO-12 | Là người dùng, tôi muốn lọc bài viết theo campus FPTU để xem nội dung phù hợp. | P2
+R14: FO-13 | Là người dùng, tôi muốn tìm kiếm bài viết theo từ khóa. | P2
+R15: FO-14 | Là người dùng, tôi muốn xem các bài viết mới nhất hoặc phổ biến nhất. | P2
+R16: FO-15 | Là người dùng, tôi muốn lọc các câu hỏi chưa có câu trả lời để hỗ trợ sinh viên khác. | P2
+R17: FO-16 | Là người dùng, tôi muốn xem các câu hỏi đã được giải đáp để tham khảo. | P2
+==============================
+SHEET: AI Service
+==============================
+R1: ID | User Story | Ưu tiên
+R2: AI-01 | Là sinh viên, tôi muốn hỏi AI về các kinh nghiệm học tập đã được chia sẻ trên Forum. | 
+R3: AI-02 | Là người dùng, tôi muốn AI trả lời dựa trên nội dung bài viết thực tế của cộng đồng FPTU. | 
+R4: AI-03 | Là người dùng, tôi muốn xem nguồn bài viết được AI tham khảo để kiểm chứng thông tin. | 
+R5: AI-04 | Là người dùng, tôi muốn đặt câu hỏi tiếp theo trong cùng một cuộc hội thoại AI. | 
+==============================
+SHEET: Admin Service
+==============================
+R1: ID | User Story | Ưu tiên
+R2: AD-01 | Là Admin, tôi muốn xem danh sách người dùng để quản lý tài khoản trên hệ thống. | 
+R3: AD-02 | Là Admin, tôi muốn tìm kiếm người dùng theo tên hoặc email. | 
+R4: AD-03 | Là Admin, tôi muốn khóa hoặc mở khóa tài khoản vi phạm. | 
+R5: AD-04 | Là Admin, tôi muốn xem danh sách bài viết trên Forum. | 
+R6: AD-05 | Là Admin, tôi muốn xóa hoặc ẩn bài viết vi phạm quy định. | 
+R7: AD-06 | Là Admin, tôi muốn xem danh sách bài viết bị người dùng báo cáo. | 
+R8: AD-07 | Là Admin, tôi muốn xử lý báo cáo bằng cách gỡ bài hoặc bỏ qua báo cáo. | 
+R9: AD-08 | Là Admin, tôi muốn xem thống kê tổng số người dùng và bài viết. | 
