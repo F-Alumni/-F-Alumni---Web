@@ -10,13 +10,13 @@ import {
   IconBriefcase as Briefcase,
   IconChevronLeft as ChevronLeft,
   IconArrowRight as ArrowRight,
-  IconCircleCheck as CheckCircle2,
   IconBuildingCommunity as Building2,
   IconBook as BookOpen,
   IconCalendar as Calendar,
   IconSparkles as Sparkles,
   IconShieldCheck as ShieldCheck,
   IconLoader2,
+  IconLogin,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
@@ -170,46 +170,116 @@ export const RegisterForm: FC = () => {
     '2020 or earlier',
   ]
 
-  // Success view (Step 4)
+  // Success view (Step 4 - Digital Member Pass)
   if (step === 4) {
+    const nameParts = fullName.trim().split(' ').filter(Boolean)
+    const firstWord = nameParts[0] ?? ''
+    const lastWord = nameParts[nameParts.length - 1] ?? ''
+    const initials = nameParts.length >= 2
+      ? (firstWord.charAt(0) + lastWord.charAt(0)).toUpperCase()
+      : (fullName.slice(0, 2) || 'FP').toUpperCase()
+    const firstName = lastWord || 'FPTer'
+    const displayCampus = campus.replace(' (Hanoi)', '')
+    const displayMajor = major.split(' (')[0]
+
     return (
-      <div className="w-full space-y-4 py-2 text-center animate-in fade-in zoom-in-95 duration-300">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 ring-6 ring-emerald-50/50">
-          <CheckCircle2 className="h-8 w-8 text-emerald-600 animate-bounce" />
-        </div>
-
+      <div className="w-full space-y-3.5 py-1 text-center animate-in fade-in zoom-in-95 duration-300">
+        {/* Celebratory Badge Header */}
         <div className="space-y-1.5">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-3 py-0.5 text-[11px] font-semibold text-brand-accent">
-            <Sparkles className="h-3.5 w-3.5" />
-            Registration Successful!
-          </span>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-            Welcome to the Network, {fullName.split(' ')[0] || 'FPTer'}!
-          </h1>
-          <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
-            Your {accountType === 'STUDENT' ? 'Student' : 'Alumni'} profile has been initialized for{' '}
-            <span className="font-semibold text-slate-800">{major.split(' (')[0]}</span> at{' '}
-            <span className="font-semibold text-slate-800">{campus}</span>.
-          </p>
+          <div className="relative mx-auto flex h-13 w-13 items-center justify-center">
+            <div className="absolute inset-0 rounded-2xl bg-emerald-500/20 blur-md animate-pulse" />
+            <div className="relative flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/25">
+              <ShieldCheck size={28} stroke={2} />
+            </div>
+            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-xs ring-2 ring-white">
+              <Sparkles size={11} stroke={2.5} />
+            </div>
+          </div>
+
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+              Registration Complete • Active Member
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mt-1">
+              Welcome to the Network, {firstName}!
+            </h1>
+            <p className="text-[11px] sm:text-xs text-slate-500 max-w-sm mx-auto leading-normal">
+              Your institutional account has been initialized and verified with the FPT Academic Registry.
+            </p>
+          </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-left space-y-2 text-xs text-slate-600">
-          <div className="flex justify-between py-0.5 border-b border-slate-200">
-            <span className="text-slate-400">Account Type</span>
-            <span className="font-semibold text-slate-800">
-              {accountType === 'STUDENT' ? 'Current Student' : 'Verified Alumni'}
+        {/* Digital Membership Pass Card */}
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-[#071d36] via-[#003869] to-[#0066b2] p-3.5 text-white shadow-xl shadow-slate-900/15 text-left">
+          {/* Subtle Decorative Ambient Glows */}
+          <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/10 blur-xl" />
+          <div className="pointer-events-none absolute -left-8 -bottom-8 h-28 w-28 rounded-full bg-brand-primary/25 blur-xl" />
+
+          {/* Pass Top Bar */}
+          <div className="flex items-center justify-between border-b border-white/15 pb-2">
+            <div className="flex items-center gap-2">
+              <img src={fptLogo} alt="FPT Education" className="h-5 w-auto brightness-0 invert opacity-95" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-white/70">
+                Member Pass
+              </span>
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-md border border-white/20">
+              {accountType === 'STUDENT' ? (
+                <>
+                  <GraduationCap size={12} stroke={2} className="text-sky-300" />
+                  <span>Current Student</span>
+                </>
+              ) : (
+                <>
+                  <Briefcase size={12} stroke={2} className="text-amber-300" />
+                  <span>Verified Alumni</span>
+                </>
+              )}
             </span>
           </div>
-          <div className="flex justify-between py-0.5 border-b border-slate-200">
-            <span className="text-slate-400">Campus</span>
-            <span className="font-semibold text-slate-800">{campus}</span>
+
+          {/* Pass Profile Section */}
+          <div className="flex items-center gap-3 py-2.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-brand-primary to-orange-400 font-extrabold text-sm text-white shadow-md ring-2 ring-white/30">
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-bold text-sm text-white truncate">{fullName || 'FPT Member'}</h3>
+                <ShieldCheck size={14} className="text-brand-accent shrink-0" stroke={2.2} />
+              </div>
+              <p className="text-[11px] text-white/75 truncate">{email}</p>
+            </div>
           </div>
-          <div className="flex justify-between py-0.5">
-            <span className="text-slate-400">Email</span>
-            <span className="font-semibold text-slate-800">{email}</span>
+
+          {/* Pass Metadata Matrix */}
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-white/10 p-2 backdrop-blur-md text-[11px] border border-white/10">
+            <div>
+              <span className="text-[9px] uppercase font-bold tracking-wider text-white/60 block">Campus</span>
+              <span className="font-semibold text-white truncate block">{displayCampus}</span>
+            </div>
+            <div>
+              <span className="text-[9px] uppercase font-bold tracking-wider text-white/60 block">Major</span>
+              <span className="font-semibold text-white truncate block">{displayMajor}</span>
+            </div>
+            <div className="pt-1 border-t border-white/10">
+              <span className="text-[9px] uppercase font-bold tracking-wider text-white/60 block">Cohort / Year</span>
+              <span className="font-semibold text-white truncate block">{gradYear}</span>
+            </div>
+            <div className="pt-1 border-t border-white/10">
+              <span className="text-[9px] uppercase font-bold tracking-wider text-white/60 block">Student ID</span>
+              <span className="font-semibold text-amber-300 truncate block">{studentId || 'SE-AUTOGEN'}</span>
+            </div>
+          </div>
+
+          {/* Pass Security Barcode footer */}
+          <div className="flex items-center justify-between pt-2 text-[9px] text-white/60 font-mono">
+            <span>STATUS: ACTIVE MEMBER</span>
+            <span className="tracking-widest">VERIFIED • FPT-CONNECT</span>
           </div>
         </div>
 
+        {/* Action Buttons */}
         <div className="space-y-2 pt-1">
           <Button
             onClick={() => {
@@ -218,17 +288,19 @@ export const RegisterForm: FC = () => {
               }
               navigate(ROUTES.APP.HOME)
             }}
-            className="w-full h-10 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-xs sm:text-sm font-bold text-white shadow-xs"
+            className="w-full h-10.5 rounded-xl bg-gradient-to-r from-brand-primary via-[#e86317] to-brand-primary-hover hover:opacity-95 text-xs sm:text-sm font-bold text-white shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all"
           >
-            Enter Community Feed &rarr;
+            <span>Enter Community Platform</span>
+            <ArrowRight size={16} stroke={2} />
           </Button>
 
           <Button
             variant="outline"
             onClick={() => navigate(ROUTES.AUTH.LOGIN)}
-            className="w-full h-10 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-semibold"
+            className="w-full h-9.5 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2"
           >
-            Sign In with credentials
+            <IconLogin size={15} stroke={1.8} className="text-slate-500" />
+            <span>Sign in with credentials</span>
           </Button>
         </div>
       </div>

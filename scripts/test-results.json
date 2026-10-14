@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-14T04:22:25.272Z",
+  "timestamp": "2026-10-14T04:32:27.927Z",
   "environmentSummary": {
     "localFrontend": "http://localhost:5173",
     "productionFrontend": "https://asm-prn232.vercel.app",
@@ -19,7 +19,7 @@
       "status": "PASSED",
       "details": {
         "status": 200,
-        "totalUsers": 8,
+        "totalUsers": 10,
         "userSample": [
           {
             "name": "Campus Safety Moderator",
@@ -45,6 +45,16 @@
             "name": "Nguyễn Hoàng Nam",
             "role": "Alumni",
             "campus": "Hòa Lạc"
+          },
+          {
+            "name": "Nguyen Phuong Khải",
+            "role": "Student",
+            "campus": "FPT TP. Ho Chi Minh"
+          },
+          {
+            "name": "Phan Đăng Lưu",
+            "role": "Student",
+            "campus": "FPT Hoa Lac (Hanoi)"
           },
           {
             "name": "Phan Đăng Lưu",
@@ -275,7 +285,7 @@
       "status": "PASSED",
       "details": {
         "hasSuccessScreen": true,
-        "headingText": "Welcome to the Network, Phan!"
+        "headingText": "Welcome to the Network, Lưu!"
       },
       "error": null
     },
