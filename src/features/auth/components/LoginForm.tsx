@@ -9,6 +9,7 @@ import {
   IconArrowRight,
   IconLoader2,
   IconAlertCircle,
+  IconUserPlus,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
@@ -256,24 +257,34 @@ export const LoginForm: FC = () => {
           </label>
         </div>
 
-        {/* Primary CTA */}
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isLoading ? (
-            <>
-              <IconLoader2 size={16} className="animate-spin" />
-              <span>Signing in...</span>
-            </>
-          ) : (
-            <>
-              <span>Sign in to Account</span>
-              <IconArrowRight size={16} stroke={2} />
-            </>
-          )}
-        </Button>
+        {/* Actions: Sign In & Register */}
+        <div className="space-y-2 pt-0.5">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <IconLoader2 size={16} className="animate-spin" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign in to Account</span>
+                <IconArrowRight size={16} stroke={2} />
+              </>
+            )}
+          </Button>
+
+          <Link
+            to={ROUTES.AUTH.REGISTER}
+            className="w-full h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-xs sm:text-sm font-semibold text-slate-700 transition-all flex items-center justify-center gap-2 shadow-xs"
+          >
+            <IconUserPlus size={16} stroke={1.8} className="text-slate-500" />
+            <span>Create New Account</span>
+          </Link>
+        </div>
       </form>
 
       {/* 6. Minimal Footer & Security Notice */}
