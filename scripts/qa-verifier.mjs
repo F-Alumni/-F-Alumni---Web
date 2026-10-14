@@ -273,12 +273,10 @@ const topbarCode = fs.readFileSync(topbarPath, 'utf8');
 assert(topbarCode.includes("label: 'Faculty Coordinator'"), 'AdminTopbar contains Faculty Coordinator badge config');
 assert(topbarCode.includes("label: 'Safety Moderator'"), 'AdminTopbar contains Safety Moderator badge config');
 assert(topbarCode.includes("label: 'FPT Super Admin'"), 'AdminTopbar contains FPT Super Admin badge config');
-assert(topbarCode.includes("handleRoleSwitch('ADMIN')") &&
-       topbarCode.includes("handleRoleSwitch('MODERATOR')") &&
-       topbarCode.includes("handleRoleSwitch('FACULTY')") &&
-       topbarCode.includes("handleRoleSwitch('STUDENT')") &&
-       topbarCode.includes("handleRoleSwitch('ALUMNI')"),
-       'AdminTopbar contains quick role switcher for all 5 actor personas');
+assert(topbarCode.includes("handleLogout") &&
+       topbarCode.includes("clearAuth") &&
+       topbarCode.includes("isDropdownOpen"),
+       'AdminTopbar contains secure session management and role-aware profile dropdown');
 
 
 // ----------------------------------------------------
@@ -347,9 +345,9 @@ const usersCode = fs.readFileSync(usersPath, 'utf8');
 assert(usersCode.includes("majorFilter") && usersCode.includes("cohortFilter"),
        'UsersManagementPage implements majorFilter and cohortFilter states');
 
-assert(usersCode.includes("if (majorFilter !== 'ALL' && !u.major.toLowerCase().includes(majorFilter.toLowerCase())) return false") &&
-       usersCode.includes("if (cohortFilter !== 'ALL' && u.cohort !== cohortFilter) return false"),
-       'UsersManagementPage correctly evaluates major and cohort filters');
+assert(usersCode.includes("usersService.searchUsers") &&
+       usersCode.includes("adaptBackendUser"),
+       'UsersManagementPage dynamically fetches and adapts users from UserService backend (/api/users/search)');
 
 assert(usersCode.includes("{!isFaculty && ("),
        'UsersManagementPage hides suspend action button when viewed by Faculty');

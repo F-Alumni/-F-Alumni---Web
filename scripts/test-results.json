@@ -1,0 +1,335 @@
+{
+  "timestamp": "2026-10-14T04:22:25.272Z",
+  "environmentSummary": {
+    "localFrontend": "http://localhost:5173",
+    "productionFrontend": "https://asm-prn232.vercel.app",
+    "userService": "http://localhost:5164",
+    "chatService": "http://localhost:5199"
+  },
+  "viewportsTested": [
+    "1366x768 (Standard Laptop)",
+    "1366x620 (Browser Viewport)",
+    "1920x1080 (Desktop FHD)",
+    "390x844 (Mobile)"
+  ],
+  "tests": [
+    {
+      "suite": "Backend API",
+      "name": "UserService (5164) /api/users/search connectivity",
+      "status": "PASSED",
+      "details": {
+        "status": 200,
+        "totalUsers": 8,
+        "userSample": [
+          {
+            "name": "Campus Safety Moderator",
+            "role": "Moderator",
+            "campus": "Hòa Lạc"
+          },
+          {
+            "name": "Chí Trung",
+            "role": "Student",
+            "campus": "Hồ Chí Minh"
+          },
+          {
+            "name": "Dr. Nguyen Van Faculty",
+            "role": "Faculty",
+            "campus": "Hòa Lạc"
+          },
+          {
+            "name": "FPT System Administrator",
+            "role": "Admin",
+            "campus": "Hòa Lạc"
+          },
+          {
+            "name": "Nguyễn Hoàng Nam",
+            "role": "Alumni",
+            "campus": "Hòa Lạc"
+          },
+          {
+            "name": "Phan Đăng Lưu",
+            "role": "Student",
+            "campus": "FPT Hoa Lac (Hanoi)"
+          },
+          {
+            "name": "Phan Đăng Lưu",
+            "role": "Student",
+            "campus": "FPT Hoa Lac (Hanoi)"
+          },
+          {
+            "name": "Test User",
+            "role": "Student",
+            "campus": "Hòa Lạc"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "suite": "Backend API",
+      "name": "ChatService (5199) endpoint response",
+      "status": "PASSED",
+      "details": {
+        "status": 401,
+        "statusText": "Unauthorized"
+      },
+      "error": null
+    },
+    {
+      "suite": "Login Layout",
+      "name": "1366x768 viewport: No forced scrollbar on form container",
+      "status": "PASSED",
+      "details": {
+        "viewportHeight": 768,
+        "containerScrollHeight": 768,
+        "containerClientHeight": 768,
+        "hasForcedScrollbar": false,
+        "signInVisible": true,
+        "createAccVisible": true,
+        "signInTop": 481,
+        "signInBottom": 521,
+        "createAccTop": 529,
+        "createAccBottom": 569
+      },
+      "error": null
+    },
+    {
+      "suite": "Login Layout",
+      "name": "1366x768 viewport: 'Sign in to Account' button fully visible without scrolling",
+      "status": "PASSED",
+      "details": {
+        "top": 481,
+        "bottom": 521
+      },
+      "error": null
+    },
+    {
+      "suite": "Login Layout",
+      "name": "1366x768 viewport: 'Create New Account' button fully visible without scrolling",
+      "status": "PASSED",
+      "details": {
+        "top": 529,
+        "bottom": 569
+      },
+      "error": null
+    },
+    {
+      "suite": "Login Layout",
+      "name": "1366x620 compact viewport: No forced scrollbar",
+      "status": "PASSED",
+      "details": {
+        "viewportHeight": 620,
+        "containerScrollHeight": 620,
+        "containerClientHeight": 620,
+        "hasForcedScrollbar": false,
+        "signInVisible": true,
+        "createAccVisible": true,
+        "signInBottom": 447,
+        "createAccBottom": 495
+      },
+      "error": null
+    },
+    {
+      "suite": "Login Layout",
+      "name": "1366x620 compact viewport: 'Sign in to Account' visible",
+      "status": "PASSED",
+      "details": {
+        "bottom": 447
+      },
+      "error": null
+    },
+    {
+      "suite": "Login Layout",
+      "name": "1366x620 compact viewport: 'Create New Account' visible",
+      "status": "PASSED",
+      "details": {
+        "bottom": 495
+      },
+      "error": null
+    },
+    {
+      "suite": "Login Layout",
+      "name": "1920x1080 Desktop: Buttons visible and centered",
+      "status": "PASSED",
+      "details": {
+        "signInVisible": true,
+        "createAccVisible": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Login Layout",
+      "name": "390x844 Mobile: Clean single-column layout without horizontal overflow",
+      "status": "PASSED",
+      "details": {
+        "hasSignInBtn": true,
+        "hasCreateLink": true,
+        "bodyScrollWidth": 390,
+        "windowWidth": 390,
+        "noHorizontalOverflow": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Authentication",
+      "name": "Login with admin@fpt.edu.vn redirects to /admin/dashboard",
+      "status": "PASSED",
+      "details": {
+        "currentUrl": "http://localhost:5173/admin/dashboard",
+        "tokenSaved": true,
+        "tokenPreview": "eyJhbGciOiJIUzI1NiIsInR5c..."
+      },
+      "error": null
+    },
+    {
+      "suite": "Protected Routes",
+      "name": "/admin/dashboard loads successfully with admin layout and sidebar",
+      "status": "PASSED",
+      "details": {
+        "title": "asm",
+        "headingText": "Dashboard",
+        "hasStats": true,
+        "sidebarLinks": [
+          "Dashboard",
+          "Users",
+          "Alumni Verification",
+          "Communities",
+          "Posts",
+          "Opportunities",
+          "Reports",
+          "Analytics"
+        ]
+      },
+      "error": null
+    },
+    {
+      "suite": "Live API Integration",
+      "name": "UsersManagementPage renders real backend users from /api/users/search",
+      "status": "PASSED",
+      "details": {
+        "rowCount": 8,
+        "foundUsers": {
+          "hasSafetyModerator": true,
+          "hasChiTrung": true,
+          "hasNam": true
+        }
+      },
+      "error": null
+    },
+    {
+      "suite": "Responsive Layout",
+      "name": "Users directory on 1366x768 maintains responsive layout with contained horizontal scroll",
+      "status": "PASSED",
+      "details": {
+        "tableScrollWidth": 1044,
+        "tableClientWidth": 1044
+      },
+      "error": null
+    },
+    {
+      "suite": "Register Layout",
+      "name": "Top header & FPT logo are fully visible and NOT clipped by top margin (top > 0)",
+      "status": "PASSED",
+      "details": {
+        "top": 91,
+        "isClippedByTop": false,
+        "isVisible": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Register Layout",
+      "name": "'Step 1 of 3' badge is completely visible and NOT clipped (top > 0)",
+      "status": "PASSED",
+      "details": {
+        "text": "Step 1 of 3",
+        "top": 95,
+        "isClippedByTop": false,
+        "isVisible": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Register Workflow",
+      "name": "Step 1 -> Step 2 navigation (Basic Info -> University)",
+      "status": "PASSED",
+      "details": {
+        "hasStep2Heading": true,
+        "hasCampusSelector": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Register Workflow",
+      "name": "Step 2 -> Step 3 navigation (University -> Role)",
+      "status": "PASSED",
+      "details": {
+        "hasStep3Heading": true,
+        "hasCompleteBtn": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Register Workflow",
+      "name": "Step 3 -> Step 4 navigation (Registration completed -> Success screen)",
+      "status": "PASSED",
+      "details": {
+        "hasSuccessScreen": true,
+        "headingText": "Welcome to the Network, Phan!"
+      },
+      "error": null
+    },
+    {
+      "suite": "Register Navigation",
+      "name": "'Sign In' link navigates back to /auth/login",
+      "status": "PASSED",
+      "details": {
+        "currentUrl": "http://localhost:5173/auth/login"
+      },
+      "error": null
+    },
+    {
+      "suite": "Route Protection",
+      "name": "Unauthenticated access to /admin/dashboard safely redirects to /auth/login",
+      "status": "PASSED",
+      "details": {
+        "redirectedUrl": "http://localhost:5173/auth/login"
+      },
+      "error": null
+    },
+    {
+      "suite": "Production Deployment",
+      "name": "Vercel deployment is live and reachable (HTTP 200)",
+      "status": "PASSED",
+      "details": {
+        "httpStatus": 200,
+        "finalUrl": "https://asm-prn232.vercel.app/auth/login"
+      },
+      "error": null
+    },
+    {
+      "suite": "Production Login Layout",
+      "name": "Vercel production login layout fits neatly on 1366x768",
+      "status": "PASSED",
+      "details": {
+        "signInVisible": true,
+        "createAccVisible": true,
+        "hasScrollbar": false,
+        "signInBottom": 521,
+        "createAccBottom": 569
+      },
+      "error": null
+    },
+    {
+      "suite": "Production Register Layout",
+      "name": "Vercel production 'Step 1 of 3' badge is visible and NOT clipped (top >= 0)",
+      "status": "PASSED",
+      "details": {
+        "hasStepBadge": true,
+        "top": 95,
+        "isNotClipped": true
+      },
+      "error": null
+    }
+  ]
+}

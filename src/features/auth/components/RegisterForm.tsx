@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { authService } from '@/services/auth'
+import type { AuthResponse } from '@/types/auth.types'
 import { normalizeError } from '@/lib/errorHandler'
 import fptLogo from '@/assets/fpt-logo.svg'
 
@@ -32,6 +33,7 @@ export const RegisterForm: FC = () => {
   const navigate = useNavigate()
   const setAuth = useAuthStore((state) => state.setAuth)
   const [step, setStep] = useState<Step>(1)
+  const [registeredAuth, setRegisteredAuth] = useState<AuthResponse | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -126,7 +128,7 @@ export const RegisterForm: FC = () => {
         cohort: gradYear,
       })
 
-      setAuth({ token: res.token, user: res.user })
+      setRegisteredAuth(res)
       setStep(4)
     } catch (err: unknown) {
       setError(normalizeError(err).message)
@@ -211,6 +213,9 @@ export const RegisterForm: FC = () => {
         <div className="space-y-2 pt-1">
           <Button
             onClick={() => {
+              if (registeredAuth) {
+                setAuth({ token: registeredAuth.token, user: registeredAuth.user })
+              }
               navigate(ROUTES.APP.HOME)
             }}
             className="w-full h-10 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-xs sm:text-sm font-bold text-white shadow-xs"
