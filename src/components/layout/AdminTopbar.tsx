@@ -11,9 +11,6 @@ import {
   IconSettings,
   IconBook,
   IconFlag,
-  IconSchool,
-  IconUserCheck,
-  IconRefresh,
   IconExternalLink,
 } from '@tabler/icons-react'
 import { Avatar } from '@/components/ui/avatar'
@@ -21,7 +18,6 @@ import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { USER_TYPES } from '@/constants/userTypes'
-import { DEMO_USERS } from '@/constants/demoUsers'
 
 import { authService } from '@/services/auth'
 
@@ -31,7 +27,7 @@ interface AdminTopbarProps {
 
 export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
   const navigate = useNavigate()
-  const { currentUser, role, userType, switchUser, clearAuth } = useAuthStore()
+  const { currentUser, role, userType, clearAuth } = useAuthStore()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -53,18 +49,6 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
     } finally {
       clearAuth()
       navigate(ROUTES.AUTH.LOGIN)
-    }
-  }
-
-  const handleRoleSwitch = (key: keyof typeof DEMO_USERS) => {
-    const targetUser = DEMO_USERS[key]
-    switchUser(targetUser)
-    setIsDropdownOpen(false)
-
-    if (key === 'STUDENT' || key === 'ALUMNI') {
-      navigate(ROUTES.APP.HOME)
-    } else {
-      navigate(ROUTES.ADMIN.DASHBOARD)
     }
   }
 
@@ -194,83 +178,6 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
                   </span>
                 </div>
               </div>
-
-              {/* Fast Actor Switcher for Dev/Testing */}
-              <div className="px-2 py-1 space-y-1">
-                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
-                  <span>Switch Actor (Testing)</span>
-                  <IconRefresh size={12} stroke={2} />
-                </div>
-                <div className="grid grid-cols-1 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleRoleSwitch('ADMIN')}
-                    className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-medium text-left transition-colors ${
-                      role === ROLES.ADMIN ? 'bg-orange-50 text-brand-primary font-bold' : 'hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconShield size={14} className="text-brand-primary" stroke={2} />
-                      <span>Admin</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">admin@fpt</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleSwitch('MODERATOR')}
-                    className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-medium text-left transition-colors ${
-                      role === ROLES.MODERATOR ? 'bg-rose-50 text-rose-700 font-bold' : 'hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconFlag size={14} className="text-rose-600" stroke={2} />
-                      <span>Moderator</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">mod@fpt</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleSwitch('FACULTY')}
-                    className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-medium text-left transition-colors ${
-                      isFaculty ? 'bg-emerald-50 text-emerald-800 font-bold' : 'hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconBook size={14} className="text-brand-accent" stroke={2} />
-                      <span>Faculty</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">faculty@fpt</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleSwitch('STUDENT')}
-                    className="flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-medium text-left hover:bg-slate-100 text-slate-700 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconSchool size={14} className="text-sky-600" stroke={2} />
-                      <span>Student</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">student@fpt</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleSwitch('ALUMNI')}
-                    className="flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-medium text-left hover:bg-slate-100 text-slate-700 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconUserCheck size={14} className="text-amber-600" stroke={2} />
-                      <span>Alumni</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">alumni@fpt</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="my-1.5 border-t border-slate-100" />
 
               {/* Navigation Links */}
               <button

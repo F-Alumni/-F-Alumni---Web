@@ -9,18 +9,11 @@ import {
   IconArrowRight,
   IconLoader2,
   IconAlertCircle,
-  IconSparkles,
-  IconSchool,
-  IconUserCheck,
-  IconBook,
-  IconShield,
-  IconFlag,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { useAuthStore } from '@/stores/authStore'
-import { DEMO_USERS } from '@/constants/demoUsers'
 import fptLogo from '@/assets/fpt-logo.svg'
 
 import { authService } from '@/services/auth'
@@ -36,7 +29,6 @@ export const LoginForm: FC = () => {
   const [rememberMe, setRememberMe] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedDemoKey, setSelectedDemoKey] = useState<string | null>(null)
 
   const executeLogin = async (loginEmail: string, loginPass: string) => {
     setIsLoading(true)
@@ -86,12 +78,12 @@ export const LoginForm: FC = () => {
     try {
       const res = await authService.googleLogin({
         idToken: 'google-oauth-token-' + Date.now(),
-        email: 'student.trung@fpt.edu.vn',
-        fullName: 'Chí Trung',
-        role: 'Student',
+        email: 'admin@fpt.edu.vn',
+        fullName: 'FPT System Administrator',
+        role: 'Admin',
       })
       setAuth({ token: res.token, user: res.user })
-      navigate(ROUTES.APP.HOME)
+      navigate(ROUTES.ADMIN.DASHBOARD)
     } catch (err: unknown) {
       setError(normalizeError(err).message)
     } finally {
@@ -99,77 +91,8 @@ export const LoginForm: FC = () => {
     }
   }
 
-  const handleSelectDemoActor = (key: keyof typeof DEMO_USERS, autoLogin: boolean = true) => {
-    const demoUser = DEMO_USERS[key]
-    setSelectedDemoKey(key)
-    setEmail(demoUser.email)
-    const pass = demoUser.defaultPassword || '123456'
-    setPassword(pass)
-    setError(null)
-
-    if (autoLogin) {
-      executeLogin(demoUser.email, pass)
-    }
-  }
-
-  const demoRolesList: {
-    key: keyof typeof DEMO_USERS
-    title: string
-    subtitle: string
-    email: string
-    icon: typeof IconShield
-    badgeColor: string
-    targetPath: string
-  }[] = [
-    {
-      key: 'ADMIN',
-      title: 'Admin',
-      subtitle: 'System Admin',
-      email: DEMO_USERS.ADMIN.email,
-      icon: IconShield,
-      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100',
-      targetPath: '/admin/dashboard',
-    },
-    {
-      key: 'MODERATOR',
-      title: 'Moderator',
-      subtitle: 'Safety & Content',
-      email: DEMO_USERS.MODERATOR.email,
-      icon: IconFlag,
-      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100',
-      targetPath: '/admin/dashboard',
-    },
-    {
-      key: 'FACULTY',
-      title: 'Faculty',
-      subtitle: 'Academic Staff',
-      email: DEMO_USERS.FACULTY.email,
-      icon: IconBook,
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100',
-      targetPath: '/app/home',
-    },
-    {
-      key: 'STUDENT',
-      title: 'Student',
-      subtitle: 'Enrolled K17',
-      email: DEMO_USERS.STUDENT.email,
-      icon: IconSchool,
-      badgeColor: 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100',
-      targetPath: '/app/home',
-    },
-    {
-      key: 'ALUMNI',
-      title: 'Alumni',
-      subtitle: 'Verified K14',
-      email: DEMO_USERS.ALUMNI.email,
-      icon: IconUserCheck,
-      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100',
-      targetPath: '/app/home',
-    },
-  ]
-
   return (
-    <div className="w-full space-y-3 sm:space-y-3.5 animate-in fade-in duration-300">
+    <div className="w-full space-y-3.5 sm:space-y-4 animate-in fade-in duration-300">
       {/* 1. Brand Identity & Header */}
       <div className="space-y-1.5">
         <div className="inline-flex items-center gap-2">
@@ -185,53 +108,12 @@ export const LoginForm: FC = () => {
             Sign in to Alumni Connect
           </h1>
           <p className="text-[11px] sm:text-xs text-slate-500 leading-normal">
-            Select a role below for fast demo testing, or sign in with your university credentials.
+            Sign in with your university credentials (@fpt.edu.vn or @fe.edu.vn).
           </p>
         </div>
       </div>
 
-      {/* 2. Quick Demo Role Selection (All 5 Platform Actors - Compact 1-Row Grid) */}
-      <div className="rounded-xl border border-brand-primary/20 bg-orange-50/40 p-2 sm:p-2.5 space-y-1.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <IconSparkles size={14} stroke={2} className="text-brand-primary shrink-0" />
-            <span className="text-[11px] font-bold text-slate-800">
-              Quick Demo 1-Click Sign In
-            </span>
-          </div>
-          <span className="text-[10px] font-medium text-slate-400">
-            Password: 123456
-          </span>
-        </div>
-
-        <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
-          {demoRolesList.map((demo) => {
-            const Icon = demo.icon
-            const isSelected = selectedDemoKey === demo.key
-            return (
-              <button
-                key={demo.key}
-                type="button"
-                onClick={() => handleSelectDemoActor(demo.key, true)}
-                disabled={isLoading}
-                title={`Sign in immediately as ${demo.title} (${demo.email})`}
-                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border text-center transition-all ${
-                  isSelected
-                    ? 'border-brand-primary bg-white shadow-xs ring-1.5 ring-brand-primary'
-                    : `border-slate-200 bg-white ${demo.badgeColor}`
-                }`}
-              >
-                <Icon size={15} stroke={2} className="shrink-0 mb-0.5" />
-                <span className="text-[10px] sm:text-[11px] font-bold leading-tight truncate w-full">
-                  {demo.title}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* 3. Google Workspace SSO */}
+      {/* 2. Google Workspace SSO */}
       <div>
         <button
           type="button"
@@ -268,7 +150,7 @@ export const LoginForm: FC = () => {
         </button>
       </div>
 
-      {/* 4. Divider */}
+      {/* 3. Divider */}
       <div className="relative my-0.5">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-slate-200" />
@@ -280,7 +162,7 @@ export const LoginForm: FC = () => {
         </div>
       </div>
 
-      {/* 5. Error Alert */}
+      {/* 4. Error Alert */}
       {error && (
         <div
           className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700 animate-in fade-in"
@@ -291,8 +173,8 @@ export const LoginForm: FC = () => {
         </div>
       )}
 
-      {/* 6. Authentication Form */}
-      <form onSubmit={handleLogin} className="space-y-2.5">
+      {/* 5. Authentication Form */}
+      <form onSubmit={handleLogin} className="space-y-3">
         {/* Email Field */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
@@ -394,8 +276,8 @@ export const LoginForm: FC = () => {
         </Button>
       </form>
 
-      {/* 7. Minimal Footer & Security Notice */}
-      <div className="pt-1 text-center space-y-1.5">
+      {/* 6. Minimal Footer & Security Notice */}
+      <div className="pt-2 text-center space-y-1.5">
         <p className="text-[10px] text-slate-400 leading-tight max-w-sm mx-auto">
           FPT University Alumni Community Platform. All session operations are secured under university data governance regulations.
         </p>
