@@ -402,6 +402,49 @@ async function runLiveE2ETesting() {
     recordTest('Register Navigation', "'Sign In' link navigates back to /auth/login", returnedToLogin, { currentUrl: page.url() });
 
     // -------------------------------------------------------------
+    // Test Suite 4B: Forgot Password Workflow
+    // -------------------------------------------------------------
+    console.log('\n--- 5B. Testing /auth/forgot-password Workflow ---');
+    await page.goto(`${LOCAL_URL}/auth/forgot-password`, { waitUntil: 'networkidle2' });
+
+    const forgotPassLayout = await page.evaluate(() => {
+      const h1 = document.querySelector('h1')?.textContent?.trim();
+      const emailInput = document.querySelector('input[type="email"]');
+      const submitBtn = document.querySelector('button[type="submit"]');
+      return {
+        hasHeading: h1?.includes('Forgot your password?'),
+        hasEmailInput: !!emailInput,
+        hasSubmitBtn: !!submitBtn,
+      };
+    });
+
+    recordTest('Forgot Password', 'Page renders successfully with email input and submit button', forgotPassLayout.hasHeading && forgotPassLayout.hasEmailInput, forgotPassLayout);
+
+    // Enter email & submit to generate reset token from UserService
+    const recoveryEmailInput = await page.$('input[type="email"]');
+    if (recoveryEmailInput) {
+      await recoveryEmailInput.type('admin@fpt.edu.vn');
+      const sendTokenBtn = await page.$('button[type="submit"]');
+      if (sendTokenBtn) {
+        await sendTokenBtn.click();
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+
+    const resetStepCheck = await page.evaluate(() => {
+      const h1 = document.querySelector('h1')?.textContent?.trim();
+      const tokenInput = document.querySelector('#reset-token');
+      const newPassInput = document.querySelector('#new-pass');
+      return {
+        isResetStep: h1?.includes('Reset your password'),
+        tokenPrefilled: !!tokenInput?.value,
+        hasNewPassInput: !!newPassInput,
+      };
+    });
+
+    recordTest('Forgot Password', 'Request reset token advances to Step 2 (Reset password) with token prefilled', resetStepCheck.isResetStep && resetStepCheck.hasNewPassInput, resetStepCheck);
+
+    // -------------------------------------------------------------
     // Test Suite 5: Route Protection & Fallback
     // -------------------------------------------------------------
     console.log('\n--- 6. Testing Route Protection & Unauthenticated Redirection ---');

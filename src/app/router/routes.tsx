@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
-import { LoginPage, RegisterPage } from '@/pages/auth'
+import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
 import {
   DashboardPage,
   UsersManagementPage,
@@ -56,7 +56,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'forgot-password',
-            element: <Outlet />,
+            element: <ForgotPasswordPage />,
           },
         ],
       },

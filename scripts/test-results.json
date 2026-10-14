@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-14T04:32:27.927Z",
+  "timestamp": "2026-10-14T04:42:03.690Z",
   "environmentSummary": {
     "localFrontend": "http://localhost:5173",
     "productionFrontend": "https://asm-prn232.vercel.app",
@@ -19,7 +19,7 @@
       "status": "PASSED",
       "details": {
         "status": 200,
-        "totalUsers": 10,
+        "totalUsers": 12,
         "userSample": [
           {
             "name": "Campus Safety Moderator",
@@ -40,6 +40,11 @@
             "name": "FPT System Administrator",
             "role": "Admin",
             "campus": "Hòa Lạc"
+          },
+          {
+            "name": "Kian Nguyen",
+            "role": "Alumni",
+            "campus": "FPT Da Nang"
           },
           {
             "name": "Nguyễn Hoàng Nam",
@@ -65,11 +70,6 @@
             "name": "Phan Đăng Lưu",
             "role": "Student",
             "campus": "FPT Hoa Lac (Hanoi)"
-          },
-          {
-            "name": "Test User",
-            "role": "Student",
-            "campus": "Hòa Lạc"
           }
         ]
       },
@@ -295,6 +295,28 @@
       "status": "PASSED",
       "details": {
         "currentUrl": "http://localhost:5173/auth/login"
+      },
+      "error": null
+    },
+    {
+      "suite": "Forgot Password",
+      "name": "Page renders successfully with email input and submit button",
+      "status": "PASSED",
+      "details": {
+        "hasHeading": true,
+        "hasEmailInput": true,
+        "hasSubmitBtn": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Forgot Password",
+      "name": "Request reset token advances to Step 2 (Reset password) with token prefilled",
+      "status": "PASSED",
+      "details": {
+        "isResetStep": true,
+        "tokenPrefilled": true,
+        "hasNewPassInput": true
       },
       "error": null
     },
