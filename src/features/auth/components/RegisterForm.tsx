@@ -1,25 +1,28 @@
 import { useState, type FC } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-  User,
-  GraduationCap,
-  Briefcase,
-  ChevronLeft,
-  ArrowRight,
-  CheckCircle2,
-  Building2,
-  BookOpen,
-  Calendar,
-  Sparkles,
-  ShieldCheck,
-} from 'lucide-react'
+  IconEye as Eye,
+  IconEyeOff as EyeOff,
+  IconMail as Mail,
+  IconLock as Lock,
+  IconUser as User,
+  IconSchool as GraduationCap,
+  IconBriefcase as Briefcase,
+  IconChevronLeft as ChevronLeft,
+  IconArrowRight as ArrowRight,
+  IconCircleCheck as CheckCircle2,
+  IconBuildingCommunity as Building2,
+  IconBook as BookOpen,
+  IconCalendar as Calendar,
+  IconSparkles as Sparkles,
+  IconShieldCheck as ShieldCheck,
+  IconLoader2,
+} from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
+import { authService } from '@/services/auth'
+import { normalizeError } from '@/lib/errorHandler'
 import fptLogo from '@/assets/fpt-logo.svg'
 
 type Step = 1 | 2 | 3 | 4
@@ -27,9 +30,10 @@ type AccountType = 'STUDENT' | 'ALUMNI'
 
 export const RegisterForm: FC = () => {
   const navigate = useNavigate()
-  const setToken = useAuthStore((state) => state.setToken)
+  const setAuth = useAuthStore((state) => state.setAuth)
   const [step, setStep] = useState<Step>(1)
   const [showPassword, setShowPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Form Fields
   const [fullName, setFullName] = useState('')
@@ -101,15 +105,34 @@ export const RegisterForm: FC = () => {
     setStep(3)
   }
 
-  // Step 3 submission
-  const handleCompleteRegistration = (e: React.FormEvent) => {
+  // Step 3 submission to real backend UserService
+  const handleCompleteRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     if (!agreedTerms) {
       setError('Please agree to the Community Guidelines & Terms')
       return
     }
-    setStep(4)
+
+    setIsSubmitting(true)
+    try {
+      const res = await authService.register({
+        name: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        role: accountType === 'STUDENT' ? 'Student' : 'Alumni',
+        campus,
+        department: major,
+        cohort: gradYear,
+      })
+
+      setAuth({ token: res.token, user: res.user })
+      setStep(4)
+    } catch (err: unknown) {
+      setError(normalizeError(err).message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const campuses = [
@@ -188,7 +211,6 @@ export const RegisterForm: FC = () => {
         <div className="space-y-3 pt-2">
           <Button
             onClick={() => {
-              setToken('fpt-registered-token-' + Date.now())
               navigate(ROUTES.APP.HOME)
             }}
             className="w-full py-6 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-base font-semibold text-white shadow-md shadow-brand-secondary/20"
@@ -669,10 +691,20 @@ export const RegisterForm: FC = () => {
             </Button>
             <Button
               type="submit"
+              disabled={isSubmitting}
               className="w-2/3 py-6 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-base font-semibold text-white shadow-md shadow-brand-secondary/20 flex items-center justify-center gap-2"
             >
-              <ShieldCheck className="h-5 w-5" />
-              <span>Complete Registration</span>
+              {isSubmitting ? (
+                <>
+                  <IconLoader2 className="h-5 w-5 animate-spin" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-5 w-5" />
+                  <span>Complete Registration</span>
+                </>
+              )}
             </Button>
           </div>
         </form>

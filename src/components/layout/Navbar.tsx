@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, type FC } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
+import { authService } from '@/services/auth'
 import {
   Search,
   PlusCircle,
@@ -72,11 +73,17 @@ const CampusDropdown = () => {
 
 export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
   const navigate = useNavigate()
-  const clearAuth = useAuthStore((state) => state.clearAuth)
+  const { currentUser, clearAuth } = useAuthStore()
 
-  const handleLogout = () => {
-    clearAuth()
-    navigate(ROUTES.AUTH.LOGIN)
+  const handleLogout = async () => {
+    try {
+      await authService.logout()
+    } catch {
+      // Ignore
+    } finally {
+      clearAuth()
+      navigate(ROUTES.AUTH.LOGIN)
+    }
   }
 
   return (
@@ -178,14 +185,16 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
             className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-slate-100 shrink-0"
           >
             <Avatar
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256"
-              fallback="ML"
+              src={currentUser?.avatarUrl}
+              fallback={(currentUser?.name || 'User').slice(0, 2).toUpperCase()}
               size="sm"
-              isVerified
+              isVerified={currentUser?.isVerified}
               isOnline
             />
             <div className="hidden xl:block shrink-0 pr-2">
-              <span className="text-sm font-semibold text-slate-800 whitespace-nowrap">Maya Lin</span>
+              <span className="text-sm font-semibold text-slate-800 whitespace-nowrap">
+                {currentUser?.name || 'User'}
+              </span>
             </div>
           </Link>
 

@@ -15,7 +15,7 @@ import {
   AnalyticsPage,
   SettingsPage,
 } from '@/pages/admin'
-import { HomePage } from '@/pages/user'
+import { HomePage, ProfilePage, AlumniPage, ChatPage } from '@/pages/user'
 import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
 
 /**
@@ -201,7 +201,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'alumni',
-            element: <Outlet />,
+            element: <AlumniPage />,
           },
           {
             path: 'alumni/:userId',
@@ -229,7 +229,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'chat',
-            element: <Outlet />,
+            element: <ChatPage />,
           },
           {
             path: 'notifications',
@@ -245,7 +245,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'profile',
-            element: <Outlet />,
+            element: <ProfilePage />,
           },
           {
             path: 'settings',

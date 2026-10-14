@@ -19,4 +19,22 @@ export default defineConfig({
       '@/constants': path.resolve(import.meta.dirname, './src/constants'),
     },
   },
+  server: {
+    port: 5173,
+    proxy: {
+      '/api/chat': {
+        target: 'http://localhost:5199',
+        changeOrigin: true,
+      },
+      '/hubs/chat': {
+        target: 'http://localhost:5199',
+        ws: true,
+        changeOrigin: true,
+      },
+      '/api': {
+        target: 'http://localhost:5164',
+        changeOrigin: true,
+      },
+    },
+  },
 })

@@ -23,6 +23,8 @@ import { ROLES } from '@/constants/roles'
 import { USER_TYPES } from '@/constants/userTypes'
 import { DEMO_USERS } from '@/constants/demoUsers'
 
+import { authService } from '@/services/auth'
+
 interface AdminTopbarProps {
   onToggleSidebar?: () => void
 }
@@ -43,9 +45,15 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleLogout = () => {
-    clearAuth()
-    navigate(ROUTES.AUTH.LOGIN)
+  const handleLogout = async () => {
+    try {
+      await authService.logout()
+    } catch {
+      // Ignore
+    } finally {
+      clearAuth()
+      navigate(ROUTES.AUTH.LOGIN)
+    }
   }
 
   const handleRoleSwitch = (key: keyof typeof DEMO_USERS) => {

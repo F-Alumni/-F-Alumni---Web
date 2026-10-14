@@ -20,12 +20,16 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ROUTES } from '@/constants/routes'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/stores/authStore'
 
 export const LeftSidebar: FC = () => {
+  const { currentUser } = useAuthStore()
+
   const navItems = [
     { label: 'Home', icon: Home, to: ROUTES.APP.HOME },
+    { label: 'Alumni Directory', icon: GraduationCap, to: ROUTES.APP.ALUMNI },
+    { label: 'Community Chat', icon: MessageSquare, to: ROUTES.APP.CHAT },
     { label: 'Communities', icon: Users2, to: ROUTES.APP.COMMUNITIES, count: '14' },
-    { label: 'Alumni Directory', icon: GraduationCap, to: ROUTES.APP.ALUMNI, count: '1.4k' },
     { label: 'Jobs', icon: Briefcase, to: ROUTES.APP.JOBS, badge: 'New' },
     { label: 'Internships', icon: Layers, to: ROUTES.APP.INTERNSHIPS },
     {
@@ -55,20 +59,35 @@ export const LeftSidebar: FC = () => {
         <div className="relative z-10 -mt-8 px-4 pb-4 pt-0">
           <div className="mb-3 flex items-end justify-between">
             <Avatar
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256"
-              fallback="ML"
+              src={currentUser?.avatarUrl}
+              fallback={(currentUser?.name || 'User').slice(0, 2).toUpperCase()}
               size="lg"
-              isVerified
+              isVerified={currentUser?.isVerified}
               isOnline
               className="border-2 border-white shadow-sm"
             />
-            
           </div>
 
           <div>
-            <h2 className="text-base font-bold leading-snug text-slate-900 flex items-center gap-1.5">Maya Lin <Badge variant="brand-accent" className="h-4 w-4 p-0 flex items-center justify-center rounded-full" title="Verified Alumni"><CheckCircle2 className="h-3 w-3" /></Badge></h2>
-            <p className="text-xs font-medium text-slate-600">Software Engineering (SE)</p>
-            <p className="mt-0.5 text-[11px] text-slate-400">Cohort 17 • Class of &apos;25</p>
+            <h2 className="text-base font-bold leading-snug text-slate-900 flex items-center gap-1.5">
+              {currentUser?.name || 'FPT Member'}
+              {currentUser?.isVerified && (
+                <Badge
+                  variant="brand-accent"
+                  className="h-4 w-4 p-0 flex items-center justify-center rounded-full"
+                  title="Verified Member"
+                >
+                  <CheckCircle2 className="h-3 w-3" />
+                </Badge>
+              )}
+            </h2>
+            <p className="text-xs font-medium text-slate-600">
+              {currentUser?.department || 'Kỹ thuật phần mềm'}
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-400">
+              {currentUser?.cohort ? `Cohort ${currentUser.cohort}` : 'Cộng đồng FPT'} •{' '}
+              {currentUser?.campus || 'Hòa Lạc'}
+            </p>
           </div>
 
           {/* Stats Bar */}

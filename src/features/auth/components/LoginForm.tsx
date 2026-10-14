@@ -21,8 +21,11 @@ import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { useAuthStore } from '@/stores/authStore'
-import { DEMO_USERS, getDemoUserByEmail, type DemoUserConfig } from '@/constants/demoUsers'
+import { DEMO_USERS } from '@/constants/demoUsers'
 import fptLogo from '@/assets/fpt-logo.svg'
+
+import { authService } from '@/services/auth'
+import { normalizeError } from '@/lib/errorHandler'
 
 export const LoginForm: FC = () => {
   const navigate = useNavigate()
@@ -36,20 +39,29 @@ export const LoginForm: FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [selectedDemoKey, setSelectedDemoKey] = useState<string | null>(null)
 
-  const completeLoginWithUser = (user: DemoUserConfig) => {
+  const executeLogin = async (loginEmail: string, loginPass: string) => {
     setIsLoading(true)
     setError(null)
-    setTimeout(() => {
-      const token = `fpt-auth-token-${user.role.toLowerCase()}-${user.userType.toLowerCase()}-${Date.now()}`
-      setAuth({ token, user })
-      setIsLoading(false)
+    try {
+      const res = await authService.login({
+        email: loginEmail,
+        password: loginPass,
+        rememberMe,
+      })
 
-      if (user.role === ROLES.ADMIN || user.role === ROLES.MODERATOR) {
+      setAuth({ token: res.token, user: res.user })
+
+      if (res.user.role === ROLES.ADMIN || res.user.role === ROLES.MODERATOR) {
         navigate(ROUTES.ADMIN.DASHBOARD)
       } else {
         navigate(ROUTES.APP.HOME)
       }
-    }, 350)
+    } catch (err: unknown) {
+      const normalized = normalizeError(err)
+      setError(normalized.message || 'Login failed. Please check your credentials.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleLogin = (e?: FormEvent) => {
@@ -66,50 +78,38 @@ export const LoginForm: FC = () => {
       return
     }
 
-    // Match with known demo account or determine best role
-    const matchedUser = getDemoUserByEmail(email)
-    if (matchedUser) {
-      completeLoginWithUser(matchedUser)
-      return
-    }
-
-    // Default heuristic for custom email login
-    const isMod = email.toLowerCase().includes('mod')
-    const isFaculty = email.toLowerCase().includes('faculty') || email.toLowerCase().includes('fe.edu.vn')
-    const isAlumni = email.toLowerCase().includes('alumni')
-
-    let resolvedUser: DemoUserConfig = DEMO_USERS.STUDENT
-    if (email.toLowerCase().includes('admin')) {
-      resolvedUser = DEMO_USERS.ADMIN
-    } else if (isMod) {
-      resolvedUser = DEMO_USERS.MODERATOR
-    } else if (isFaculty) {
-      resolvedUser = DEMO_USERS.FACULTY
-    } else if (isAlumni) {
-      resolvedUser = DEMO_USERS.ALUMNI
-    }
-
-    completeLoginWithUser({
-      ...resolvedUser,
-      id: `USR-CUSTOM-${Date.now()}`,
-      name: email.split('@')[0] || 'User',
-      email: email.trim(),
-    })
+    executeLogin(email.trim(), password)
   }
 
-  const handleGoogleLogin = () => {
-    completeLoginWithUser(DEMO_USERS.ADMIN)
+  const handleGoogleLogin = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const res = await authService.googleLogin({
+        idToken: 'google-oauth-token-' + Date.now(),
+        email: 'student.trung@fpt.edu.vn',
+        fullName: 'Chí Trung',
+        role: 'Student',
+      })
+      setAuth({ token: res.token, user: res.user })
+      navigate(ROUTES.APP.HOME)
+    } catch (err: unknown) {
+      setError(normalizeError(err).message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSelectDemoActor = (key: keyof typeof DEMO_USERS, autoLogin: boolean = true) => {
     const demoUser = DEMO_USERS[key]
     setSelectedDemoKey(key)
     setEmail(demoUser.email)
-    setPassword('FPTUniversity2026!@#')
+    const pass = demoUser.defaultPassword || '123456'
+    setPassword(pass)
     setError(null)
 
     if (autoLogin) {
-      completeLoginWithUser(demoUser)
+      executeLogin(demoUser.email, pass)
     }
   }
 

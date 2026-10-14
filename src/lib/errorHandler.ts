@@ -30,9 +30,26 @@ export const normalizeError = (error: unknown): AppError => {
   }
 
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as { message?: string; code?: string } | undefined
+    const data = error.response?.data as
+      | { message?: string; code?: string; title?: string; errors?: Record<string, string[]> }
+      | undefined
+
+    let resolvedMessage = data?.message
+
+    // If ProblemDetails contains validation error dictionary, concatenate messages
+    if (!resolvedMessage && data?.errors && typeof data.errors === 'object') {
+      const fieldErrors = Object.values(data.errors).flat()
+      if (fieldErrors.length > 0) {
+        resolvedMessage = fieldErrors.join(' ')
+      }
+    }
+
+    if (!resolvedMessage) {
+      resolvedMessage = data?.title ?? error.message ?? 'An unexpected network error occurred.'
+    }
+
     return new AppError({
-      message: data?.message ?? error.message ?? 'An unexpected network error occurred.',
+      message: resolvedMessage,
       status: error.response?.status,
       code: data?.code ?? error.code,
       details: error.response?.data,

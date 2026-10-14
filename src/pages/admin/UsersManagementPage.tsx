@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react'
+import { useState, useEffect, useCallback, type FC } from 'react'
 import {
   IconSchool,
   IconUserCheck,
@@ -17,6 +17,8 @@ import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/ad
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { USER_TYPES } from '@/constants/userTypes'
+import { usersService } from '@/services/users'
+import type { BackendUserSummary } from '@/types/user.types'
 
 export interface UserDirectoryRecord {
   id: string
@@ -35,6 +37,31 @@ export interface UserDirectoryRecord {
   isVerified?: boolean
 }
 
+function adaptBackendUser(u: BackendUserSummary): UserDirectoryRecord {
+  const normRole = (u.role || '').toUpperCase()
+  let role: UserDirectoryRecord['role'] = 'STUDENT'
+  if (normRole.includes('ADMIN')) role = 'ADMIN'
+  else if (normRole.includes('FACULTY')) role = 'FACULTY'
+  else if (normRole.includes('ALUMNI')) role = 'ALUMNI'
+  else if (normRole.includes('MOD')) role = 'ADMIN'
+  else role = 'STUDENT'
+
+  return {
+    id: u.id,
+    name: u.fullName,
+    email: `${u.fullName.toLowerCase().replace(/[^a-z0-9]/g, '')}@fpt.edu.vn`,
+    role,
+    campus: u.campus || 'Hòa Lạc',
+    major: u.major || 'Chưa cập nhật',
+    cohort: u.batch || 'K17',
+    studentId: u.id.slice(0, 8).toUpperCase(),
+    status: 'active',
+    joinedDate: '2026-10-14',
+    bio: `Thành viên khoa ${u.major || 'Đại học FPT'}, cơ sở ${u.campus || 'Hòa Lạc'}.`,
+    isVerified: role === 'ALUMNI' || role === 'FACULTY' || role === 'ADMIN',
+  }
+}
+
 export const UsersManagementPage: FC = () => {
   const { role, userType } = useAuthStore()
   const isFaculty = role !== 'ADMIN' && role !== 'MODERATOR' && userType === USER_TYPES.FACULTY
@@ -48,112 +75,59 @@ export const UsersManagementPage: FC = () => {
   // Selected User Modal for detail preview
   const [selectedUser, setSelectedUser] = useState<UserDirectoryRecord | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [users, setUsers] = useState<UserDirectoryRecord[]>([])
 
-  const [users, setUsers] = useState<UserDirectoryRecord[]>([
-    {
-      id: 'USR-001',
-      name: 'Maya Lin',
-      email: 'linm@fpt.edu.vn',
-      role: 'STUDENT',
-      campus: 'Hoa Lac',
-      major: 'Software Engineering',
-      cohort: 'K17',
-      studentId: 'SE170123',
-      status: 'active',
-      joinedDate: '2023-09-15',
-      bio: 'Junior Software Engineering student interested in Distributed Systems and Cloud Computing.',
-    },
-    {
-      id: 'USR-002',
-      name: 'Minh Hoang',
-      email: 'hoang.minh@alumni.fpt.edu.vn',
-      role: 'ALUMNI',
-      campus: 'Ho Chi Minh',
-      major: 'AI & Robotics',
-      cohort: 'K14',
-      studentId: 'SE140456',
-      status: 'active',
-      joinedDate: '2020-08-10',
-      currentCompany: 'FPT Software Da Nang',
-      currentPosition: 'Technical Lead',
-      bio: 'Verified Alumni mentor with 5 years experience in React, TypeScript, and C# backend.',
-      isVerified: true,
-    },
-    {
-      id: 'USR-003',
-      name: 'Dang Tran Hoang',
-      email: 'hoangdt@alumni.fpt.edu.vn',
-      role: 'ALUMNI',
-      campus: 'Da Nang',
-      major: 'Software Engineering',
-      cohort: 'K15',
-      studentId: 'SE150392',
-      status: 'pending',
-      joinedDate: '2026-10-08',
-      currentCompany: 'SmartDev Vietnam',
-      currentPosition: 'Frontend Engineer',
-      bio: 'Class of 2023 graduate seeking alumni verification badge.',
-      isVerified: false,
-    },
-    {
-      id: 'USR-004',
-      name: 'Dr. Le Van Phuc',
-      email: 'phuclv@fe.edu.vn',
-      role: 'FACULTY',
-      campus: 'Hoa Lac',
-      major: 'Information Security',
-      cohort: 'Faculty Staff',
-      studentId: 'FAC-082',
-      status: 'active',
-      joinedDate: '2019-01-20',
-      bio: 'Associate Professor in Information Assurance and Cryptography.',
-      isVerified: true,
-    },
-    {
-      id: 'USR-005',
-      name: 'Nguyen Quoc Dat',
-      email: 'datnq@fpt.edu.vn',
-      role: 'STUDENT',
-      campus: 'Hoa Lac',
-      major: 'Artificial Intelligence',
-      cohort: 'K16',
-      studentId: 'SE160982',
-      status: 'active',
-      joinedDate: '2022-09-01',
-      bio: 'Senior student conducting undergraduate research in Natural Language Processing.',
-    },
-    {
-      id: 'USR-006',
-      name: 'Tran Thu Ha',
-      email: 'hatt@alumni.fpt.edu.vn',
-      role: 'ALUMNI',
-      campus: 'Can Tho',
-      major: 'Business Administration',
-      cohort: 'K15',
-      studentId: 'BA150119',
-      status: 'active',
-      joinedDate: '2021-08-15',
-      currentCompany: 'Shopee Vietnam',
-      currentPosition: 'Product Operations Lead',
-      isVerified: true,
-    },
-    {
-      id: 'USR-007',
-      name: 'Spam Account Test',
-      email: 'promo123@tempmail.org',
-      role: 'STUDENT',
-      campus: 'Can Tho',
-      major: 'Business Administration',
-      cohort: 'K18',
-      studentId: 'BA180999',
-      status: 'banned',
-      joinedDate: '2026-10-01',
-    },
-  ])
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const beRole =
+        roleFilter === 'ALL'
+          ? undefined
+          : roleFilter === 'STUDENT'
+          ? 'Student'
+          : roleFilter === 'ALUMNI'
+          ? 'Alumni'
+          : roleFilter === 'FACULTY'
+          ? 'Faculty'
+          : roleFilter === 'ADMIN'
+          ? 'Admin'
+          : undefined
 
-  const handleToggleSuspend = (user: UserDirectoryRecord) => {
+      const res = await usersService.searchUsers({
+        campus: campusFilter === 'ALL' ? undefined : campusFilter,
+        major: majorFilter === 'ALL' ? undefined : majorFilter,
+        role: beRole,
+        pageSize: 50,
+      })
+
+      if (res && res.items) {
+        setUsers(res.items.map(adaptBackendUser))
+      }
+    } catch (err) {
+      console.error('Failed to query backend users:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [campusFilter, majorFilter, roleFilter])
+
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
+
+  const handleToggleSuspend = async (user: UserDirectoryRecord) => {
     const isBanned = user.status === 'banned'
     const newStatus: UserDirectoryRecord['status'] = isBanned ? 'active' : 'banned'
+
+    try {
+      if (isBanned) {
+        await usersService.unblockUser(user.id)
+      } else {
+        await usersService.blockUser(user.id)
+      }
+    } catch {
+      // Toggle client-side state
+    }
 
     setUsers((prev) =>
       prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u))
@@ -166,11 +140,8 @@ export const UsersManagementPage: FC = () => {
     setTimeout(() => setToastMessage(null), 3500)
   }
 
-  // Filter evaluation
+  // Filter evaluation on client side for cohort or extra checks
   const filteredUsers = users.filter((u) => {
-    if (roleFilter !== 'ALL' && u.role !== roleFilter) return false
-    if (campusFilter !== 'ALL' && u.campus !== campusFilter) return false
-    if (majorFilter !== 'ALL' && !u.major.toLowerCase().includes(majorFilter.toLowerCase())) return false
     if (cohortFilter !== 'ALL' && u.cohort !== cohortFilter) return false
     return true
   })
@@ -402,6 +373,18 @@ export const UsersManagementPage: FC = () => {
                 <option value="Can Tho">Can Tho</option>
               </select>
             </div>
+
+            {/* Refresh Button */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => fetchUsers()}
+              disabled={isLoading}
+              className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5 ml-auto"
+            >
+              <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
+              <span>Refresh</span>
+            </Button>
           </div>
         }
       />

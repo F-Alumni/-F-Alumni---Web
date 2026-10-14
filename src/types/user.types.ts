@@ -28,6 +28,79 @@ export interface UserSummary {
   cohort?: string
 }
 
+export interface BackendUserSummary {
+  id: string
+  fullName: string
+  avatarUrl: string | null
+  campus: string | null
+  major: string | null
+  batch: string | null
+  role: string
+}
+
+export interface BackendPrivacySetting {
+  showEmail: boolean
+  showCampus: boolean
+  showMajor: boolean
+  showBatch: boolean
+  showBio: boolean
+  showGoogleCalendar: boolean
+}
+
+export interface BackendMyProfileResponse {
+  id: string
+  email: string
+  fullName: string
+  avatarUrl: string | null
+  campus: string | null
+  major: string | null
+  batch: string | null
+  bio: string | null
+  googleCalendarUrl: string | null
+  role: string
+  isEmailVerified: boolean
+  createdAt: string
+  privacySetting: BackendPrivacySetting
+}
+
+export interface BackendPublicProfileResponse {
+  id: string
+  fullName: string
+  avatarUrl: string | null
+  campus: string | null
+  major: string | null
+  batch: string | null
+  bio: string | null
+  googleCalendarUrl: string | null
+  role: string
+  email: string | null
+}
+
+export interface UpdateProfilePayload {
+  fullName: string
+  avatarUrl?: string | null
+  campus?: string | null
+  major?: string | null
+  batch?: string | null
+  bio?: string | null
+  googleCalendarUrl?: string | null
+}
+
+export interface BackendBlockedUser {
+  blockedUserId: string
+  fullName: string
+  avatarUrl: string | null
+  blockedAt: string
+}
+
+export interface BackendPagedResult<T> {
+  items: T[]
+  totalCount: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 export interface UserProfile extends UserSummary {
   bio?: string
   graduationYear?: number
@@ -38,8 +111,10 @@ export interface UserProfile extends UserSummary {
   currentPosition?: string
   industry?: string
   skills?: string[]
+  googleCalendarUrl?: string
   createdAt: string
-  updatedAt: string
+  updatedAt?: string
+  privacySetting?: BackendPrivacySetting
 }
 
 export interface UserRecord extends UserSummary {
@@ -53,11 +128,14 @@ export interface UserRecord extends UserSummary {
 export interface GetUsersParams {
   page?: number
   limit?: number
+  pageSize?: number
   search?: string
+  keyword?: string
   role?: Role | 'ALL' | string
   campus?: CampusCode | string | 'ALL'
   status?: UserStatus | 'ALL' | string
   userType?: UserType | 'ALL' | string
+  major?: string
 }
 
 export interface UpdateUserStatusPayload {
@@ -67,13 +145,16 @@ export interface UpdateUserStatusPayload {
 
 export interface SearchDirectoryParams {
   query?: string
+  keyword?: string
   campus?: CampusCode | string
   department?: string
   major?: string
   cohort?: string
   userType?: UserType
+  role?: string
   page?: number
   limit?: number
+  pageSize?: number
 }
 
 export interface DirectoryUser extends UserSummary {
