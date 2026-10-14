@@ -10,7 +10,6 @@ import {
   IconLoader2,
   IconAlertCircle,
   IconSparkles,
-  IconCheck,
   IconSchool,
   IconUserCheck,
   IconBook,
@@ -128,16 +127,16 @@ export const LoginForm: FC = () => {
       subtitle: 'System Admin',
       email: DEMO_USERS.ADMIN.email,
       icon: IconShield,
-      badgeColor: 'bg-purple-100 text-purple-800 border-purple-200',
+      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100',
       targetPath: '/admin/dashboard',
     },
     {
       key: 'MODERATOR',
       title: 'Moderator',
-      subtitle: 'Content & Safety',
+      subtitle: 'Safety & Content',
       email: DEMO_USERS.MODERATOR.email,
       icon: IconFlag,
-      badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',
+      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100',
       targetPath: '/admin/dashboard',
     },
     {
@@ -146,66 +145,66 @@ export const LoginForm: FC = () => {
       subtitle: 'Academic Staff',
       email: DEMO_USERS.FACULTY.email,
       icon: IconBook,
-      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100',
       targetPath: '/app/home',
     },
     {
       key: 'STUDENT',
       title: 'Student',
-      subtitle: 'K17 Enrolled',
+      subtitle: 'Enrolled K17',
       email: DEMO_USERS.STUDENT.email,
       icon: IconSchool,
-      badgeColor: 'bg-sky-100 text-sky-800 border-sky-200',
+      badgeColor: 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100',
       targetPath: '/app/home',
     },
     {
       key: 'ALUMNI',
       title: 'Alumni',
-      subtitle: 'K14 Verified',
+      subtitle: 'Verified K14',
       email: DEMO_USERS.ALUMNI.email,
       icon: IconUserCheck,
-      badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100',
       targetPath: '/app/home',
     },
   ]
 
   return (
-    <div className="w-full space-y-5 animate-in fade-in duration-300">
+    <div className="w-full space-y-3 sm:space-y-3.5 animate-in fade-in duration-300">
       {/* 1. Brand Identity & Header */}
-      <div className="space-y-2.5">
+      <div className="space-y-1.5">
         <div className="inline-flex items-center gap-2">
-          <img src={fptLogo} alt="FPT Education Logo" className="h-8 w-auto object-contain" />
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
-            <IconShieldCheck size={14} stroke={2} />
+          <img src={fptLogo} alt="FPT Education Logo" className="h-7 w-auto object-contain" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
+            <IconShieldCheck size={13} stroke={2} />
             Alumni Connect Portal
           </span>
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
             Sign in to Alumni Connect
           </h1>
-          <p className="mt-1 text-xs text-slate-500 leading-normal">
-            Select a role below for fast demo testing, or sign in with your official university credentials.
+          <p className="text-[11px] sm:text-xs text-slate-500 leading-normal">
+            Select a role below for fast demo testing, or sign in with your university credentials.
           </p>
         </div>
       </div>
 
-      {/* 2. Quick Demo Role Selection (All 5 Platform Actors) */}
-      <div className="rounded-2xl border border-brand-primary/20 bg-gradient-to-br from-orange-50/60 to-slate-50 p-3.5 space-y-2.5">
+      {/* 2. Quick Demo Role Selection (All 5 Platform Actors - Compact 1-Row Grid) */}
+      <div className="rounded-xl border border-brand-primary/20 bg-orange-50/40 p-2 sm:p-2.5 space-y-1.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <IconSparkles size={16} stroke={2} className="text-brand-primary shrink-0" />
-            <span className="text-xs font-bold text-slate-800">
-              Quick Demo Role Testing
+          <div className="flex items-center gap-1.5">
+            <IconSparkles size={14} stroke={2} className="text-brand-primary shrink-0" />
+            <span className="text-[11px] font-bold text-slate-800">
+              Quick Demo 1-Click Sign In
             </span>
           </div>
-          <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
-            1-Click Sign In
+          <span className="text-[10px] font-medium text-slate-400">
+            Password: 123456
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
           {demoRolesList.map((demo) => {
             const Icon = demo.icon
             const isSelected = selectedDemoKey === demo.key
@@ -216,24 +215,15 @@ export const LoginForm: FC = () => {
                 onClick={() => handleSelectDemoActor(demo.key, true)}
                 disabled={isLoading}
                 title={`Sign in immediately as ${demo.title} (${demo.email})`}
-                className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all ${
+                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border text-center transition-all ${
                   isSelected
-                    ? 'border-brand-primary bg-white shadow-xs ring-2 ring-brand-primary/20'
-                    : 'border-slate-200 bg-white/90 hover:border-brand-primary/40 hover:bg-white hover:shadow-xs'
+                    ? 'border-brand-primary bg-white shadow-xs ring-1.5 ring-brand-primary'
+                    : `border-slate-200 bg-white ${demo.badgeColor}`
                 }`}
               >
-                <div className="flex items-center justify-between w-full">
-                  <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold border ${demo.badgeColor}`}>
-                    <Icon size={12} stroke={2} />
-                    {demo.title}
-                  </span>
-                  {isSelected && <IconCheck size={14} className="text-brand-primary" stroke={2.5} />}
-                </div>
-                <span className="mt-1 text-[11px] font-semibold text-slate-900 leading-tight">
-                  {demo.subtitle}
-                </span>
-                <span className="text-[10px] text-slate-400 truncate max-w-full">
-                  {demo.email.split('@')[0]}
+                <Icon size={15} stroke={2} className="shrink-0 mb-0.5" />
+                <span className="text-[10px] sm:text-[11px] font-bold leading-tight truncate w-full">
+                  {demo.title}
                 </span>
               </button>
             )
@@ -247,13 +237,13 @@ export const LoginForm: FC = () => {
           type="button"
           onClick={handleGoogleLogin}
           disabled={isLoading}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {/* Official Google Multi-color Logo */}
           <svg
-            className="w-5 h-5 shrink-0"
-            width="20"
-            height="20"
+            className="w-4 h-4 shrink-0"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
@@ -279,12 +269,12 @@ export const LoginForm: FC = () => {
       </div>
 
       {/* 4. Divider */}
-      <div className="relative">
+      <div className="relative my-0.5">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-slate-200" />
         </div>
-        <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
-          <span className="bg-white px-3 text-slate-400">
+        <div className="relative flex justify-center text-[9px] uppercase font-bold tracking-wider">
+          <span className="bg-white px-2.5 text-slate-400">
             Or sign in with email & password
           </span>
         </div>
@@ -293,29 +283,29 @@ export const LoginForm: FC = () => {
       {/* 5. Error Alert */}
       {error && (
         <div
-          className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 animate-in fade-in"
+          className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700 animate-in fade-in"
           role="alert"
         >
-          <IconAlertCircle size={16} stroke={2} className="shrink-0 mt-0.5 text-rose-600" />
+          <IconAlertCircle size={15} stroke={2} className="shrink-0 mt-0.5 text-rose-600" />
           <div className="font-medium leading-normal">{error}</div>
         </div>
       )}
 
       {/* 6. Authentication Form */}
-      <form onSubmit={handleLogin} className="space-y-3.5">
+      <form onSubmit={handleLogin} className="space-y-2.5">
         {/* Email Field */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label htmlFor="staff-email" className="text-xs font-semibold text-slate-700">
+            <label htmlFor="staff-email" className="text-[11px] font-semibold text-slate-700">
               University Email
             </label>
-            <span className="text-[11px] font-medium text-slate-400">
+            <span className="text-[10px] font-medium text-slate-400">
               @fpt.edu.vn or @fe.edu.vn
             </span>
           </div>
           <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-              <IconMail size={18} stroke={1.8} />
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <IconMail size={16} stroke={1.8} />
             </div>
             <input
               id="staff-email"
@@ -326,27 +316,27 @@ export const LoginForm: FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@fpt.edu.vn"
               required
-              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-10 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 pl-9 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary/20 transition-all"
             />
           </div>
         </div>
 
         {/* Password Field */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label htmlFor="staff-password" className="text-xs font-semibold text-slate-700">
+            <label htmlFor="staff-password" className="text-[11px] font-semibold text-slate-700">
               Password
             </label>
             <Link
               to={ROUTES.AUTH.FORGOT_PASSWORD}
-              className="text-xs font-semibold text-brand-secondary hover:text-brand-primary transition-colors focus:outline-none focus:underline"
+              className="text-[11px] font-semibold text-brand-secondary hover:text-brand-primary transition-colors focus:outline-none focus:underline"
             >
               Forgot password?
             </Link>
           </div>
           <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-              <IconLock size={18} stroke={1.8} />
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <IconLock size={16} stroke={1.8} />
             </div>
             <input
               id="staff-password"
@@ -357,15 +347,15 @@ export const LoginForm: FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your security password"
               required
-              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 pl-9 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary/20 transition-all"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
             >
-              {showPassword ? <IconEyeOff size={18} stroke={1.8} /> : <IconEye size={18} stroke={1.8} />}
+              {showPassword ? <IconEyeOff size={16} stroke={1.8} /> : <IconEye size={16} stroke={1.8} />}
             </button>
           </div>
         </div>
@@ -378,9 +368,9 @@ export const LoginForm: FC = () => {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary focus:ring-offset-0"
+              className="h-3.5 w-3.5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary focus:ring-offset-0"
             />
-            <span className="text-xs text-slate-600">Remember this session on device</span>
+            <span className="text-[11px] text-slate-600">Remember this session on device</span>
           </label>
         </div>
 
@@ -388,29 +378,29 @@ export const LoginForm: FC = () => {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>
-              <IconLoader2 size={18} className="animate-spin" />
+              <IconLoader2 size={16} className="animate-spin" />
               <span>Signing in...</span>
             </>
           ) : (
             <>
               <span>Sign in to Account</span>
-              <IconArrowRight size={18} stroke={2} />
+              <IconArrowRight size={16} stroke={2} />
             </>
           )}
         </Button>
       </form>
 
       {/* 7. Minimal Footer & Security Notice */}
-      <div className="pt-2 text-center space-y-2.5">
-        <p className="text-[11px] text-slate-400 leading-relaxed max-w-sm mx-auto">
+      <div className="pt-1 text-center space-y-1.5">
+        <p className="text-[10px] text-slate-400 leading-tight max-w-sm mx-auto">
           FPT University Alumni Community Platform. All session operations are secured under university data governance regulations.
         </p>
 
-        <div className="flex items-center justify-center gap-4 text-[11px] font-medium text-slate-400 pt-1.5 border-t border-slate-100">
+        <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-slate-400 pt-1 border-t border-slate-100">
           <a href="#" className="hover:text-slate-600 transition-colors">IT Helpdesk</a>
           <span className="text-slate-300">•</span>
           <a href="#" className="hover:text-slate-600 transition-colors">Security Policy</a>

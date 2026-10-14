@@ -8,16 +8,16 @@ import { IconShieldCheck, IconSchool, IconUsers, IconAward } from '@tabler/icons
  */
 export const AuthLayout: FC = () => {
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen md:h-screen md:max-h-screen md:overflow-hidden bg-white">
       {/* Left Column: Form Area */}
-      <div className="flex w-full flex-col justify-center px-6 py-8 md:w-1/2 lg:px-12 xl:px-16 overflow-y-auto">
-        <main className="mx-auto w-full max-w-[440px] my-auto py-4">
+      <div className="flex w-full flex-col justify-center px-4 py-3 sm:px-6 md:w-1/2 lg:px-8 xl:px-12 overflow-y-auto">
+        <main className="mx-auto w-full max-w-[430px] my-auto py-2">
           <Outlet />
         </main>
       </div>
 
       {/* Right Column: Institutional Branding & Governance */}
-      <div className="relative hidden w-1/2 overflow-hidden bg-slate-900 md:block">
+      <div className="relative hidden w-1/2 h-full overflow-hidden bg-slate-900 md:block">
         <img
           src="/images/auth-bg.jpg"
           alt="FPT University Innovation & Administration Center"
@@ -33,7 +33,7 @@ export const AuthLayout: FC = () => {
         />
 
         {/* Content Overlay */}
-        <div className="absolute inset-0 flex flex-col justify-between p-6 lg:p-10 xl:p-12 text-white">
+        <div className="absolute inset-0 flex flex-col justify-between p-6 lg:p-8 xl:p-10 text-white">
           {/* Top Tag */}
           <div className="flex items-center space-x-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-md border border-white/20">
