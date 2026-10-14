@@ -10,7 +10,7 @@ export const AuthLayout: FC = () => {
   return (
     <div className="flex min-h-screen md:h-screen md:max-h-screen md:overflow-hidden bg-white">
       {/* Left Column: Form Area */}
-      <div className="flex w-full flex-col justify-center px-4 py-3 sm:px-6 md:w-1/2 lg:px-8 xl:px-12 overflow-y-auto">
+      <div className="flex w-full flex-col px-4 py-4 sm:px-6 md:w-1/2 lg:px-8 xl:px-12 overflow-y-auto">
         <main className="mx-auto w-full max-w-[430px] my-auto py-2">
           <Outlet />
         </main>

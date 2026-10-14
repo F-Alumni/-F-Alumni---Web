@@ -171,49 +171,49 @@ export const RegisterForm: FC = () => {
   // Success view (Step 4)
   if (step === 4) {
     return (
-      <div className="w-full space-y-8 py-4 text-center animate-in fade-in zoom-in-95 duration-300">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 ring-8 ring-emerald-50/50">
-          <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-bounce" />
+      <div className="w-full space-y-4 py-2 text-center animate-in fade-in zoom-in-95 duration-300">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 ring-6 ring-emerald-50/50">
+          <CheckCircle2 className="h-8 w-8 text-emerald-600 animate-bounce" />
         </div>
 
-        <div className="space-y-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-3.5 py-1 text-xs font-semibold text-brand-accent">
+        <div className="space-y-1.5">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-3 py-0.5 text-[11px] font-semibold text-brand-accent">
             <Sparkles className="h-3.5 w-3.5" />
             Registration Successful!
           </span>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
             Welcome to the Network, {fullName.split(' ')[0] || 'FPTer'}!
           </h1>
-          <p className="text-sm text-slate-600 max-w-sm mx-auto leading-relaxed">
+          <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
             Your {accountType === 'STUDENT' ? 'Student' : 'Alumni'} profile has been initialized for{' '}
             <span className="font-semibold text-slate-800">{major.split(' (')[0]}</span> at{' '}
             <span className="font-semibold text-slate-800">{campus}</span>.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left space-y-2.5 text-xs text-slate-600">
-          <div className="flex justify-between py-1 border-b border-slate-200">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-left space-y-2 text-xs text-slate-600">
+          <div className="flex justify-between py-0.5 border-b border-slate-200">
             <span className="text-slate-400">Account Type</span>
             <span className="font-semibold text-slate-800">
               {accountType === 'STUDENT' ? 'Current Student' : 'Verified Alumni'}
             </span>
           </div>
-          <div className="flex justify-between py-1 border-b border-slate-200">
+          <div className="flex justify-between py-0.5 border-b border-slate-200">
             <span className="text-slate-400">Campus</span>
             <span className="font-semibold text-slate-800">{campus}</span>
           </div>
-          <div className="flex justify-between py-1">
+          <div className="flex justify-between py-0.5">
             <span className="text-slate-400">Email</span>
             <span className="font-semibold text-slate-800">{email}</span>
           </div>
         </div>
 
-        <div className="space-y-3 pt-2">
+        <div className="space-y-2 pt-1">
           <Button
             onClick={() => {
               navigate(ROUTES.APP.HOME)
             }}
-            className="w-full py-6 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-base font-semibold text-white shadow-md shadow-brand-secondary/20"
+            className="w-full h-10 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-xs sm:text-sm font-bold text-white shadow-xs"
           >
             Enter Community Feed &rarr;
           </Button>
@@ -221,9 +221,9 @@ export const RegisterForm: FC = () => {
           <Button
             variant="outline"
             onClick={() => navigate(ROUTES.AUTH.LOGIN)}
-            className="w-full py-5 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50"
+            className="w-full h-10 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-semibold"
           >
-            Sign In with new credentials
+            Sign In with credentials
           </Button>
         </div>
       </div>
@@ -231,102 +231,102 @@ export const RegisterForm: FC = () => {
   }
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-3 sm:space-y-3.5 animate-in fade-in duration-300">
       {/* Brand Header */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <Link to={ROUTES.AUTH.LOGIN} className="inline-flex items-center space-x-2">
-            <img src={fptLogo} alt="FPT Logo" className="h-8 w-auto object-contain" />
-            <span className="text-xs font-bold tracking-wider text-slate-400 uppercase">
-              Alumni Network
+          <Link to={ROUTES.AUTH.LOGIN} className="inline-flex items-center gap-2">
+            <img src={fptLogo} alt="FPT Logo" className="h-7 w-auto object-contain" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
+              Alumni Connect
             </span>
           </Link>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600">
             Step {step} of 3
           </span>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-          {step === 1 && 'Create your account'}
-          {step === 2 && 'Academic profile'}
-          {step === 3 && 'Choose your role'}
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500">
-          {step === 1 && 'Join 40,000+ FPT students and alumni connecting worldwide.'}
-          {step === 2 && 'Tell us your campus and field of study to personalize your network.'}
-          {step === 3 && 'Select whether you are a currently enrolled student or graduated alumni.'}
-        </p>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+            {step === 1 && 'Create your account'}
+            {step === 2 && 'Academic profile'}
+            {step === 3 && 'Choose your role'}
+          </h1>
+          <p className="text-[11px] sm:text-xs text-slate-500">
+            {step === 1 && 'Join 40,000+ FPT students and alumni connecting worldwide.'}
+            {step === 2 && 'Tell us your campus and field of study to personalize your network.'}
+            {step === 3 && 'Select whether you are a currently enrolled student or graduated alumni.'}
+          </p>
+        </div>
       </div>
 
       {/* Stepper Progress Bar */}
-      <div className="space-y-2">
-        <div className="grid grid-cols-3 gap-2 text-center text-xs font-medium">
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            className={`flex items-center justify-center gap-1.5 py-1.5 border-b-2 transition-all ${
-              step >= 1
-                ? 'border-brand-secondary font-bold text-brand-secondary'
-                : 'border-slate-200 text-slate-400'
-            }`}
-          >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-secondary text-[10px] text-white">
-              1
-            </span>
-            <span className="hidden sm:inline">Basic Info</span>
-          </button>
+      <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-medium border-b border-slate-200 pb-1.5">
+        <button
+          type="button"
+          onClick={() => setStep(1)}
+          className={`flex items-center justify-center gap-1 py-1 rounded-md transition-all ${
+            step >= 1
+              ? 'bg-brand-secondary/10 font-bold text-brand-secondary'
+              : 'text-slate-400'
+          }`}
+        >
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-secondary text-[9px] text-white">
+            1
+          </span>
+          <span>Basic Info</span>
+        </button>
 
-          <button
-            type="button"
-            onClick={() => fullName && email && password && setStep(2)}
-            disabled={step < 2}
-            className={`flex items-center justify-center gap-1.5 py-1.5 border-b-2 transition-all ${
-              step >= 2
-                ? 'border-brand-secondary font-bold text-brand-secondary'
-                : 'border-slate-200 text-slate-400'
+        <button
+          type="button"
+          onClick={() => fullName && email && password && setStep(2)}
+          disabled={step < 2}
+          className={`flex items-center justify-center gap-1 py-1 rounded-md transition-all ${
+            step >= 2
+              ? 'bg-brand-secondary/10 font-bold text-brand-secondary'
+              : 'text-slate-400'
+          }`}
+        >
+          <span
+            className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] ${
+              step >= 2 ? 'bg-brand-secondary text-white' : 'bg-slate-200 text-slate-600'
             }`}
           >
-            <span
-              className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
-                step >= 2 ? 'bg-brand-secondary text-white' : 'bg-slate-200 text-slate-600'
-              }`}
-            >
-              2
-            </span>
-            <span className="hidden sm:inline">University</span>
-          </button>
+            2
+          </span>
+          <span>University</span>
+        </button>
 
-          <button
-            type="button"
-            disabled={step < 3}
-            className={`flex items-center justify-center gap-1.5 py-1.5 border-b-2 transition-all ${
-              step >= 3
-                ? 'border-brand-secondary font-bold text-brand-secondary'
-                : 'border-slate-200 text-slate-400'
+        <button
+          type="button"
+          disabled={step < 3}
+          className={`flex items-center justify-center gap-1 py-1 rounded-md transition-all ${
+            step >= 3
+              ? 'bg-brand-secondary/10 font-bold text-brand-secondary'
+              : 'text-slate-400'
+          }`}
+        >
+          <span
+            className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] ${
+              step >= 3 ? 'bg-brand-secondary text-white' : 'bg-slate-200 text-slate-600'
             }`}
           >
-            <span
-              className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
-                step >= 3 ? 'bg-brand-secondary text-white' : 'bg-slate-200 text-slate-600'
-              }`}
-            >
-              3
-            </span>
-            <span className="hidden sm:inline">Account Type</span>
-          </button>
-        </div>
+            3
+          </span>
+          <span>Account Type</span>
+        </button>
       </div>
 
       {/* Error Alert */}
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700 animate-in fade-in">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 animate-in fade-in">
           {error}
         </div>
       )}
 
       {/* STEP 1: Basic Information */}
       {step === 1 && (
-        <form onSubmit={handleStep1Next} className="space-y-4">
+        <form onSubmit={handleStep1Next} className="space-y-2.5">
           {/* Google Quick Registration */}
           <button
             type="button"
@@ -336,9 +336,9 @@ export const RegisterForm: FC = () => {
               setPassword('FPTalumni2026!')
               setConfirmPassword('FPTalumni2026!')
             }}
-            className="flex w-full items-center justify-center space-x-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs sm:text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:ring-offset-2"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus:outline-none"
           >
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -359,71 +359,71 @@ export const RegisterForm: FC = () => {
             <span>Auto-fill with Google SSO</span>
           </button>
 
-          <div className="relative">
+          <div className="relative my-0.5">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-slate-200" />
             </div>
-            <div className="relative flex justify-center text-[11px] uppercase">
-              <span className="bg-white px-3 font-semibold text-slate-400">
+            <div className="relative flex justify-center text-[9px] uppercase font-bold tracking-wider">
+              <span className="bg-white px-2.5 text-slate-400">
                 Or fill details below
               </span>
             </div>
           </div>
 
           {/* Full Name */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">FULL NAME</label>
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-700">FULL NAME</label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <User className="h-5 w-5" />
+                <User size={16} stroke={1.8} />
               </div>
               <input
                 type="text"
                 placeholder="e.g. Nguyen Van An"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-3 text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary transition-colors"
+                className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 pl-9 pr-3 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
                 required
               />
             </div>
           </div>
 
           {/* Institutional Email */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700">EMAIL ADDRESS</label>
-              <span className="text-[11px] font-medium text-brand-secondary">
+              <label className="text-[11px] font-semibold text-slate-700">EMAIL ADDRESS</label>
+              <span className="text-[10px] font-medium text-brand-secondary">
                 @fpt.edu.vn recommended
               </span>
             </div>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Mail className="h-5 w-5" />
+                <Mail size={16} stroke={1.8} />
               </div>
               <input
                 type="email"
                 placeholder="student@fpt.edu.vn or personal email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-3 text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary transition-colors"
+                className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 pl-9 pr-3 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
                 required
               />
             </div>
           </div>
 
           {/* Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">CREATE PASSWORD</label>
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-700">CREATE PASSWORD</label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Lock className="h-5 w-5" />
+                <Lock size={16} stroke={1.8} />
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="At least 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary transition-colors"
+                className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 pl-9 pr-9 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
                 required
               />
               <button
@@ -431,52 +431,52 @@ export const RegisterForm: FC = () => {
                 className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showPassword ? <EyeOff size={16} stroke={1.8} /> : <Eye size={16} stroke={1.8} />}
               </button>
             </div>
 
             {/* Strength meter */}
             {password && (
-              <div className="space-y-1 pt-1">
-                <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+              <div className="space-y-0.5 pt-0.5">
+                <div className="flex h-1 w-full overflow-hidden rounded-full bg-slate-200">
                   <div
                     className={`h-full transition-all duration-300 ${strength.color}`}
                     style={{ width: `${strength.score}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] text-slate-400">
+                <div className="flex justify-between text-[9px] text-slate-400">
                   <span>Strength: {strength.label}</span>
-                  <span>Use letters, numbers & symbols</span>
+                  <span>Letters, numbers & symbols</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Confirm Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">CONFIRM PASSWORD</label>
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-700">CONFIRM PASSWORD</label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Lock className="h-5 w-5" />
+                <Lock size={16} stroke={1.8} />
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Re-enter password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-3 text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary transition-colors"
+                className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 pl-9 pr-3 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
               />
             </div>
           </div>
 
           {/* Step 1 Actions */}
-          <div className="pt-2">
+          <div className="pt-1">
             <Button
               type="submit"
-              className="w-full py-6 rounded-xl bg-brand-secondary hover:bg-[#004e8a] text-base font-semibold text-white shadow-md shadow-brand-secondary/20 transition-all flex items-center justify-center gap-2"
+              className="w-full h-10 rounded-xl bg-brand-secondary hover:bg-[#004e8a] text-xs sm:text-sm font-bold text-white shadow-xs transition-all flex items-center justify-center gap-2"
             >
               <span>Continue to Academic Info</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight size={16} stroke={2} />
             </Button>
           </div>
         </form>
@@ -484,17 +484,17 @@ export const RegisterForm: FC = () => {
 
       {/* STEP 2: University Information */}
       {step === 2 && (
-        <form onSubmit={handleStep2Next} className="space-y-4">
+        <form onSubmit={handleStep2Next} className="space-y-2.5">
           {/* Campus */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Building2 className="h-4 w-4 text-brand-secondary" />
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
+              <Building2 size={15} stroke={1.8} className="text-brand-secondary" />
               CAMPUS
             </label>
             <select
               value={campus}
               onChange={(e) => setCampus(e.target.value)}
-              className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 px-3 text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary transition-colors"
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 px-3 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
             >
               {campuses.map((c) => (
                 <option key={c} value={c}>
@@ -505,15 +505,15 @@ export const RegisterForm: FC = () => {
           </div>
 
           {/* Major */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <BookOpen className="h-4 w-4 text-brand-secondary" />
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
+              <BookOpen size={15} stroke={1.8} className="text-brand-secondary" />
               MAJOR / FIELD OF STUDY
             </label>
             <select
               value={major}
               onChange={(e) => setMajor(e.target.value)}
-              className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 px-3 text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary transition-colors"
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 px-3 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
             >
               {majors.map((m) => (
                 <option key={m} value={m}>
@@ -524,15 +524,15 @@ export const RegisterForm: FC = () => {
           </div>
 
           {/* Graduation Year */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-brand-secondary" />
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
+              <Calendar size={15} stroke={1.8} className="text-brand-secondary" />
               GRADUATION YEAR (OR EXPECTED)
             </label>
             <select
               value={gradYear}
               onChange={(e) => setGradYear(e.target.value)}
-              className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 px-3 text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary transition-colors"
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 px-3 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
             >
               {gradYears.map((y) => (
                 <option key={y} value={y}>
@@ -543,37 +543,37 @@ export const RegisterForm: FC = () => {
           </div>
 
           {/* Student ID / Alumni Code */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700">STUDENT ID (OPTIONAL)</label>
-              <span className="text-[11px] text-slate-400">For fast-track verification</span>
+              <label className="text-[11px] font-semibold text-slate-700">STUDENT ID (OPTIONAL)</label>
+              <span className="text-[10px] text-slate-400">For fast-track verification</span>
             </div>
             <input
               type="text"
               placeholder="e.g. SE160123"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 px-3 text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary transition-colors"
+              className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 px-3 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
             />
           </div>
 
           {/* Step 2 Actions */}
-          <div className="flex items-center gap-3 pt-3">
+          <div className="flex items-center gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setStep(1)}
-              className="w-1/3 py-6 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5"
+              className="w-1/3 h-10 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1 text-xs sm:text-sm font-semibold"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft size={16} stroke={1.8} />
               <span>Back</span>
             </Button>
             <Button
               type="submit"
-              className="w-2/3 py-6 rounded-xl bg-brand-secondary hover:bg-[#004e8a] text-base font-semibold text-white shadow-md shadow-brand-secondary/20 flex items-center justify-center gap-2"
+              className="w-2/3 h-10 rounded-xl bg-brand-secondary hover:bg-[#004e8a] text-xs sm:text-sm font-bold text-white shadow-xs flex items-center justify-center gap-1.5"
             >
               <span>Continue</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight size={16} stroke={2} />
             </Button>
           </div>
         </form>
@@ -581,43 +581,42 @@ export const RegisterForm: FC = () => {
 
       {/* STEP 3: Account Type & Finalize */}
       {step === 3 && (
-        <form onSubmit={handleCompleteRegistration} className="space-y-5">
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-slate-700">SELECT YOUR ROLE</label>
+        <form onSubmit={handleCompleteRegistration} className="space-y-3">
+          <div className="space-y-2">
+            <label className="text-[11px] font-semibold text-slate-700">SELECT YOUR ROLE</label>
 
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2">
               {/* Option A: Current Student */}
               <div
                 onClick={() => setAccountType('STUDENT')}
-                className={`relative flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all ${
+                className={`relative flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all ${
                   accountType === 'STUDENT'
-                    ? 'border-brand-secondary bg-brand-secondary/5 ring-2 ring-brand-secondary/20 shadow-sm'
+                    ? 'border-brand-secondary bg-brand-secondary/5 ring-1.5 ring-brand-secondary shadow-xs'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
                 <div
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                     accountType === 'STUDENT'
                       ? 'bg-brand-secondary text-white'
                       : 'bg-slate-100 text-slate-600'
                   }`}
                 >
-                  <GraduationCap className="h-6 w-6" />
+                  <GraduationCap size={18} stroke={1.8} />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 text-sm">Current Student</span>
+                    <span className="font-bold text-slate-900 text-xs sm:text-sm">Current Student</span>
                     <span
-                      className={`inline-block h-4 w-4 rounded-full border-2 ${
+                      className={`inline-block h-3.5 w-3.5 rounded-full border-2 ${
                         accountType === 'STUDENT'
-                          ? 'border-brand-secondary bg-brand-secondary ring-2 ring-brand-secondary/20'
+                          ? 'border-brand-secondary bg-brand-secondary'
                           : 'border-slate-300'
                       }`}
                     />
                   </div>
-                  <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-                    Currently enrolled at FPT University. Access verified alumni mentors, discover
-                    OJT & internships, and join student clubs.
+                  <p className="mt-0.5 text-[11px] text-slate-500 leading-tight">
+                    Currently enrolled at FPT University. Access verified alumni mentors, OJT & internships.
                   </p>
                 </div>
               </div>
@@ -625,35 +624,34 @@ export const RegisterForm: FC = () => {
               {/* Option B: FPT Alumni */}
               <div
                 onClick={() => setAccountType('ALUMNI')}
-                className={`relative flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all ${
+                className={`relative flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all ${
                   accountType === 'ALUMNI'
-                    ? 'border-brand-primary bg-brand-primary/5 ring-2 ring-brand-primary/20 shadow-sm'
+                    ? 'border-brand-primary bg-brand-primary/5 ring-1.5 ring-brand-primary shadow-xs'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
                 <div
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                     accountType === 'ALUMNI'
                       ? 'bg-brand-primary text-white'
                       : 'bg-slate-100 text-slate-600'
                   }`}
                 >
-                  <Briefcase className="h-6 w-6" />
+                  <Briefcase size={18} stroke={1.8} />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 text-sm">FPT Alumni</span>
+                    <span className="font-bold text-slate-900 text-xs sm:text-sm">FPT Alumni</span>
                     <span
-                      className={`inline-block h-4 w-4 rounded-full border-2 ${
+                      className={`inline-block h-3.5 w-3.5 rounded-full border-2 ${
                         accountType === 'ALUMNI'
-                          ? 'border-brand-primary bg-brand-primary ring-2 ring-brand-primary/20'
+                          ? 'border-brand-primary bg-brand-primary'
                           : 'border-slate-300'
                       }`}
                     />
                   </div>
-                  <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-                    Graduated from FPT University. Mentor junior students, post job openings, and
-                    network with fellow alumni across global chapters.
+                  <p className="mt-0.5 text-[11px] text-slate-500 leading-tight">
+                    Graduated from FPT University. Mentor junior students, post job openings, and network.
                   </p>
                 </div>
               </div>
@@ -661,47 +659,47 @@ export const RegisterForm: FC = () => {
           </div>
 
           {/* Terms checkbox */}
-          <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3.5 flex items-start gap-3">
+          <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-2.5 flex items-start gap-2">
             <input
               id="agree-terms"
               type="checkbox"
               checked={agreedTerms}
               onChange={(e) => setAgreedTerms(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-secondary focus:ring-brand-secondary"
+              className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-brand-secondary focus:ring-brand-secondary"
             />
-            <label htmlFor="agree-terms" className="text-xs text-slate-600 leading-relaxed">
+            <label htmlFor="agree-terms" className="text-[11px] text-slate-600 leading-tight">
               I agree to the{' '}
               <a href="#" className="font-semibold text-brand-secondary hover:underline">
                 Code of Academic Conduct
               </a>{' '}
-              and FPT Alumni Network Terms of Service.
+              and FPT Alumni Terms of Service.
             </label>
           </div>
 
           {/* Step 3 Actions */}
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex items-center gap-2 pt-1">
             <Button
               type="button"
               variant="outline"
               onClick={() => setStep(2)}
-              className="w-1/3 py-6 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5"
+              className="w-1/3 h-10 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1 text-xs sm:text-sm font-semibold"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft size={16} stroke={1.8} />
               <span>Back</span>
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-2/3 py-6 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-base font-semibold text-white shadow-md shadow-brand-secondary/20 flex items-center justify-center gap-2"
+              className="w-2/3 h-10 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-xs sm:text-sm font-bold text-white shadow-xs flex items-center justify-center gap-1.5"
             >
               {isSubmitting ? (
                 <>
-                  <IconLoader2 className="h-5 w-5 animate-spin" />
+                  <IconLoader2 size={16} className="animate-spin" />
                   <span>Creating Account...</span>
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="h-5 w-5" />
+                  <ShieldCheck size={16} stroke={1.8} />
                   <span>Complete Registration</span>
                 </>
               )}
@@ -711,26 +709,16 @@ export const RegisterForm: FC = () => {
       )}
 
       {/* Footer Navigation link back to Login */}
-      <div className="text-center pt-3 border-t border-slate-100">
-        <p className="text-sm text-slate-600">
+      <div className="text-center pt-2 border-t border-slate-100">
+        <p className="text-xs text-slate-600">
           Already have an account?{' '}
-          <Link to={ROUTES.AUTH.LOGIN} className="font-semibold text-brand-secondary hover:underline">
+          <Link to={ROUTES.AUTH.LOGIN} className="font-bold text-brand-secondary hover:underline">
             Sign In &rarr;
           </Link>
         </p>
       </div>
-
-      <div className="flex items-center justify-center space-x-6 pt-2 text-xs font-medium text-slate-400">
-        <Link to="#" className="hover:text-slate-600">
-          Privacy Policy
-        </Link>
-        <Link to="#" className="hover:text-slate-600">
-          Campus Rules
-        </Link>
-        <Link to="#" className="hover:text-slate-600">
-          Support FAQ
-        </Link>
-      </div>
     </div>
   )
 }
+
+export default RegisterForm
