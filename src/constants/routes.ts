@@ -4,8 +4,9 @@
  */
 
 export const ROUTES = {
-  // Root
+  // Root & Landing
   ROOT: '/',
+  LANDING: '/landing',
 
   // Auth routes (/auth/*)
   AUTH: {

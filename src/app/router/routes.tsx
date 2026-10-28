@@ -16,6 +16,7 @@ import {
   SettingsPage,
 } from '@/pages/admin'
 import { HomePage, ProfilePage, AlumniPage, ChatPage } from '@/pages/user'
+import { LandingPage } from '@/pages/LandingPage'
 import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
 
 /**
@@ -24,10 +25,15 @@ import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
  * with granular role-based route guards and safe fallback redirection.
  */
 export const routes: RouteObject[] = [
-  // 1. Dynamic Root Redirect (Authenticated -> Role Destination | Guest -> Login)
+  // 1. Dynamic Root Redirect (Authenticated -> Role Destination | Guest -> LandingPage)
   {
     path: ROUTES.ROOT,
     element: <RootRedirect />,
+  },
+  // Dedicated Landing Page Route (Available for both Guests and Authenticated Review)
+  {
+    path: ROUTES.LANDING,
+    element: <LandingPage />,
   },
 
   // 2. Authentication Section (/auth/* & /admin/login)

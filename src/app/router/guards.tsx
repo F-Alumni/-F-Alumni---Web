@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
 import { ROLES, type Role } from '@/constants/roles'
 import { USER_TYPES, type UserType } from '@/constants/userTypes'
+import { LandingPage } from '@/pages/LandingPage'
 
 /**
  * 1. ProtectedRoute: Base guard requiring user authentication.
@@ -107,7 +108,7 @@ export const RoleGuard: FC<RoleGuardProps> = ({
 
 /**
  * 4. RootRedirect: Dynamic landing page router for path "/".
- * Unauthenticated -> /auth/login
+ * Unauthenticated -> LandingPage
  * Admin / Moderator -> /admin/dashboard
  * Faculty / Student / Alumni -> /app/home
  */
@@ -115,7 +116,7 @@ export const RootRedirect: FC = () => {
   const { isAuthenticated, role } = useAuthStore()
 
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.AUTH.LOGIN} replace />
+    return <LandingPage />
   }
 
   if (role === ROLES.ADMIN || role === ROLES.MODERATOR) {
