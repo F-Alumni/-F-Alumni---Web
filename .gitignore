@@ -34,3 +34,7 @@ dist-ssr
 .eslintcache
 .cache
 .vercel
+
+# Test Output & Artifacts
+screenshots/
+*.png
