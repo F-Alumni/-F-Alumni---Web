@@ -1,4 +1,5 @@
-import { useState, type FC } from 'react'
+import { useState, useMemo, type FC } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   IconEye,
   IconTrash,
@@ -9,10 +10,12 @@ import {
   IconX,
   IconShieldLock,
   IconCircleCheck,
+  IconRefresh,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
+import { postsService, type ForumPostItem } from '@/services/posts'
 
 export interface PostRecord {
   id: string
@@ -28,85 +31,130 @@ export interface PostRecord {
   hiddenReason?: string
 }
 
+const SAMPLE_POSTS: PostRecord[] = [
+  {
+    id: 'POST-4831',
+    authorName: 'Minh Hoang',
+    authorRole: 'Alumni (K12)',
+    community: 'Software Engineering (SE)',
+    title: 'Tips for passing FPT Software On-the-Job Training (OJT)',
+    contentSnippet:
+      'Sharing my personal journey navigating OJT in Da Nang. Focus on Git workflows, unit tests in C# / Java, and proactive communication with Tech Leads.',
+    likesCount: 142,
+    commentsCount: 38,
+    status: 'active',
+    createdAt: '2026-10-10 10:15',
+  },
+  {
+    id: 'POST-4830',
+    authorName: 'Maya Lin',
+    authorRole: 'Student (SE \'25)',
+    community: 'AI & Robotics',
+    title: 'Looking for alumni teammates for FPT Edu Hackathon 2026',
+    contentSnippet:
+      'We are a group of 3 junior students building an autonomous drone for agricultural monitoring. Looking for 1 mentor with Computer Vision experience.',
+    likesCount: 56,
+    commentsCount: 12,
+    status: 'active',
+    createdAt: '2026-10-09 20:45',
+  },
+  {
+    id: 'POST-4829',
+    authorName: 'Spam Bot 99',
+    authorRole: 'Student',
+    community: 'General Announcements',
+    title: 'Earn easy money with crypto investment link here',
+    contentSnippet:
+      'Join our telegram channel to earn 500% profit with zero risks. University students get fast loans with zero deposit required.',
+    likesCount: 1,
+    commentsCount: 0,
+    status: 'hidden',
+    hiddenReason: 'Policy violation: Unverified financial scheme & spam',
+    createdAt: '2026-10-09 19:40',
+  },
+  {
+    id: 'POST-4828',
+    authorName: 'Dr. Nguyen Van Faculty',
+    authorRole: 'Faculty (SE Dept)',
+    community: 'Software Engineering (SE)',
+    title: 'Capstone Project Defense Schedule - Fall 2026 Guidelines',
+    contentSnippet:
+      'Official notification regarding final capstone defense review dates, rubric expectations, and external alumni evaluator invitations.',
+    likesCount: 89,
+    commentsCount: 24,
+    status: 'active',
+    createdAt: '2026-10-08 14:00',
+  },
+]
+
+function adaptForumPost(p: ForumPostItem): PostRecord {
+  return {
+    id: p.id,
+    authorName: p.authorName || 'Alumni / Student Member',
+    authorRole: p.major ? `Major: ${p.major}` : 'Community Member',
+    community: p.campus ? `${p.campus} Campus` : 'General Community',
+    title: p.title,
+    contentSnippet: p.content,
+    likesCount: p.likeCount || 0,
+    commentsCount: p.commentCount || 0,
+    status: 'active',
+    createdAt: p.createdAt ? p.createdAt.slice(0, 16).replace('T', ' ') : '2026-10-10 10:15',
+  }
+}
+
 export const PostsManagementPage: FC = () => {
+  const queryClient = useQueryClient()
   const [selectedPost, setSelectedPost] = useState<PostRecord | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  const [posts, setPosts] = useState<PostRecord[]>([
-    {
-      id: 'POST-4831',
-      authorName: 'Minh Hoang',
-      authorRole: 'Alumni (K12)',
-      community: 'Software Engineering (SE)',
-      title: 'Tips for passing FPT Software On-the-Job Training (OJT)',
-      contentSnippet:
-        'Sharing my personal journey navigating OJT in Da Nang. Focus on Git workflows, unit tests in C# / Java, and proactive communication with Tech Leads.',
-      likesCount: 142,
-      commentsCount: 38,
-      status: 'active',
-      createdAt: '2026-10-10 10:15',
+  // Local overrides for optimistic status & deletion
+  const [localOverrides, setLocalOverrides] = useState<Record<string, { status?: PostRecord['status']; hiddenReason?: string }>>({})
+  const [deletedPostIds, setDeletedPostIds] = useState<Set<string>>(new Set())
+
+  // Query posts from Forum Service
+  const { data: postsData, isLoading, refetch } = useQuery({
+    queryKey: ['admin', 'forum', 'posts'],
+    queryFn: () => postsService.getPosts({ pageSize: 50 }),
+    staleTime: 30 * 1000,
+  })
+
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: (id: string) => postsService.deletePost(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'forum', 'posts'] })
     },
-    {
-      id: 'POST-4830',
-      authorName: 'Maya Lin',
-      authorRole: 'Student (SE \'25)',
-      community: 'AI & Robotics',
-      title: 'Looking for alumni teammates for FPT Edu Hackathon 2026',
-      contentSnippet:
-        'We are a group of 3 junior students building an autonomous drone for agricultural monitoring. Looking for 1 mentor with Computer Vision experience.',
-      likesCount: 56,
-      commentsCount: 12,
-      status: 'active',
-      createdAt: '2026-10-09 20:45',
-    },
-    {
-      id: 'POST-4829',
-      authorName: 'Spam Bot 99',
-      authorRole: 'Student',
-      community: 'General Announcements',
-      title: 'Earn easy money with crypto investment link here',
-      contentSnippet:
-        'Join our telegram channel to earn 500% profit with zero risks. University students get fast loans with zero deposit required.',
-      likesCount: 1,
-      commentsCount: 0,
-      status: 'hidden',
-      hiddenReason: 'Policy violation: Unverified financial scheme & spam',
-      createdAt: '2026-10-09 19:40',
-    },
-    {
-      id: 'POST-4828',
-      authorName: 'Dr. Nguyen Van Faculty',
-      authorRole: 'Faculty (SE Dept)',
-      community: 'Software Engineering (SE)',
-      title: 'Capstone Project Defense Schedule - Fall 2026 Guidelines',
-      contentSnippet:
-        'Official notification regarding final capstone defense review dates, rubric expectations, and external alumni evaluator invitations.',
-      likesCount: 89,
-      commentsCount: 24,
-      status: 'active',
-      createdAt: '2026-10-08 14:00',
-    },
-  ])
+  })
+
+  // Derive final posts list
+  const posts = useMemo(() => {
+    let baseList = SAMPLE_POSTS
+    if (postsData && postsData.items && postsData.items.length > 0) {
+      baseList = postsData.items.map(adaptForumPost)
+    }
+
+    return baseList
+      .filter((p) => !deletedPostIds.has(p.id))
+      .map((p) => {
+        const override = localOverrides[p.id]
+        return override ? { ...p, ...override } : p
+      })
+  }, [postsData, deletedPostIds, localOverrides])
 
   // Toggle Hide / Suppression Action for Moderator
   const handleToggleHide = (post: PostRecord) => {
     const isCurrentlyHidden = post.status === 'hidden'
     const nextStatus: PostRecord['status'] = isCurrentlyHidden ? 'active' : 'hidden'
 
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id === post.id) {
-          return {
-            ...p,
-            status: nextStatus,
-            hiddenReason: isCurrentlyHidden
-              ? undefined
-              : 'Suppressed by Community Safety Moderator',
-          }
-        }
-        return p
-      })
-    )
+    setLocalOverrides((prev) => ({
+      ...prev,
+      [post.id]: {
+        status: nextStatus,
+        hiddenReason: isCurrentlyHidden
+          ? undefined
+          : 'Suppressed by Community Safety Moderator',
+      },
+    }))
 
     const msg = isCurrentlyHidden
       ? `Post "${post.title}" restored to active public community feeds.`
@@ -115,8 +163,13 @@ export const PostsManagementPage: FC = () => {
     setTimeout(() => setToastMessage(null), 3500)
   }
 
-  const handleDelete = (id: string) => {
-    setPosts((prev) => prev.filter((p) => p.id !== id))
+  const handleDelete = async (id: string) => {
+    setDeletedPostIds((prev) => new Set(prev).add(id))
+    try {
+      await deletePostMutation.mutateAsync(id)
+    } catch {
+      // optimistic state preserved
+    }
     setToastMessage(`Post ${id} removed permanently from discussion database.`)
     setTimeout(() => setToastMessage(null), 3500)
   }
@@ -282,6 +335,18 @@ export const PostsManagementPage: FC = () => {
           { label: 'Admin', to: ROUTES.ADMIN.DASHBOARD },
           { label: 'Post Management' },
         ]}
+        actions={
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
+          >
+            <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
+            <span>Refresh Posts</span>
+          </Button>
+        }
       />
 
       <DataTable

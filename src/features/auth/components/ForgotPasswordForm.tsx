@@ -49,8 +49,8 @@ export const ForgotPasswordForm: FC = () => {
     try {
       const res = await authService.forgotPassword(email.trim())
       setSuccessNotice(res.message || 'Reset token generated successfully.')
-      if (res.token) {
-        setToken(res.token)
+      if (res.token || res.verificationOtpPreview) {
+        setToken(res.token || res.verificationOtpPreview || '')
       }
       setStep('RESET')
     } catch (err: unknown) {

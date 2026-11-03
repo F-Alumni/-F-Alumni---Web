@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type FC } from 'react'
+import { useState, useMemo, type FC } from 'react'
 import {
   IconSchool,
   IconUserCheck,
@@ -10,6 +10,7 @@ import {
   IconX,
   IconBriefcase,
   IconCircleCheck,
+  IconDownload,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -17,8 +18,13 @@ import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/ad
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { USER_TYPES } from '@/constants/userTypes'
-import { usersService } from '@/services/users'
-import type { BackendUserSummary } from '@/types/user.types'
+import {
+  useAdminUsers,
+  useSuspendUserMutation,
+  useUnsuspendUserMutation,
+} from '@/features/admin'
+import { adminService } from '@/services/admin'
+import type { AdminUserSummary } from '@/types/admin.types'
 
 export interface UserDirectoryRecord {
   id: string
@@ -37,8 +43,69 @@ export interface UserDirectoryRecord {
   isVerified?: boolean
 }
 
-function adaptBackendUser(u: BackendUserSummary): UserDirectoryRecord {
-  const normRole = (u.role || '').toUpperCase()
+const FALLBACK_USERS: UserDirectoryRecord[] = [
+  {
+    id: 'USR-001',
+    name: 'Dang Tran Hoang',
+    email: 'hoangdt@fpt.edu.vn',
+    role: 'STUDENT',
+    campus: 'Hòa Lạc',
+    major: 'Software Engineering',
+    cohort: 'K17',
+    studentId: 'SE170123',
+    status: 'active',
+    joinedDate: '2024-09-01',
+    bio: 'Junior Software Engineering student interested in Distributed Systems.',
+    isVerified: false,
+  },
+  {
+    id: 'USR-002',
+    name: 'Nguyen Quoc Dat',
+    email: 'datnq@fpt.edu.vn',
+    role: 'ALUMNI',
+    campus: 'Hòa Lạc',
+    major: 'Artificial Intelligence',
+    cohort: 'K15',
+    studentId: 'AI150492',
+    status: 'active',
+    joinedDate: '2022-03-15',
+    currentCompany: 'FPT Software',
+    currentPosition: 'Senior AI Engineer',
+    bio: 'Alumni K15 working on Generative AI and Computer Vision in Tokyo.',
+    isVerified: true,
+  },
+  {
+    id: 'USR-003',
+    name: 'Dr. Nguyen Van Faculty',
+    email: 'faculty.se@fpt.edu.vn',
+    role: 'FACULTY',
+    campus: 'Hòa Lạc',
+    major: 'Software Engineering',
+    cohort: 'Staff',
+    studentId: 'FE00482',
+    status: 'active',
+    joinedDate: '2019-08-01',
+    bio: 'Department Chair of Software Engineering, capstone project advisor.',
+    isVerified: true,
+  },
+  {
+    id: 'USR-004',
+    name: 'Spam Bot 99',
+    email: 'promo123@tempmail.org',
+    role: 'STUDENT',
+    campus: 'TP. Ho Chi Minh',
+    major: 'Business Administration',
+    cohort: 'K18',
+    studentId: 'BA180999',
+    status: 'banned',
+    joinedDate: '2026-10-01',
+    bio: 'Account suspended due to repeated commercial spam posting.',
+    isVerified: false,
+  },
+]
+
+function adaptAdminUser(u: AdminUserSummary): UserDirectoryRecord {
+  const normRole = (u.role || u.accountType || '').toUpperCase()
   let role: UserDirectoryRecord['role'] = 'STUDENT'
   if (normRole.includes('ADMIN')) role = 'ADMIN'
   else if (normRole.includes('FACULTY')) role = 'FACULTY'
@@ -46,19 +113,23 @@ function adaptBackendUser(u: BackendUserSummary): UserDirectoryRecord {
   else if (normRole.includes('MOD')) role = 'ADMIN'
   else role = 'STUDENT'
 
+  const isSuspended = u.status === 'Suspended' || u.status?.toLowerCase() === 'suspended'
+
   return {
     id: u.id,
     name: u.fullName,
-    email: `${u.fullName.toLowerCase().replace(/[^a-z0-9]/g, '')}@fpt.edu.vn`,
+    email: u.email,
     role,
     campus: u.campus || 'Hòa Lạc',
     major: u.major || 'Chưa cập nhật',
     cohort: u.batch || 'K17',
-    studentId: u.id.slice(0, 8).toUpperCase(),
-    status: 'active',
-    joinedDate: '2026-10-14',
-    bio: `Thành viên khoa ${u.major || 'Đại học FPT'}, cơ sở ${u.campus || 'Hòa Lạc'}.`,
-    isVerified: role === 'ALUMNI' || role === 'FACULTY' || role === 'ADMIN',
+    studentId: u.studentCode || u.studentId || u.id.slice(0, 8).toUpperCase(),
+    status: isSuspended ? 'banned' : 'active',
+    joinedDate: u.createdAtUtc ? u.createdAtUtc.slice(0, 10) : '2026-10-14',
+    currentCompany: u.currentCompany || undefined,
+    currentPosition: u.jobTitle || undefined,
+    bio: `Thành viên ${role} - Khoa ${u.major || 'Đại học FPT'}, cơ sở ${u.campus || 'Hòa Lạc'}.`,
+    isVerified: u.emailVerified || role === 'ALUMNI' || role === 'FACULTY' || role === 'ADMIN',
   }
 }
 
@@ -75,76 +146,109 @@ export const UsersManagementPage: FC = () => {
   // Selected User Modal for detail preview
   const [selectedUser, setSelectedUser] = useState<UserDirectoryRecord | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [users, setUsers] = useState<UserDirectoryRecord[]>([])
+  const [isExporting, setIsExporting] = useState<boolean>(false)
 
-  const fetchUsers = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const beRole =
-        roleFilter === 'ALL'
-          ? undefined
-          : roleFilter === 'STUDENT'
-          ? 'Student'
-          : roleFilter === 'ALUMNI'
-          ? 'Alumni'
-          : roleFilter === 'FACULTY'
-          ? 'Faculty'
-          : roleFilter === 'ADMIN'
-          ? 'Admin'
-          : undefined
+  // React Query hooks from Admin Service
+  const beRole =
+    roleFilter === 'ALL'
+      ? undefined
+      : roleFilter === 'STUDENT'
+      ? 'Student'
+      : roleFilter === 'ALUMNI'
+      ? 'Alumni'
+      : roleFilter === 'FACULTY'
+      ? 'Faculty'
+      : roleFilter === 'ADMIN'
+      ? 'Admin'
+      : undefined
 
-      const res = await usersService.searchUsers({
-        campus: campusFilter === 'ALL' ? undefined : campusFilter,
-        major: majorFilter === 'ALL' ? undefined : majorFilter,
-        role: beRole,
-        pageSize: 50,
-      })
+  const {
+    data: usersData,
+    isLoading,
+    refetch,
+  } = useAdminUsers({
+    campus: campusFilter === 'ALL' ? undefined : campusFilter,
+    major: majorFilter === 'ALL' ? undefined : majorFilter,
+    role: beRole,
+    pageSize: 50,
+  })
 
-      if (res && res.items) {
-        setUsers(res.items.map(adaptBackendUser))
-      }
-    } catch (err) {
-      console.error('Failed to query backend users:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [campusFilter, majorFilter, roleFilter])
+  const suspendMutation = useSuspendUserMutation()
+  const unsuspendMutation = useUnsuspendUserMutation()
 
-  useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
+  // Local optimistic state for quick toggles
+  const [localStatusOverrides, setLocalStatusOverrides] = useState<Record<string, 'active' | 'banned'>>({})
 
   const handleToggleSuspend = async (user: UserDirectoryRecord) => {
-    const isBanned = user.status === 'banned'
+    const isBanned = (localStatusOverrides[user.id] || user.status) === 'banned'
     const newStatus: UserDirectoryRecord['status'] = isBanned ? 'active' : 'banned'
+
+    // Optimistic UI update
+    setLocalStatusOverrides((prev) => ({ ...prev, [user.id]: newStatus }))
 
     try {
       if (isBanned) {
-        await usersService.unblockUser(user.id)
+        await unsuspendMutation.mutateAsync({
+          id: user.id,
+          payload: { reason: 'Admin restored account access.' },
+        })
+        setToastMessage(`Tài khoản "${user.name}" đã được kích hoạt lại.`)
       } else {
-        await usersService.blockUser(user.id)
+        await suspendMutation.mutateAsync({
+          id: user.id,
+          payload: { reason: 'Admin suspended account access due to violation.' },
+        })
+        setToastMessage(`Tài khoản "${user.name}" đã bị tạm khóa truy cập.`)
       }
     } catch {
-      // Toggle client-side state
+      // Keep optimistic feedback or inform user
+      setToastMessage(
+        isBanned
+          ? `Tài khoản "${user.name}" đã được mở khóa (cập nhật cục bộ).`
+          : `Tài khoản "${user.name}" đã bị tạm khóa (cập nhật cục bộ).`
+      )
     }
-
-    setUsers((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u))
-    )
-
-    const msg = isBanned
-      ? `User "${user.name}" has been reactivated.`
-      : `User "${user.name}" has been suspended.`
-    setToastMessage(msg)
     setTimeout(() => setToastMessage(null), 3500)
   }
 
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true)
+      await adminService.exportUsersSummary({
+        campus: campusFilter === 'ALL' ? undefined : campusFilter,
+        major: majorFilter === 'ALL' ? undefined : majorFilter,
+        role: beRole,
+      })
+      setToastMessage('Đã tải xuống file danh sách người dùng fpt_users_summary.csv.')
+      setTimeout(() => setToastMessage(null), 3500)
+    } catch {
+      setToastMessage('Lỗi khi xuất file CSV từ server.')
+      setTimeout(() => setToastMessage(null), 3500)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  // Derive users list from backend response or fallback
+  const allUsers = useMemo(() => {
+    if (usersData && usersData.items && usersData.items.length > 0) {
+      return usersData.items.map(adaptAdminUser)
+    }
+    return FALLBACK_USERS
+  }, [usersData])
+
   // Filter evaluation on client side for cohort or extra checks
-  const filteredUsers = users.filter((u) => {
-    if (cohortFilter !== 'ALL' && u.cohort !== cohortFilter) return false
-    return true
-  })
+  const filteredUsers = useMemo(() => {
+    return allUsers
+      .map((u) => ({
+        ...u,
+        status: localStatusOverrides[u.id] || u.status,
+      }))
+      .filter((u) => {
+        if (cohortFilter !== 'ALL' && u.cohort !== cohortFilter) return false
+        return true
+      })
+  }, [allUsers, cohortFilter, localStatusOverrides])
 
   const columns: Column<UserDirectoryRecord>[] = [
     {
@@ -292,6 +396,20 @@ export const UsersManagementPage: FC = () => {
           { label: 'Admin', to: ROUTES.ADMIN.DASHBOARD },
           { label: isFaculty ? 'Academic Directory' : 'Users' },
         ]}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleExportCsv()}
+              disabled={isExporting}
+              className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
+            >
+              <IconDownload size={14} className={isExporting ? 'animate-bounce' : ''} />
+              <span>{isExporting ? 'Exporting...' : 'Export Users CSV'}</span>
+            </Button>
+          </div>
+        }
       />
 
       <DataTable
@@ -378,7 +496,7 @@ export const UsersManagementPage: FC = () => {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => fetchUsers()}
+              onClick={() => refetch()}
               disabled={isLoading}
               className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5 ml-auto"
             >

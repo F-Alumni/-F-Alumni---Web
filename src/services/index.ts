@@ -1,6 +1,7 @@
 export * from './api'
 export * from './auth'
 export * from './users'
+export * from './admin'
 export * from './posts'
 export * from './communities'
 export * from './alumni'

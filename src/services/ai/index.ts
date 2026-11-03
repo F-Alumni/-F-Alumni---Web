@@ -1,5 +1,55 @@
+import { aiApiClient } from '@/services/api/apiClient'
+
+export interface CitationItem {
+  sourceTitle: string
+  section: string
+  programCode?: string | null
+  snippet: string
+}
+
+export interface AiChatPayload {
+  question: string
+  conversationId?: string | null
+  campus?: string
+  major?: string
+}
+
+export interface AiChatResponse {
+  conversationId: string
+  answer: string
+  citations: CitationItem[]
+  createdAt: string
+}
+
+export interface RagIngestPayload {
+  directoryPath?: string
+  forceReindex?: boolean
+}
+
+export interface RagIngestResult {
+  totalIndexed: number
+  message?: string
+}
+
 /**
- * AI service boundary.
- * Architectural boundary for AI assistant and conversation API operations.
+ * AI Service operations connecting to AI Microservice & API Gateway.
  */
-export const aiService = {}
+export const aiService = {
+  /**
+   * Ask AI question with multi-turn conversation and university citations.
+   * POST /api/v1/ai/chat
+   */
+  async ask(payload: AiChatPayload): Promise<AiChatResponse> {
+    const res = await aiApiClient.post<AiChatResponse>('/ai/chat', payload)
+    return res.data
+  },
+
+  /**
+   * Administrative RAG Ingestion / re-indexing trigger.
+   * POST /api/v1/ai/rag/ingest
+   */
+  async ingestRag(payload?: RagIngestPayload): Promise<RagIngestResult> {
+    const res = await aiApiClient.post<RagIngestResult>('/ai/rag/ingest', payload || {})
+    return res.data
+  },
+}

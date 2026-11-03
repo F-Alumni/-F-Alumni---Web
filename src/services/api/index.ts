@@ -1,1 +1,8 @@
-export { apiClient, chatApiClient } from './apiClient'
+export {
+  apiClient,
+  adminApiClient,
+  userApiClient,
+  forumApiClient,
+  chatApiClient,
+  aiApiClient,
+} from './apiClient'

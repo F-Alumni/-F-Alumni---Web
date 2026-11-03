@@ -1,4 +1,5 @@
-import { useState, type FC, type FormEvent } from 'react'
+import { useState, useMemo, type FC, type FormEvent } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   IconPlus,
   IconUsers,
@@ -8,12 +9,14 @@ import {
   IconPinned,
   IconX,
   IconCircleCheck,
+  IconRefresh,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { USER_TYPES } from '@/constants/userTypes'
+import { communitiesService, type ForumCategoryItem } from '@/services/communities'
 
 export interface CommunityRecord {
   id: string
@@ -33,6 +36,75 @@ export interface CommunityRecord {
   }
 }
 
+const SAMPLE_COMMUNITIES: CommunityRecord[] = [
+  {
+    id: 'COM-01',
+    name: 'Software Engineering (SE) Alumni & Students',
+    category: 'ACADEMIC',
+    membersCount: 4250,
+    leader: 'Nguyen Van A (Admin)',
+    isPrivate: false,
+    status: 'active',
+    createdAt: '2022-01-15',
+    pinnedAnnouncement: {
+      title: 'Fall 2026 Capstone Project Guidelines & External Jury Schedule',
+      body: 'All graduating teams must submit final reports to the department office by Nov 15.',
+      pinnedBy: 'Dr. Nguyen Van Faculty',
+      duration: 'Until Capstone Defense',
+      expiresAt: '2026-11-30',
+    },
+  },
+  {
+    id: 'COM-02',
+    name: 'FPT Alumni Tokyo Chapter',
+    category: 'CAMPUS_CHAPTER',
+    membersCount: 890,
+    leader: 'Minh Hoang (K12)',
+    isPrivate: true,
+    status: 'active',
+    createdAt: '2023-04-10',
+  },
+  {
+    id: 'COM-03',
+    name: 'AI & Machine Learning Innovators',
+    category: 'CAREER',
+    membersCount: 1680,
+    leader: 'Dr. Le Van Phuc',
+    isPrivate: false,
+    status: 'active',
+    createdAt: '2022-11-20',
+  },
+  {
+    id: 'COM-04',
+    name: 'Capstones Archive Spring 2024',
+    category: 'ACADEMIC',
+    membersCount: 340,
+    leader: 'Faculty Academic Board',
+    isPrivate: false,
+    status: 'archived',
+    createdAt: '2024-02-01',
+  },
+]
+
+function adaptForumCategory(cat: ForumCategoryItem): CommunityRecord {
+  const normSlug = (cat.slug || cat.name || '').toLowerCase()
+  let category: CommunityRecord['category'] = 'ACADEMIC'
+  if (normSlug.includes('chapter') || normSlug.includes('campus')) category = 'CAMPUS_CHAPTER'
+  else if (normSlug.includes('career') || normSlug.includes('job')) category = 'CAREER'
+  else if (normSlug.includes('club') || normSlug.includes('life')) category = 'STUDENT_CLUB'
+
+  return {
+    id: cat.id,
+    name: cat.name,
+    category,
+    membersCount: 1250,
+    leader: 'Faculty Academic Board',
+    isPrivate: false,
+    status: 'active',
+    createdAt: '2024-01-15',
+  }
+}
+
 export const CommunitiesManagementPage: FC = () => {
   const { role, userType, currentUser } = useAuthStore()
   const isFaculty = role !== 'ADMIN' && role !== 'MODERATOR' && userType === USER_TYPES.FACULTY
@@ -45,64 +117,37 @@ export const CommunitiesManagementPage: FC = () => {
   const [departmentBadge, setDepartmentBadge] = useState('Khoa Kỹ Thuật Phần Mềm (SE)')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  const [communities, setCommunities] = useState<CommunityRecord[]>([
-    {
-      id: 'COM-01',
-      name: 'Software Engineering (SE) Alumni & Students',
-      category: 'ACADEMIC',
-      membersCount: 4250,
-      leader: 'Nguyen Van A (Admin)',
-      isPrivate: false,
-      status: 'active',
-      createdAt: '2022-01-15',
-      pinnedAnnouncement: {
-        title: 'Fall 2026 Capstone Project Guidelines & External Jury Schedule',
-        body: 'All graduating teams must submit final reports to the department office by Nov 15.',
-        pinnedBy: 'Dr. Nguyen Van Faculty',
-        duration: 'Until Capstone Defense',
-        expiresAt: '2026-11-30',
-      },
-    },
-    {
-      id: 'COM-02',
-      name: 'FPT Alumni Tokyo Chapter',
-      category: 'CAMPUS_CHAPTER',
-      membersCount: 890,
-      leader: 'Minh Hoang (K12)',
-      isPrivate: true,
-      status: 'active',
-      createdAt: '2023-04-10',
-    },
-    {
-      id: 'COM-03',
-      name: 'AI & Machine Learning Innovators',
-      category: 'CAREER',
-      membersCount: 1680,
-      leader: 'Dr. Le Van Phuc',
-      isPrivate: false,
-      status: 'active',
-      createdAt: '2022-11-20',
-    },
-    {
-      id: 'COM-04',
-      name: 'Capstones Archive Spring 2024',
-      category: 'ACADEMIC',
-      membersCount: 340,
-      leader: 'Faculty Academic Board',
-      isPrivate: false,
-      status: 'archived',
-      createdAt: '2024-02-01',
-    },
-  ])
+  // Local status overrides & custom pinned announcements
+  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<CommunityRecord>>>({})
+
+  // Fetch live categories from Forum Service
+  const { data: categoriesData, isLoading, refetch } = useQuery({
+    queryKey: ['admin', 'forum', 'categories'],
+    queryFn: () => communitiesService.getCategories(),
+    staleTime: 60 * 1000,
+  })
+
+  // Combine categories
+  const communities = useMemo(() => {
+    let list = SAMPLE_COMMUNITIES
+    if (categoriesData && categoriesData.length > 0) {
+      const liveItems = categoriesData.map(adaptForumCategory)
+      const existingNames = new Set(liveItems.map((i) => i.name.toLowerCase()))
+      list = [...liveItems, ...SAMPLE_COMMUNITIES.filter((s) => !existingNames.has(s.name.toLowerCase()))]
+    }
+
+    return list.map((c) => {
+      const override = localOverrides[c.id]
+      return override ? { ...c, ...override } : c
+    })
+  }, [categoriesData, localOverrides])
 
   const toggleStatus = (id: string) => {
-    setCommunities((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? { ...c, status: c.status === 'active' ? 'archived' : 'active' }
-          : c
-      )
-    )
+    setLocalOverrides((prev) => {
+      const current = communities.find((c) => c.id === id)
+      const nextStatus = current?.status === 'active' ? 'archived' : 'active'
+      return { ...prev, [id]: { ...(prev[id] || {}), status: nextStatus } }
+    })
   }
 
   const handleOpenPinModal = (comm: CommunityRecord) => {
@@ -122,23 +167,19 @@ export const CommunitiesManagementPage: FC = () => {
     e.preventDefault()
     if (!pinTargetCommunity) return
 
-    setCommunities((prev) =>
-      prev.map((c) => {
-        if (c.id === pinTargetCommunity.id) {
-          return {
-            ...c,
-            pinnedAnnouncement: {
-              title: announcementTitle.trim(),
-              body: announcementBody.trim(),
-              pinnedBy: currentUser?.name || 'Faculty Coordinator',
-              duration: pinDuration,
-              expiresAt: '2026-12-31',
-            },
-          }
-        }
-        return c
-      })
-    )
+    setLocalOverrides((prev) => ({
+      ...prev,
+      [pinTargetCommunity.id]: {
+        ...(prev[pinTargetCommunity.id] || {}),
+        pinnedAnnouncement: {
+          title: announcementTitle.trim(),
+          body: announcementBody.trim(),
+          pinnedBy: currentUser?.name || 'Faculty Coordinator',
+          duration: pinDuration,
+          expiresAt: '2026-12-31',
+        },
+      },
+    }))
 
     setToastMessage(`Department Announcement pinned to "${pinTargetCommunity.name}"!`)
     setTimeout(() => setToastMessage(null), 3500)
@@ -146,9 +187,13 @@ export const CommunitiesManagementPage: FC = () => {
   }
 
   const handleUnpinAnnouncement = (id: string) => {
-    setCommunities((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, pinnedAnnouncement: undefined } : c))
-    )
+    setLocalOverrides((prev) => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || {}),
+        pinnedAnnouncement: undefined,
+      },
+    }))
     setToastMessage('Announcement unpinned from community.')
     setTimeout(() => setToastMessage(null), 3000)
     setPinTargetCommunity(null)
@@ -298,10 +343,22 @@ export const CommunitiesManagementPage: FC = () => {
           { label: 'Community Management' },
         ]}
         actions={
-          <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5">
-            <IconPlus size={16} stroke={2} />
-            <span>Create Community</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="h-9 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
+            >
+              <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
+              <span>Refresh</span>
+            </Button>
+            <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5">
+              <IconPlus size={16} stroke={2} />
+              <span>Create Community</span>
+            </Button>
+          </div>
         }
       />
 

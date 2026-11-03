@@ -1,8 +1,10 @@
-import { useState, type FC } from 'react'
-import { IconCheck, IconX, IconFileCheck, IconEye, IconDownload } from '@tabler/icons-react'
+import { useState, useMemo, type FC } from 'react'
+import { IconCheck, IconX, IconFileCheck, IconEye, IconDownload, IconRefresh } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
+import { useAdminUsers } from '@/features/admin'
+import type { AdminUserSummary } from '@/types/admin.types'
 
 interface VerificationRequest {
   id: string
@@ -17,68 +19,102 @@ interface VerificationRequest {
   status: 'pending' | 'approved' | 'rejected'
 }
 
+const SAMPLE_REQUESTS: VerificationRequest[] = [
+  {
+    id: 'VER-001',
+    fullName: 'Dang Tran Hoang',
+    email: 'hoangdt@alumni.fpt.edu.vn',
+    studentId: 'SE150392',
+    major: 'Software Engineering (SE)',
+    cohort: 'K15',
+    gradYear: '2023',
+    documentName: 'Bang_Tot_Nghiep_SE150392.pdf',
+    submissionDate: '2026-10-10 14:32',
+    status: 'pending',
+  },
+  {
+    id: 'VER-002',
+    fullName: 'Nguyen Quoc Dat',
+    email: 'datnq@fpt.edu.vn',
+    studentId: 'SE160982',
+    major: 'Artificial Intelligence (AI)',
+    cohort: 'K16',
+    gradYear: '2024',
+    documentName: 'ChungChi_TotNghiep_DatNQ.jpg',
+    submissionDate: '2026-10-10 11:20',
+    status: 'pending',
+  },
+  {
+    id: 'VER-003',
+    fullName: 'Tran Thi Mai Anh',
+    email: 'maianh.tran@accenture.com',
+    studentId: 'BA140221',
+    major: 'International Business (IB)',
+    cohort: 'K14',
+    gradYear: '2022',
+    documentName: 'FPT_Degree_TranThiMaiAnh.pdf',
+    submissionDate: '2026-10-09 16:45',
+    status: 'approved',
+  },
+  {
+    id: 'VER-004',
+    fullName: 'Pham Duc Thang',
+    email: 'thang.dev99@gmail.com',
+    studentId: 'IA130114',
+    major: 'Information Assurance (IA)',
+    cohort: 'K13',
+    gradYear: '2021',
+    documentName: 'Bang_Tam_Thoi_IA.png',
+    submissionDate: '2026-10-08 09:12',
+    status: 'rejected',
+  },
+]
+
+function adaptAdminUserToVerification(u: AdminUserSummary): VerificationRequest {
+  const isPending = !u.emailVerified || u.status === 'PendingVerification'
+  return {
+    id: u.id,
+    fullName: u.fullName,
+    email: u.email,
+    studentId: u.studentCode || u.studentId || u.id.slice(0, 8).toUpperCase(),
+    major: u.major || 'Software Engineering',
+    cohort: u.batch || 'K15',
+    gradYear: '2023',
+    documentName: `Diploma_${u.studentCode || 'FPT'}.pdf`,
+    submissionDate: u.createdAtUtc ? u.createdAtUtc.slice(0, 10) : '2026-10-10',
+    status: isPending ? 'pending' : 'approved',
+  }
+}
+
 export const AlumniVerificationPage: FC = () => {
-  const [requests, setRequests] = useState<VerificationRequest[]>([
-    {
-      id: 'VER-001',
-      fullName: 'Dang Tran Hoang',
-      email: 'hoangdt@alumni.fpt.edu.vn',
-      studentId: 'SE150392',
-      major: 'Software Engineering (SE)',
-      cohort: 'K15',
-      gradYear: '2023',
-      documentName: 'Bang_Tot_Nghiep_SE150392.pdf',
-      submissionDate: '2026-10-10 14:32',
-      status: 'pending',
-    },
-    {
-      id: 'VER-002',
-      fullName: 'Nguyen Quoc Dat',
-      email: 'datnq@fpt.edu.vn',
-      studentId: 'SE160982',
-      major: 'Artificial Intelligence (AI)',
-      cohort: 'K16',
-      gradYear: '2024',
-      documentName: 'ChungChi_TotNghiep_DatNQ.jpg',
-      submissionDate: '2026-10-10 11:20',
-      status: 'pending',
-    },
-    {
-      id: 'VER-003',
-      fullName: 'Tran Thi Mai Anh',
-      email: 'maianh.tran@accenture.com',
-      studentId: 'BA140221',
-      major: 'International Business (IB)',
-      cohort: 'K14',
-      gradYear: '2022',
-      documentName: 'FPT_Degree_TranThiMaiAnh.pdf',
-      submissionDate: '2026-10-09 16:45',
-      status: 'approved',
-    },
-    {
-      id: 'VER-004',
-      fullName: 'Pham Duc Thang',
-      email: 'thang.dev99@gmail.com',
-      studentId: 'IA130114',
-      major: 'Information Assurance (IA)',
-      cohort: 'K13',
-      gradYear: '2021',
-      documentName: 'Bang_Tam_Thoi_IA.png',
-      submissionDate: '2026-10-08 09:12',
-      status: 'rejected',
-    },
-  ])
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, 'approved' | 'rejected'>>({})
+
+  // Fetch alumni user records from Admin Service
+  const { data: alumniData, isLoading, refetch } = useAdminUsers({
+    role: 'Alumni',
+    pageSize: 50,
+  })
+
+  const requests = useMemo(() => {
+    let baseList = SAMPLE_REQUESTS
+    if (alumniData && alumniData.items && alumniData.items.length > 0) {
+      const liveList = alumniData.items.map(adaptAdminUserToVerification)
+      const existingEmails = new Set(liveList.map((l) => l.email.toLowerCase()))
+      baseList = [...liveList, ...SAMPLE_REQUESTS.filter((s) => !existingEmails.has(s.email.toLowerCase()))]
+    }
+
+    return baseList.map((r) => {
+      const override = statusOverrides[r.id]
+      return override ? { ...r, status: override } : r
+    })
+  }, [alumniData, statusOverrides])
 
   const handleApprove = (id: string) => {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'approved' } : r))
-    )
+    setStatusOverrides((prev) => ({ ...prev, [id]: 'approved' }))
   }
 
   const handleReject = (id: string) => {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'rejected' } : r))
-    )
+    setStatusOverrides((prev) => ({ ...prev, [id]: 'rejected' }))
   }
 
   const columns: Column<VerificationRequest>[] = [
@@ -184,6 +220,16 @@ export const AlumniVerificationPage: FC = () => {
         ]}
         actions={
           <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
+            >
+              <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
+              <span>Refresh</span>
+            </Button>
             <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-bold text-brand-primary">
               {pendingCount} Pending Requests
             </span>

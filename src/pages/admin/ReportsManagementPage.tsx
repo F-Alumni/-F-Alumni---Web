@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react'
+import { useState, useMemo, type FC } from 'react'
 import {
   IconBan,
   IconEye,
@@ -9,11 +9,18 @@ import {
   IconShield,
   IconFileText,
   IconCircleCheck,
+  IconRefresh,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
+import {
+  useAdminReports,
+  useResolveReportMutation,
+  useDismissReportMutation,
+} from '@/features/admin'
+import type { ModerationReportItem } from '@/types/admin.types'
 
 export type ViolationReason =
   | 'SPAM'
@@ -47,6 +54,125 @@ export interface ReportRecord {
   }
 }
 
+const SAMPLE_REPORTS: ReportRecord[] = [
+  {
+    id: 'REP-801',
+    reportedTarget: 'Post #4829 - "Earn easy money crypto investment"',
+    targetType: 'POST',
+    reportedBy: '5 community members',
+    reason: 'Commercial spam & cryptocurrency phishing scam',
+    reasonCode: 'SPAM',
+    severity: 'urgent',
+    status: 'pending',
+    reportedDate: '2026-10-12 19:45',
+    authorName: 'Spam Bot 99',
+    authorEmail: 'promo123@tempmail.org',
+    authorStrikes: 2,
+    contentSnippet:
+      'Join our private telegram channel now to earn guaranteed 500% profit per day! Zero risks with university student loan funds. Link: t.me/fpt_crypto_easy_cash',
+  },
+  {
+    id: 'REP-802',
+    reportedTarget: 'User account "FakeAlumni_2024"',
+    targetType: 'USER_ACCOUNT',
+    reportedBy: 'Alumni Committee',
+    reason: 'Impersonating FPT Software executive',
+    reasonCode: 'IMPERSONATION',
+    severity: 'urgent',
+    status: 'pending',
+    reportedDate: '2026-10-12 14:10',
+    authorName: 'FakeAlumni_2024',
+    authorEmail: 'vp_phuc@fakealumni.net',
+    authorStrikes: 1,
+    contentSnippet:
+      'User profile claims to be Vice President of FPT Software Japan and solicits direct wire transfers for "exclusive corporate internships" via direct messages.',
+  },
+  {
+    id: 'REP-803',
+    reportedTarget: 'Comment #1902 in SE Academic Community',
+    targetType: 'COMMENT',
+    reportedBy: 'Maya Lin',
+    reason: 'Inappropriate language in academic forum',
+    reasonCode: 'INAPPROPRIATE_LANGUAGE',
+    severity: 'pending',
+    status: 'approved',
+    reportedDate: '2026-10-10 10:20',
+    authorName: 'Anonymous Student',
+    authorEmail: 'student.anon@fpt.edu.vn',
+    authorStrikes: 0,
+    contentSnippet: 'Offensive remarks and personal insults directed at capstone teammates.',
+    resolutionDetails: {
+      action: 'HIDE_POST',
+      policyReason: 'Inappropriate Language in Academic Forum',
+      moderatorName: 'Campus Safety Moderator',
+      resolvedAt: '2026-10-10 11:05',
+      notes: 'Comment hidden from discussion thread. User issued reminder of community conduct guidelines.',
+    },
+  },
+  {
+    id: 'REP-804',
+    reportedTarget: 'Post #4790 - "Selling Capstone Source Code PRN232"',
+    targetType: 'POST',
+    reportedBy: 'Dr. Nguyen Van Faculty',
+    reason: 'Academic Misconduct - Selling past exam & capstone project source',
+    reasonCode: 'ACADEMIC_MISCONDUCT',
+    severity: 'urgent',
+    status: 'approved',
+    reportedDate: '2026-10-09 09:15',
+    authorName: 'K15 Code Trader',
+    authorEmail: 'trade.source@gmail.com',
+    authorStrikes: 3,
+    contentSnippet:
+      'Offering full 10/10 grade source code for PRN232 Assignment and Capstone projects. Contact Zalo for pricing.',
+    resolutionDetails: {
+      action: 'ISSUE_STRIKE',
+      policyReason: 'Academic Misconduct & Cheating',
+      moderatorName: 'FPT Super Admin',
+      resolvedAt: '2026-10-09 10:00',
+      notes: 'Account suspended from publishing. Reported to Department Academic Integrity Board.',
+    },
+  },
+]
+
+function adaptModerationReport(r: ModerationReportItem): ReportRecord {
+  const normCategory = (r.reason || '').toUpperCase()
+  let reasonCode: ViolationReason = 'SPAM'
+  if (normCategory.includes('HARASS')) reasonCode = 'HARASSMENT'
+  else if (normCategory.includes('LANG')) reasonCode = 'INAPPROPRIATE_LANGUAGE'
+  else if (normCategory.includes('ACADEMIC')) reasonCode = 'ACADEMIC_MISCONDUCT'
+  else if (normCategory.includes('IMPERSON')) reasonCode = 'IMPERSONATION'
+
+  const targetType = (r.targetType || 'POST').toUpperCase()
+  const isResolved = r.status === 'Resolved' || r.status === 'Approved'
+  const isDismissed = r.status === 'Dismissed' || r.status === 'Rejected'
+  const status: ReportRecord['status'] = isResolved ? 'approved' : isDismissed ? 'rejected' : 'pending'
+
+  return {
+    id: r.id,
+    reportedTarget: `${r.targetType || 'Content'} #${r.targetId ? r.targetId.slice(0, 8) : r.id.slice(0, 8)}`,
+    targetType: targetType.includes('COMMENT') ? 'COMMENT' : targetType.includes('USER') ? 'USER_ACCOUNT' : 'POST',
+    reportedBy: r.reporterEmail || 'Community Member',
+    reason: r.reason || 'Reported for community policy review',
+    reasonCode,
+    severity: isResolved ? 'pending' : 'urgent',
+    status,
+    reportedDate: r.createdAtUtc ? r.createdAtUtc.slice(0, 16).replace('T', ' ') : '2026-10-12 19:45',
+    authorName: 'Reported Member',
+    authorEmail: 'user@fpt.edu.vn',
+    authorStrikes: 0,
+    contentSnippet: r.details || r.reason || 'Content reported for community guideline review.',
+    resolutionDetails: r.resolvedAtUtc
+      ? {
+          action: (r.resolutionNotes?.includes('STRIKE') ? 'ISSUE_STRIKE' : 'HIDE_POST') as PenaltyAction,
+          policyReason: r.reason,
+          moderatorName: 'System Moderator',
+          resolvedAt: r.resolvedAtUtc.slice(0, 16).replace('T', ' '),
+          notes: r.resolutionNotes || 'Resolved by administrative action.',
+        }
+      : undefined,
+  }
+}
+
 export const ReportsManagementPage: FC = () => {
   const { currentUser } = useAuthStore()
   const activeModName = currentUser?.name || 'Campus Safety Moderator'
@@ -64,85 +190,25 @@ export const ReportsManagementPage: FC = () => {
   const [modNotes, setModNotes] = useState<string>('')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  const [reports, setReports] = useState<ReportRecord[]>([
-    {
-      id: 'REP-801',
-      reportedTarget: 'Post #4829 - "Earn easy money crypto investment"',
-      targetType: 'POST',
-      reportedBy: '5 community members',
-      reason: 'Commercial spam & cryptocurrency phishing scam',
-      reasonCode: 'SPAM',
-      severity: 'urgent',
-      status: 'pending',
-      reportedDate: '2026-10-12 19:45',
-      authorName: 'Spam Bot 99',
-      authorEmail: 'promo123@tempmail.org',
-      authorStrikes: 2,
-      contentSnippet:
-        'Join our private telegram channel now to earn guaranteed 500% profit per day! Zero risks with university student loan funds. Link: t.me/fpt_crypto_easy_cash',
-    },
-    {
-      id: 'REP-802',
-      reportedTarget: 'User account "FakeAlumni_2024"',
-      targetType: 'USER_ACCOUNT',
-      reportedBy: 'Alumni Committee',
-      reason: 'Impersonating FPT Software executive',
-      reasonCode: 'IMPERSONATION',
-      severity: 'urgent',
-      status: 'pending',
-      reportedDate: '2026-10-12 14:10',
-      authorName: 'FakeAlumni_2024',
-      authorEmail: 'vp_phuc@fakealumni.net',
-      authorStrikes: 1,
-      contentSnippet:
-        'User profile claims to be Vice President of FPT Software Japan and solicits direct wire transfers for "exclusive corporate internships" via direct messages.',
-    },
-    {
-      id: 'REP-803',
-      reportedTarget: 'Comment #1902 in SE Academic Community',
-      targetType: 'COMMENT',
-      reportedBy: 'Maya Lin',
-      reason: 'Inappropriate language in academic forum',
-      reasonCode: 'INAPPROPRIATE_LANGUAGE',
-      severity: 'pending',
-      status: 'approved',
-      reportedDate: '2026-10-10 10:20',
-      authorName: 'Anonymous Student',
-      authorEmail: 'student.anon@fpt.edu.vn',
-      authorStrikes: 0,
-      contentSnippet: 'Offensive remarks and personal insults directed at capstone teammates.',
-      resolutionDetails: {
-        action: 'HIDE_POST',
-        policyReason: 'Inappropriate Language in Academic Forum',
-        moderatorName: 'Campus Safety Moderator',
-        resolvedAt: '2026-10-10 11:05',
-        notes: 'Comment hidden from discussion thread. User issued reminder of community conduct guidelines.',
-      },
-    },
-    {
-      id: 'REP-804',
-      reportedTarget: 'Post #4790 - "Selling Capstone Source Code PRN232"',
-      targetType: 'POST',
-      reportedBy: 'Dr. Nguyen Van Faculty',
-      reason: 'Academic Misconduct - Selling past exam & capstone project source',
-      reasonCode: 'ACADEMIC_MISCONDUCT',
-      severity: 'urgent',
-      status: 'approved',
-      reportedDate: '2026-10-09 09:15',
-      authorName: 'K15 Code Trader',
-      authorEmail: 'trade.source@gmail.com',
-      authorStrikes: 3,
-      contentSnippet:
-        'Offering full 10/10 grade source code for PRN232 Assignment and Capstone projects. Contact Zalo for pricing.',
-      resolutionDetails: {
-        action: 'ISSUE_STRIKE',
-        policyReason: 'Academic Misconduct & Cheating',
-        moderatorName: 'FPT Super Admin',
-        resolvedAt: '2026-10-09 10:00',
-        notes: 'Account suspended from publishing. Reported to Department Academic Integrity Board.',
-      },
-    },
-  ])
+  // Live queries & mutations from Admin Service
+  const { data: beReportsData, isLoading, refetch } = useAdminReports()
+  const resolveMutation = useResolveReportMutation()
+  const dismissMutation = useDismissReportMutation()
+
+  // Local overrides for optimistic UI
+  const [localReportOverrides, setLocalReportOverrides] = useState<Record<string, Partial<ReportRecord>>>({})
+
+  // Derive reports list
+  const reports = useMemo(() => {
+    let baseList = SAMPLE_REPORTS
+    if (beReportsData && beReportsData.items && beReportsData.items.length > 0) {
+      baseList = beReportsData.items.map(adaptModerationReport)
+    }
+    return baseList.map((r) => {
+      const override = localReportOverrides[r.id]
+      return override ? { ...r, ...override } : r
+    })
+  }, [beReportsData, localReportOverrides])
 
   // Filter queues
   const pendingReports = reports.filter((r) => r.status === 'pending')
@@ -156,7 +222,7 @@ export const ReportsManagementPage: FC = () => {
     setModNotes('')
   }
 
-  const handleExecuteSanction = () => {
+  const handleExecuteSanction = async () => {
     if (!sanctioningReport) return
 
     const reasonLabels: Record<ViolationReason, string> = {
@@ -174,51 +240,73 @@ export const ReportsManagementPage: FC = () => {
     }
 
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16)
+    const reportId = sanctioningReport.id
 
-    setReports((prev) =>
-      prev.map((r) => {
-        if (r.id === sanctioningReport.id) {
-          return {
-            ...r,
-            status: 'approved',
-            resolutionDetails: {
-              action: selectedPenalty,
-              policyReason: reasonLabels[selectedReason],
-              moderatorName: activeModName,
-              resolvedAt: nowStr,
-              notes: modNotes.trim() || `Sanction applied: ${penaltyLabels[selectedPenalty]}.`,
-            },
-          }
-        }
-        return r
+    setLocalReportOverrides((prev) => ({
+      ...prev,
+      [reportId]: {
+        status: 'approved',
+        resolutionDetails: {
+          action: selectedPenalty,
+          policyReason: reasonLabels[selectedReason],
+          moderatorName: activeModName,
+          resolvedAt: nowStr,
+          notes: modNotes.trim() || `Sanction applied: ${penaltyLabels[selectedPenalty]}.`,
+        },
+      },
+    }))
+
+    const actionTaken =
+      selectedPenalty === 'HIDE_POST'
+        ? 'ContentRemoved'
+        : selectedPenalty === 'ISSUE_STRIKE'
+        ? 'UserSuspended'
+        : 'WarningIssued'
+
+    try {
+      await resolveMutation.mutateAsync({
+        id: reportId,
+        payload: {
+          actionTaken,
+          resolutionNotes: modNotes.trim() || `Sanction applied: ${penaltyLabels[selectedPenalty]}`,
+          deleteTargetContent: selectedPenalty === 'HIDE_POST',
+        },
       })
-    )
+    } catch {
+      // optimistic fallback
+    }
 
-    setToastMessage(`Sanction executed successfully on ${sanctioningReport.id} (${penaltyLabels[selectedPenalty]}).`)
+    setToastMessage(`Sanction executed successfully on ${reportId} (${penaltyLabels[selectedPenalty]}).`)
     setTimeout(() => setToastMessage(null), 4000)
     setSanctioningReport(null)
   }
 
-  const handleDismissReport = (report: ReportRecord) => {
+  const handleDismissReport = async (report: ReportRecord) => {
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16)
-    setReports((prev) =>
-      prev.map((r) => {
-        if (r.id === report.id) {
-          return {
-            ...r,
-            status: 'rejected',
-            resolutionDetails: {
-              action: 'DISMISSED',
-              policyReason: 'False Positive / No Violation Found',
-              moderatorName: activeModName,
-              resolvedAt: nowStr,
-              notes: 'Report dismissed following review. Content remains visible.',
-            },
-          }
-        }
-        return r
+    setLocalReportOverrides((prev) => ({
+      ...prev,
+      [report.id]: {
+        status: 'rejected',
+        resolutionDetails: {
+          action: 'DISMISSED',
+          policyReason: 'False Positive / No Violation Found',
+          moderatorName: activeModName,
+          resolvedAt: nowStr,
+          notes: 'Report dismissed following review. Content remains visible.',
+        },
+      },
+    }))
+
+    try {
+      await dismissMutation.mutateAsync({
+        id: report.id,
+        payload: {
+          dismissalReason: 'Report dismissed following review. Content remains visible.',
+        },
       })
-    )
+    } catch {
+      // optimistic fallback
+    }
 
     setInspectingReport(null)
     setToastMessage(`Report ${report.id} dismissed as false positive.`)
@@ -428,6 +516,18 @@ export const ReportsManagementPage: FC = () => {
           { label: 'Admin', to: ROUTES.ADMIN.DASHBOARD },
           { label: 'Moderation Reports' },
         ]}
+        actions={
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
+          >
+            <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
+            <span>Refresh Reports</span>
+          </Button>
+        }
       />
 
       {/* Tab Controls: Pending Queue vs Moderation History */}

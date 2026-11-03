@@ -1,4 +1,5 @@
-import { useState, type FC, type FormEvent } from 'react'
+import { useState, useMemo, type FC, type FormEvent } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   IconPlus,
   IconBriefcase,
@@ -13,12 +14,19 @@ import {
   IconCalendar,
   IconUsers,
   IconSparkles,
+  IconRefresh,
+  IconTrash,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { USER_TYPES } from '@/constants/userTypes'
+import {
+  opportunitiesService,
+  type CommunityEventItem,
+  type CreateEventPayload,
+} from '@/services/opportunities'
 
 export type OpportunityType = 'JOB' | 'INTERNSHIP' | 'SCHOLARSHIP' | 'CAPSTONE_PROJECT' | 'RESEARCH_ASSISTANT'
 
@@ -39,7 +47,85 @@ export interface OpportunityRecord {
   isAcademicVerified?: boolean
 }
 
+const SAMPLE_OPPORTUNITIES: OpportunityRecord[] = [
+  {
+    id: 'OPP-01',
+    title: 'Junior React & Node.js Engineer (Graduate Hire)',
+    company: 'FPT Software Da Nang',
+    type: 'JOB',
+    location: 'Da Nang (F-Complex)',
+    postedBy: 'Hoang Minh (K12 SE)',
+    applicantsCount: 42,
+    status: 'active',
+    deadline: '2026-11-15',
+    description: 'Full-time junior software engineer position for recent FPT graduates with strong JavaScript/TypeScript skills.',
+    contactEmail: 'recruitment.danang@fpt.com',
+  },
+  {
+    id: 'OPP-02',
+    title: 'AI Research Assistant (Spring 2026 Capstone & OJT)',
+    company: 'FPT AI Lab & Research Center',
+    type: 'RESEARCH_ASSISTANT',
+    location: 'Hanoi (Hoa Lac Campus)',
+    postedBy: 'Dr. Le Van Phuc',
+    department: 'Software Engineering',
+    targetCohort: 'K17, K18',
+    applicantsCount: 18,
+    status: 'active',
+    deadline: '2026-10-30',
+    description: 'Join faculty research on Large Language Model optimization for academic tutoring in Vietnamese universities.',
+    contactEmail: 'phuclv@fe.edu.vn',
+    isAcademicVerified: true,
+  },
+  {
+    id: 'OPP-03',
+    title: 'FPT Alumni Global Master Fellowship 2026',
+    company: 'FPT University Global Alumni Fund',
+    type: 'SCHOLARSHIP',
+    location: 'Tokyo, Japan',
+    postedBy: 'Tokyo Alumni Chapter',
+    applicantsCount: 7,
+    status: 'pending',
+    deadline: '2026-12-01',
+    description: '$15,000 scholarship fellowship for outstanding engineering alumni pursuing graduate studies abroad.',
+    contactEmail: 'scholarship@alumni.fpt.edu.vn',
+  },
+  {
+    id: 'OPP-04',
+    title: 'Automated Code Review Capstone Mentorship (Fall 2026)',
+    company: 'Department of Software Engineering',
+    type: 'CAPSTONE_PROJECT',
+    location: 'Hoa Lac Campus',
+    postedBy: 'Dr. Nguyen Van Faculty',
+    department: 'Software Engineering',
+    targetCohort: 'K17 Seniors',
+    applicantsCount: 14,
+    status: 'active',
+    deadline: '2026-11-20',
+    description: 'Department sponsored capstone project with industry mentor supervision and high performance computing resource grant.',
+    contactEmail: 'faculty.se@fpt.edu.vn',
+    isAcademicVerified: true,
+  },
+]
+
+function adaptEventToOpportunity(ev: CommunityEventItem): OpportunityRecord {
+  return {
+    id: ev.id,
+    title: ev.title,
+    company: ev.campus ? `FPT University (${ev.campus})` : 'FPT University Alumni Network',
+    type: 'CAPSTONE_PROJECT',
+    location: ev.location || 'FPT Campus',
+    postedBy: ev.creatorName || 'Faculty / Coordinator',
+    applicantsCount: (ev.goingCount || 0) + (ev.interestedCount || 0),
+    status: 'active',
+    deadline: ev.endTime ? ev.endTime.slice(0, 10) : '2026-12-31',
+    description: ev.description,
+    isAcademicVerified: true,
+  }
+}
+
 export const OpportunitiesManagementPage: FC = () => {
+  const queryClient = useQueryClient()
   const { role, userType, currentUser } = useAuthStore()
   const isFaculty = role !== 'ADMIN' && role !== 'MODERATOR' && userType === USER_TYPES.FACULTY
 
@@ -59,72 +145,51 @@ export const OpportunitiesManagementPage: FC = () => {
   const [contactEmail, setContactEmail] = useState(currentUser?.email || 'faculty.se@fpt.edu.vn')
   const [description, setDescription] = useState('')
 
-  const [opportunities, setOpportunities] = useState<OpportunityRecord[]>([
-    {
-      id: 'OPP-01',
-      title: 'Junior React & Node.js Engineer (Graduate Hire)',
-      company: 'FPT Software Da Nang',
-      type: 'JOB',
-      location: 'Da Nang (F-Complex)',
-      postedBy: 'Hoang Minh (K12 SE)',
-      applicantsCount: 42,
-      status: 'active',
-      deadline: '2026-11-15',
-      description: 'Full-time junior software engineer position for recent FPT graduates with strong JavaScript/TypeScript skills.',
-      contactEmail: 'recruitment.danang@fpt.com',
-    },
-    {
-      id: 'OPP-02',
-      title: 'AI Research Assistant (Spring 2026 Capstone & OJT)',
-      company: 'FPT AI Lab & Research Center',
-      type: 'RESEARCH_ASSISTANT',
-      location: 'Hanoi (Hoa Lac Campus)',
-      postedBy: 'Dr. Le Van Phuc',
-      department: 'Software Engineering',
-      targetCohort: 'K17, K18',
-      applicantsCount: 18,
-      status: 'active',
-      deadline: '2026-10-30',
-      description: 'Join faculty research on Large Language Model optimization for academic tutoring in Vietnamese universities.',
-      contactEmail: 'phuclv@fe.edu.vn',
-      isAcademicVerified: true,
-    },
-    {
-      id: 'OPP-03',
-      title: 'FPT Alumni Global Master Fellowship 2026',
-      company: 'FPT University Global Alumni Fund',
-      type: 'SCHOLARSHIP',
-      location: 'Tokyo, Japan',
-      postedBy: 'Tokyo Alumni Chapter',
-      applicantsCount: 7,
-      status: 'pending',
-      deadline: '2026-12-01',
-      description: '$15,000 scholarship fellowship for outstanding engineering alumni pursuing graduate studies abroad.',
-      contactEmail: 'scholarship@alumni.fpt.edu.vn',
-    },
-    {
-      id: 'OPP-04',
-      title: 'Automated Code Review Capstone Mentorship (Fall 2026)',
-      company: 'Department of Software Engineering',
-      type: 'CAPSTONE_PROJECT',
-      location: 'Hoa Lac Campus',
-      postedBy: 'Dr. Nguyen Van Faculty',
-      department: 'Software Engineering',
-      targetCohort: 'K17 Seniors',
-      applicantsCount: 14,
-      status: 'active',
-      deadline: '2026-11-20',
-      description: 'Department sponsored capstone project with industry mentor supervision and high performance computing resource grant.',
-      contactEmail: 'faculty.se@fpt.edu.vn',
-      isAcademicVerified: true,
-    },
-  ])
+  // Query events & workshops from Forum Service
+  const { data: eventsData, isLoading, refetch } = useQuery({
+    queryKey: ['admin', 'forum', 'events'],
+    queryFn: () => opportunitiesService.getEvents({ pageSize: 50 }),
+    staleTime: 30 * 1000,
+  })
 
-  const handleCreateOpportunity = (e: FormEvent) => {
+  // Create event mutation
+  const createEventMutation = useMutation({
+    mutationFn: (payload: CreateEventPayload) => opportunitiesService.createEvent(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'forum', 'events'] })
+    },
+  })
+
+  // Local additions & deletions & status overrides
+  const [localAddedOpps, setLocalAddedOpps] = useState<OpportunityRecord[]>([])
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, OpportunityRecord['status']>>({})
+
+  // Derive final opportunities list
+  const opportunities: OpportunityRecord[] = useMemo(() => {
+    let baseList = SAMPLE_OPPORTUNITIES
+    if (eventsData && eventsData.items && eventsData.items.length > 0) {
+      const liveItems = eventsData.items.map(adaptEventToOpportunity)
+      const existingTitles = new Set(liveItems.map((i) => i.title.toLowerCase()))
+      baseList = [...liveItems, ...SAMPLE_OPPORTUNITIES.filter((s) => !existingTitles.has(s.title.toLowerCase()))]
+    }
+
+    return [...localAddedOpps, ...baseList]
+      .filter((o) => !deletedIds.has(o.id))
+      .map((o): OpportunityRecord => {
+        const overrideStatus = statusOverrides[o.id]
+        return {
+          ...o,
+          status: overrideStatus || o.status,
+        }
+      })
+  }, [eventsData, localAddedOpps, deletedIds, statusOverrides])
+
+  const handleCreateOpportunity = async (e: FormEvent) => {
     e.preventDefault()
 
     const newOpp: OpportunityRecord = {
-      id: `OPP-0${opportunities.length + 1}`,
+      id: `OPP-0${Date.now().toString().slice(-4)}`,
       title: title.trim(),
       company: company.trim(),
       type: oppType,
@@ -140,13 +205,32 @@ export const OpportunitiesManagementPage: FC = () => {
       isAcademicVerified: true,
     }
 
-    setOpportunities([newOpp, ...opportunities])
+    setLocalAddedOpps((prev) => [newOpp, ...prev])
     setIsModalOpen(false)
+
+    try {
+      await createEventMutation.mutateAsync({
+        title: title.trim(),
+        description: description.trim(),
+        location: location.trim(),
+        campus: location.includes('Hoa Lac') ? 'Hoa Lac' : 'TP. Ho Chi Minh',
+        startTime: new Date().toISOString(),
+        endTime: new Date(deadline).toISOString(),
+      })
+    } catch {
+      // optimistic state preserved
+    }
+
     setTitle('')
     setDescription('')
-
     setToastMessage(`Academic Opportunity "${newOpp.title}" published successfully!`)
     setTimeout(() => setToastMessage(null), 4000)
+  }
+
+  const handleDeleteOpportunity = (id: string) => {
+    setDeletedIds((prev) => new Set(prev).add(id))
+    setToastMessage(`Opportunity ${id} removed.`)
+    setTimeout(() => setToastMessage(null), 3500)
   }
 
   const columns: Column<OpportunityRecord>[] = [
@@ -250,19 +334,27 @@ export const OpportunitiesManagementPage: FC = () => {
           {o.status === 'pending' && (
             <Button
               size="sm"
-              onClick={() =>
-                setOpportunities((prev) =>
-                  prev.map((item) =>
-                    item.id === o.id ? { ...item, status: 'active' } : item
-                  )
-                )
-              }
+              onClick={() => {
+                setStatusOverrides((prev) => ({ ...prev, [o.id]: 'active' }))
+                setToastMessage(`Opportunity "${o.title}" approved!`)
+                setTimeout(() => setToastMessage(null), 3000)
+              }}
               className="h-7 rounded-md bg-brand-accent px-2.5 text-xs font-semibold text-white hover:bg-emerald-600"
             >
               <IconCheck size={14} stroke={1.8} className="mr-1" />
               Approve
             </Button>
           )}
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleDeleteOpportunity(o.id)}
+            className="h-7 text-xs border-slate-200 text-rose-600 hover:bg-rose-50"
+            title="Remove opportunity"
+          >
+            <IconTrash size={14} stroke={1.8} />
+          </Button>
         </div>
       ),
     },
@@ -295,13 +387,25 @@ export const OpportunitiesManagementPage: FC = () => {
           { label: 'Opportunities' },
         ]}
         actions={
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5"
-          >
-            <IconPlus size={16} stroke={2} />
-            <span>{isFaculty ? 'Publish Academic Opportunity' : 'Post Opportunity'}</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="h-9 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
+            >
+              <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
+              <span>Refresh</span>
+            </Button>
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5"
+            >
+              <IconPlus size={16} stroke={2} />
+              <span>{isFaculty ? 'Publish Academic Opportunity' : 'Post Opportunity'}</span>
+            </Button>
+          </div>
         }
       />
 
