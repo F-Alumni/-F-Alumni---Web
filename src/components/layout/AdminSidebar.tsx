@@ -13,7 +13,6 @@ import {
   IconX,
   IconShield,
   IconBook,
-  IconExternalLink,
   type Icon as TablerIcon,
 } from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
@@ -260,26 +259,6 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
               </div>
             </div>
           ))}
-
-          {/* Direct Link to Community Social Feed */}
-          <div className="pt-2 border-t border-slate-100 space-y-1">
-            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              COMMUNITY NETWORK
-            </p>
-            <NavLink
-              to={ROUTES.APP.HOME}
-              onClick={onClose}
-              className="group flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-brand-secondary hover:bg-sky-50 transition-colors"
-            >
-              <div className="flex items-center gap-2.5">
-                <IconExternalLink size={18} stroke={1.8} className="shrink-0 text-brand-secondary" />
-                <span>Community Feed</span>
-              </div>
-              <span className="rounded-full bg-brand-secondary/10 px-2 py-0.5 text-[10px] font-bold text-brand-secondary">
-                Web App
-              </span>
-            </NavLink>
-          </div>
         </div>
 
         {/* Sidebar Footer info */}

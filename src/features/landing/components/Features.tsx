@@ -10,19 +10,19 @@ interface StepItem {
 const STEPS: StepItem[] = [
   {
     number: '01',
-    title: 'Tạo hồ sơ',
-    description: 'Giới thiệu bản thân, ngành học và mục tiêu của bạn.',
+    title: 'Xác thực & Phân quyền',
+    description: 'Đăng nhập bảo mật qua tài khoản Quản trị viên FPT Education hoặc Google Workspace (@fpt.edu.vn).',
   },
   {
     number: '02',
-    title: 'Khám phá',
-    description: 'Tìm mentor, nhóm chuyên ngành và những cơ hội phù hợp.',
+    title: 'Giám sát & Điều phối',
+    description: 'Theo dõi chỉ số mạng lưới, tiếp nhận báo cáo nội dung và thẩm định hồ sơ cựu sinh viên.',
     highlight: true,
   },
   {
     number: '03',
-    title: 'Kết nối & phát triển',
-    description: 'Bắt đầu cuộc trò chuyện và cùng nhau tiến xa hơn.',
+    title: 'Ra quyết định & Tối ưu',
+    description: 'Ban hành cảnh cáo, điều phối danh mục cộng đồng và thúc đẩy mạng lưới alumni phát triển.',
   },
 ]
 
@@ -33,10 +33,10 @@ export const Features: FC = () => {
         {/* Section Header */}
         <div className="max-w-3xl mb-14 lg:mb-20">
           <span className="text-xs font-bold uppercase tracking-widest text-[#F27024] block mb-2">
-            BẮT ĐẦU THẬT ĐƠN GIẢN
+            QUY TRÌNH VẬN HÀNH CHUẨN MỰC
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Ba bước để mở rộng thế giới của bạn
+            Ba bước để quản trị & điều phối mạng lưới
           </h2>
         </div>
 
@@ -64,7 +64,7 @@ export const Features: FC = () => {
                     </span>
                     {step.highlight && (
                       <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-50 text-[#F27024] border border-orange-200">
-                        Quan trọng
+                        Cốt lõi
                       </span>
                     )}
                   </div>

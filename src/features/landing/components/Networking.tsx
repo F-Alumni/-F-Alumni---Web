@@ -9,18 +9,18 @@ interface PillarItem {
 const PILLARS: PillarItem[] = [
   {
     id: '01',
-    title: 'Kết nối thật',
-    subtitle: 'Mở rộng network',
+    title: 'Quản trị Danh bạ',
+    subtitle: 'Giám sát tài khoản & phân quyền',
   },
   {
     id: '02',
-    title: 'Học từ trải nghiệm',
-    subtitle: 'Chia sẻ kiến thức',
+    title: 'Kiểm duyệt Nội dung',
+    subtitle: 'Bảo đảm an toàn môi trường thảo luận',
   },
   {
     id: '03',
-    title: 'Cơ hội rõ ràng',
-    subtitle: 'Nghề nghiệp & mentor',
+    title: 'Xác minh & Kết nối',
+    subtitle: 'Thẩm định hồ sơ & điều phối cơ hội',
   },
 ]
 
@@ -32,9 +32,9 @@ export const Networking: FC = () => {
           {/* Section Headline */}
           <div className="lg:w-1/3">
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-              Một cộng đồng —
+              Một nền tảng —
               <br />
-              nhiều cách để tiến xa
+              quản trị toàn diện mạng lưới
             </h2>
             <div className="w-12 h-1 bg-[#F27024] rounded-full mt-3" />
           </div>

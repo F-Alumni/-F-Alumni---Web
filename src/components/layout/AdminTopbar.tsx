@@ -11,7 +11,6 @@ import {
   IconSettings,
   IconBook,
   IconFlag,
-  IconExternalLink,
 } from '@tabler/icons-react'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
@@ -180,18 +179,6 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
               </div>
 
               {/* Navigation Links */}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDropdownOpen(false)
-                  navigate(ROUTES.APP.HOME)
-                }}
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <IconExternalLink size={16} stroke={1.8} className="text-brand-secondary" />
-                <span>Go to Community Feed</span>
-              </button>
-
               {role === ROLES.ADMIN && (
                 <button
                   type="button"

@@ -27,7 +27,7 @@ export const Footer: FC = () => {
               </span>
             </Link>
             <p className="mt-3 text-sm text-slate-500 leading-relaxed">
-              Kết nối thế hệ hôm nay với kinh nghiệm của ngày mai.
+              Cổng Quản Trị & Điều Hành Mạng Lưới Cựu Sinh Viên Đại Học FPT.
             </p>
           </div>
 
@@ -38,27 +38,34 @@ export const Footer: FC = () => {
               onClick={(e) => handleNavClick(e, 'hero')}
               className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
             >
-              Giới thiệu
-            </a>
-            <a
-              href="#features"
-              onClick={(e) => handleNavClick(e, 'features')}
-              className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
-            >
-              Tính năng
+              Tổng quan
             </a>
             <a
               href="#networking"
               onClick={(e) => handleNavClick(e, 'networking')}
               className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
             >
-              Cộng đồng
+              Trụ cột quản trị
+            </a>
+            <a
+              href="#mentoring"
+              onClick={(e) => handleNavClick(e, 'mentoring')}
+              className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
+            >
+              Chức năng
+            </a>
+            <a
+              href="#features"
+              onClick={(e) => handleNavClick(e, 'features')}
+              className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
+            >
+              Quy trình
             </a>
             <a
               href="mailto:alumni@fpt.edu.vn"
               className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
             >
-              Liên hệ
+              Hỗ trợ Kỹ thuật
             </a>
           </div>
         </div>
@@ -66,7 +73,7 @@ export const Footer: FC = () => {
         {/* Bottom Section: Divider, Copyright & Policies */}
         <div className="border-t border-slate-100 mt-12 pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-xs text-slate-400">
-            © 2026 FPT Alumni Connect · Made for the FPT community
+            © 2026 FPT Alumni Connect · Governance Portal · Đại học FPT
           </p>
 
           <div className="flex items-center gap-6">
@@ -75,14 +82,14 @@ export const Footer: FC = () => {
               onClick={(e) => e.preventDefault()}
               className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
             >
-              Quyền riêng tư
+              Chính sách Bảo mật Quản trị
             </a>
             <a
               href="#"
               onClick={(e) => e.preventDefault()}
               className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
             >
-              Điều khoản sử dụng
+              Quy định Vận hành Hệ thống
             </a>
           </div>
         </div>

@@ -3,16 +3,11 @@ import { Link } from 'react-router-dom'
 import { IconArrowRight } from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
-import { ROLES } from '@/constants/roles'
 
 export const CTA: FC = () => {
-  const { isAuthenticated, role } = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
 
-  const destinationPath = isAuthenticated
-    ? role === ROLES.ADMIN || role === ROLES.MODERATOR
-      ? ROUTES.ADMIN.DASHBOARD
-      : ROUTES.APP.HOME
-    : ROUTES.AUTH.REGISTER
+  const destinationPath = isAuthenticated ? ROUTES.ADMIN.DASHBOARD : ROUTES.AUTH.LOGIN
 
   return (
     <section className="bg-white py-12 sm:py-16">
@@ -27,13 +22,13 @@ export const CTA: FC = () => {
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
             <div className="max-w-2xl">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-white backdrop-blur-sm border border-white/15 uppercase tracking-wider mb-4">
-                CÙNG NHAU PHÁT TRIỂN
+                CỔNG ĐIỀU HÀNH TẬP TRUNG
               </span>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                Hành trình của bạn không cần phải đi một mình.
+                Hệ thống Quản trị & Điều hành FPT Alumni Connect.
               </h2>
               <p className="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed">
-                Gia nhập cộng đồng FPT Alumni Connect và bắt đầu một kết nối ý nghĩa ngay hôm nay.
+                Đăng nhập ngay để tiếp nhận công tác quản trị, thẩm định hồ sơ và phát triển mạng lưới cựu sinh viên Đại học FPT.
               </p>
             </div>
 
@@ -42,7 +37,7 @@ export const CTA: FC = () => {
                 to={destinationPath}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-lg shadow-orange-950/50 transition-all hover:scale-105 active:scale-95 cursor-pointer"
               >
-                <span>{isAuthenticated ? 'Vào cộng đồng ngay' : 'Tham gia cộng đồng'}</span>
+                <span>{isAuthenticated ? 'Vào Bảng Quản Trị' : 'Đăng nhập Quản trị viên'}</span>
                 <IconArrowRight className="w-5 h-5" />
               </Link>
             </div>

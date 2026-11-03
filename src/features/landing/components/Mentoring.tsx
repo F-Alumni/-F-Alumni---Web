@@ -1,50 +1,50 @@
 import type { FC } from 'react'
 import {
-  IconArrowUpRight,
   IconUsersGroup,
-  IconBriefcase,
-  IconHeartHandshake,
+  IconCertificate,
+  IconShieldCheck,
+  IconChartBar,
 } from '@tabler/icons-react'
 
 interface FeatureValue {
   id: string
   title: string
   description: string
-  icon: typeof IconArrowUpRight
+  icon: typeof IconUsersGroup
   iconBg: string
   iconColor: string
 }
 
 const VALUES: FeatureValue[] = [
   {
-    id: 'mentorship',
-    title: 'Mentorship',
-    description: 'Tìm mentor phù hợp, nhận lời khuyên từ người đi trước.',
-    icon: IconArrowUpRight,
+    id: 'user-management',
+    title: 'Quản lý Người dùng & An toàn',
+    description: 'Tra cứu danh bạ, quản lý cờ quyền riêng tư và điều phối lệnh khóa tài khoản vi phạm.',
+    icon: IconUsersGroup,
     iconBg: 'bg-orange-100/80',
     iconColor: 'text-[#F27024]',
   },
   {
-    id: 'communities',
-    title: 'Cộng đồng chuyên ngành',
-    description: 'Thảo luận, chia sẻ dự án và học hỏi cùng những người cùng lĩnh vực.',
-    icon: IconUsersGroup,
+    id: 'alumni-verification',
+    title: 'Xác minh Hồ sơ Cựu sinh viên',
+    description: 'Thẩm định hồ sơ bằng cấp, xét duyệt huy hiệu xác minh cựu sinh viên chính quy Đại học FPT.',
+    icon: IconCertificate,
     iconBg: 'bg-blue-100/80',
     iconColor: 'text-[#0066B2]',
   },
   {
-    id: 'opportunities',
-    title: 'Cơ hội nghề nghiệp',
-    description: 'Khám phá việc làm, thực tập và cơ hội phát triển sự nghiệp.',
-    icon: IconBriefcase,
+    id: 'content-moderation',
+    title: 'Kiểm duyệt Báo cáo & Nội dung',
+    description: 'Tiếp nhận báo cáo vi phạm, kiểm duyệt bài đăng diễn đàn và duy trì văn hóa thảo luận lành mạnh.',
+    icon: IconShieldCheck,
     iconBg: 'bg-emerald-100/80',
     iconColor: 'text-[#0DB04B]',
   },
   {
-    id: 'alumni',
-    title: 'Kết nối alumni',
-    description: 'Tìm kiếm cựu sinh viên và xây dựng mối quan hệ lâu dài.',
-    icon: IconHeartHandshake,
+    id: 'analytics-reports',
+    title: 'Thống kê & Báo cáo Tương tác',
+    description: 'Theo dõi các chỉ số tăng trưởng thành viên, số lượng kết nối mentor và cơ hội việc làm theo thời gian thực.',
+    icon: IconChartBar,
     iconBg: 'bg-indigo-100/80',
     iconColor: 'text-indigo-600',
   },
@@ -57,13 +57,13 @@ export const Mentoring: FC = () => {
         {/* Section Header */}
         <div className="max-w-3xl mb-12 lg:mb-16">
           <span className="text-xs font-bold uppercase tracking-widest text-[#F27024] block mb-2">
-            KHÁM PHÁ GIÁ TRỊ
+            CHỨC NĂNG QUẢN TRỊ NỀN TẢNG
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Cơ hội bắt đầu từ một kết nối
+            Mọi công cụ vận hành nằm trong tầm tay
           </h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            Tất cả những gì bạn cần để học hỏi, sẻ chia và phát triển cùng cộng đồng FPT.
+            Hệ thống hỗ trợ toàn diện các nghiệp vụ quản trị, kiểm duyệt và phân tích số liệu mạng lưới FPT Alumni.
           </p>
         </div>
 

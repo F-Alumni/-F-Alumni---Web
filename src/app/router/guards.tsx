@@ -22,9 +22,8 @@ export const ProtectedRoute: FC = () => {
 }
 
 /**
- * 2. PublicRoute: Guest-only route guard (e.g. login, register).
- * Redirects already authenticated actors to their respective home portal:
- * Admin/Moderator to /admin/dashboard, Faculty/Student/Alumni to /app/home.
+ * 2. PublicRoute: Guest-only route guard (e.g. login).
+ * Redirects already authenticated admin to /admin/dashboard.
  */
 export const PublicRoute: FC = () => {
   const { isAuthenticated, role } = useAuthStore()
@@ -33,7 +32,7 @@ export const PublicRoute: FC = () => {
     if (role === ROLES.ADMIN || role === ROLES.MODERATOR) {
       return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />
     }
-    return <Navigate to={ROUTES.APP.HOME} replace />
+    return <Navigate to={ROUTES.AUTH.LOGIN} replace />
   }
 
   return <Outlet />
@@ -41,10 +40,7 @@ export const PublicRoute: FC = () => {
 
 /**
  * 3. RoleGuard: Enforces role-based or user-type authorization.
- * Supports technical roles (ADMIN, MODERATOR, USER) and university personas (FACULTY).
- * Unauthorized redirection:
- * - Admin / Moderator redirected safely to /admin/dashboard
- * - Faculty / Student / Alumni redirected safely to /app/home
+ * Exclusively for Administrative Governance (Admin, Moderator, Faculty).
  */
 export interface RoleGuardProps {
   allowedRoles?: (Role | 'FACULTY')[]
@@ -95,12 +91,7 @@ export const RoleGuard: FC<RoleGuardProps> = ({
   }
 
   if (!isAllowed) {
-    const defaultFallback =
-      role === ROLES.MODERATOR
-        ? ROUTES.ADMIN.DASHBOARD
-        : ROUTES.APP.HOME
-
-    return <Navigate to={fallbackPath || defaultFallback} replace />
+    return <Navigate to={fallbackPath || ROUTES.ADMIN.DASHBOARD} replace />
   }
 
   return children ? <>{children}</> : <Outlet />
@@ -109,8 +100,7 @@ export const RoleGuard: FC<RoleGuardProps> = ({
 /**
  * 4. RootRedirect: Dynamic landing page router for path "/".
  * Unauthenticated -> LandingPage
- * Admin / Moderator -> /admin/dashboard
- * Faculty / Student / Alumni -> /app/home
+ * Authenticated Admin / Moderator -> /admin/dashboard
  */
 export const RootRedirect: FC = () => {
   const { isAuthenticated, role } = useAuthStore()
@@ -123,5 +113,5 @@ export const RootRedirect: FC = () => {
     return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />
   }
 
-  return <Navigate to={ROUTES.APP.HOME} replace />
+  return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />
 }

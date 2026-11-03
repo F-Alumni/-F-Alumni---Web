@@ -2,8 +2,8 @@ import type { RouteObject } from 'react-router-dom'
 import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
-import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
-import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
+import { AdminLayout, AuthLayout } from '@/layouts'
+import { LoginPage, ForgotPasswordPage } from '@/pages/auth'
 import {
   DashboardPage,
   UsersManagementPage,
@@ -15,7 +15,6 @@ import {
   AnalyticsPage,
   SettingsPage,
 } from '@/pages/admin'
-import { HomePage, ProfilePage, AlumniPage, ChatPage } from '@/pages/user'
 import { LandingPage } from '@/pages/LandingPage'
 import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
 
@@ -54,7 +53,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'register',
-            element: <RegisterPage />,
+            element: <Navigate to={ROUTES.AUTH.LOGIN} replace />,
           },
           {
             path: 'verify-email',
@@ -173,93 +172,10 @@ export const routes: RouteObject[] = [
     ],
   },
 
-  // 4. End-User Social & Academic Community Platform (/app/*)
+  // 4. End-User Routes Redirection (Web application is dedicated to Admin Portal)
   {
-    element: <ProtectedRoute />,
-    children: [
-      {
-        path: ROUTES.APP.ROOT,
-        element: <UserLayout />,
-        children: [
-          {
-            index: true,
-            element: <Navigate to={ROUTES.APP.HOME} replace />,
-          },
-          {
-            path: 'home',
-            element: <HomePage />,
-          },
-          {
-            path: 'communities',
-            element: <Outlet />,
-          },
-          {
-            path: 'communities/:communityId',
-            element: <Outlet />,
-          },
-          {
-            path: 'posts/create',
-            element: <Outlet />,
-          },
-          {
-            path: 'posts/:postId',
-            element: <Outlet />,
-          },
-          {
-            path: 'alumni',
-            element: <AlumniPage />,
-          },
-          {
-            path: 'alumni/:userId',
-            element: <Outlet />,
-          },
-          {
-            path: 'jobs',
-            element: <Outlet />,
-          },
-          {
-            path: 'jobs/:jobId',
-            element: <Outlet />,
-          },
-          {
-            path: 'internships',
-            element: <Outlet />,
-          },
-          {
-            path: 'scholarships',
-            element: <Outlet />,
-          },
-          {
-            path: 'search',
-            element: <Outlet />,
-          },
-          {
-            path: 'chat',
-            element: <ChatPage />,
-          },
-          {
-            path: 'notifications',
-            element: <Outlet />,
-          },
-          {
-            path: 'ai',
-            element: <Outlet />,
-          },
-          {
-            path: 'saved',
-            element: <Outlet />,
-          },
-          {
-            path: 'profile',
-            element: <ProfilePage />,
-          },
-          {
-            path: 'settings',
-            element: <Outlet />,
-          },
-        ],
-      },
-    ],
+    path: '/app/*',
+    element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
   },
 
   // 5. Fallback Wildcard Route

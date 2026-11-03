@@ -4,20 +4,15 @@ import {
   IconArrowRight,
   IconCircleCheckFilled,
   IconCompass,
-  IconSparkles,
+  IconShieldLock,
 } from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
-import { ROLES } from '@/constants/roles'
 
 export const Hero: FC = () => {
-  const { isAuthenticated, role } = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
 
-  const destinationPath = isAuthenticated
-    ? role === ROLES.ADMIN || role === ROLES.MODERATOR
-      ? ROUTES.ADMIN.DASHBOARD
-      : ROUTES.APP.HOME
-    : ROUTES.AUTH.REGISTER
+  const destinationPath = isAuthenticated ? ROUTES.ADMIN.DASHBOARD : ROUTES.AUTH.LOGIN
 
   return (
     <section id="hero" className="relative overflow-hidden bg-white py-12 sm:py-16 lg:py-24">
@@ -30,19 +25,18 @@ export const Hero: FC = () => {
           {/* Left Column: Headline and Call-to-actions */}
           <div className="lg:col-span-6 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-[#F27024] text-xs font-bold tracking-wider uppercase">
-              <IconSparkles className="w-3.5 h-3.5 text-[#F27024]" />
-              <span>CỘNG ĐỒNG ALUMNI FPT</span>
+              <IconShieldLock className="w-3.5 h-3.5 text-[#F27024]" />
+              <span>CỔNG QUẢN TRỊ & ĐIỀU HÀNH HỆ THỐNG</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black text-slate-900 tracking-tight leading-[1.12]">
-              Kết nối hôm nay.
+              Quản trị thông minh.
               <br />
               <span className="text-[#F27024]">Bứt phá</span> ngày mai.
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
-              Cầu nối giữa sinh viên và cựu sinh viên FPT — nơi chia sẻ kinh nghiệm, tìm người
-              dẫn đường và mở ra cơ hội nghề nghiệp.
+              Nền tảng điều phối và giám sát tập trung dành cho Ban Quản Trị Đại học FPT — Quản lý danh bạ, xác minh cựu sinh viên, kiểm duyệt an toàn nội dung và thúc đẩy các cơ hội kết nối mạng lưới.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-4">
@@ -50,7 +44,7 @@ export const Hero: FC = () => {
                 to={destinationPath}
                 className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-base font-bold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
-                <span>{isAuthenticated ? 'Vào cộng đồng ngay' : 'Khám phá cộng đồng'}</span>
+                <span>{isAuthenticated ? 'Vào Bảng Quản Trị ngay' : 'Đăng nhập Cổng Quản Trị'}</span>
                 <IconArrowRight className="w-5 h-5" />
               </Link>
 
@@ -58,13 +52,13 @@ export const Hero: FC = () => {
                 href="#mentoring"
                 className="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200/70 transition-colors"
               >
-                Tìm hiểu thêm
+                Xem tính năng quản trị
               </a>
             </div>
 
-            <p className="text-xs sm:text-sm font-medium text-slate-400 pt-2 flex items-center gap-2">
+            <p className="text-xs sm:text-sm font-medium text-slate-500 pt-2 flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Dành cho sinh viên · Alumni · Mentor</span>
+              <span>Dành riêng cho Ban Quản trị, Điều phối viên & Cán bộ Nhà trường</span>
             </p>
           </div>
 
@@ -79,7 +73,7 @@ export const Hero: FC = () => {
                 {/* Sub-header inside graphic card */}
                 <div className="relative z-10 mb-6">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#F27024] block mb-1">
-                    CỘNG ĐỒNG CỦA BẠN
+                    GIÁM SÁT KẾT NỐI MẠNG LƯỚI
                   </span>
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug">
                     Những kết nối
@@ -106,7 +100,7 @@ export const Hero: FC = () => {
                       <div className="mt-1.5">
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                           <IconCircleCheckFilled className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Alumni xác minh</span>
+                          <span>Alumni xác minh (Đã duyệt)</span>
                         </span>
                       </div>
                     </div>

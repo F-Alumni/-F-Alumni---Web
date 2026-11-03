@@ -4,17 +4,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { IconMenu2, IconX, IconArrowRight, IconDashboard } from '@tabler/icons-react'
 import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
-import { ROLES } from '@/constants/roles'
 
 export const Navbar: FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { isAuthenticated, role, currentUser } = useAuthStore()
+  const { isAuthenticated, currentUser } = useAuthStore()
   const navigate = useNavigate()
-
-  const dashboardPath =
-    role === ROLES.ADMIN || role === ROLES.MODERATOR
-      ? ROUTES.ADMIN.DASHBOARD
-      : ROUTES.APP.HOME
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault()
@@ -38,7 +32,7 @@ export const Navbar: FC = () => {
               FPT Alumni Connect
             </span>
             <span className="text-[10px] font-semibold text-[#F27024] tracking-wider uppercase mt-1">
-              Community Platform
+              Admin & Governance Portal
             </span>
           </div>
         </Link>
@@ -50,57 +44,49 @@ export const Navbar: FC = () => {
             onClick={(e) => handleNavClick(e, 'hero')}
             className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
           >
-            Giới thiệu
+            Tổng quan
           </a>
           <a
             href="#networking"
             onClick={(e) => handleNavClick(e, 'networking')}
             className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
           >
-            Cộng đồng
+            Trụ cột quản trị
           </a>
           <a
             href="#mentoring"
             onClick={(e) => handleNavClick(e, 'mentoring')}
             className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
           >
-            Cơ hội nghề nghiệp
+            Chức năng hệ thống
           </a>
           <a
             href="#features"
             onClick={(e) => handleNavClick(e, 'features')}
             className="text-sm font-medium text-slate-600 hover:text-[#F27024] transition-colors"
           >
-            Tính năng
+            Quy trình vận hành
           </a>
         </nav>
 
-        {/* Action Buttons */}
+        {/* Action Buttons (Exclusively Admin oriented) */}
         <div className="hidden md:flex items-center gap-3">
           {isAuthenticated ? (
             <button
-              onClick={() => navigate(dashboardPath)}
+              onClick={() => navigate(ROUTES.ADMIN.DASHBOARD)}
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-md shadow-orange-500/25 transition-all hover:scale-[1.02] cursor-pointer"
             >
               <IconDashboard className="w-4 h-4" />
-              <span>Vào trang chính ({currentUser?.name || 'Dashboard'})</span>
+              <span>Vào Bảng Quản Trị ({currentUser?.name || 'Admin'})</span>
             </button>
           ) : (
-            <>
-              <Link
-                to={ROUTES.AUTH.LOGIN}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-              >
-                Đăng nhập
-              </Link>
-              <Link
-                to={ROUTES.AUTH.REGISTER}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-sm shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
-              >
-                <span>Tham gia ngay</span>
-                <IconArrowRight className="w-4 h-4" />
-              </Link>
-            </>
+            <Link
+              to={ROUTES.AUTH.LOGIN}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-md shadow-orange-500/25 transition-all hover:scale-[1.02]"
+            >
+              <span>Đăng nhập Quản trị viên</span>
+              <IconArrowRight className="w-4 h-4" />
+            </Link>
           )}
         </div>
 
@@ -126,28 +112,28 @@ export const Navbar: FC = () => {
               onClick={(e) => handleNavClick(e, 'hero')}
               className="px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-[#F27024]"
             >
-              Giới thiệu
+              Tổng quan
             </a>
             <a
               href="#networking"
               onClick={(e) => handleNavClick(e, 'networking')}
               className="px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-[#F27024]"
             >
-              Cộng đồng
+              Trụ cột quản trị
             </a>
             <a
               href="#mentoring"
               onClick={(e) => handleNavClick(e, 'mentoring')}
               className="px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-[#F27024]"
             >
-              Cơ hội nghề nghiệp
+              Chức năng hệ thống
             </a>
             <a
               href="#features"
               onClick={(e) => handleNavClick(e, 'features')}
               className="px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-[#F27024]"
             >
-              Tính năng
+              Quy trình vận hành
             </a>
           </div>
 
@@ -156,31 +142,22 @@ export const Navbar: FC = () => {
               <button
                 onClick={() => {
                   setMobileMenuOpen(false)
-                  navigate(dashboardPath)
+                  navigate(ROUTES.ADMIN.DASHBOARD)
                 }}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-md"
               >
                 <IconDashboard className="w-4 h-4" />
-                <span>Vào trang chính ({currentUser?.name || 'Dashboard'})</span>
+                <span>Vào Bảng Quản Trị ({currentUser?.name || 'Admin'})</span>
               </button>
             ) : (
-              <>
-                <Link
-                  to={ROUTES.AUTH.LOGIN}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl"
-                >
-                  Đăng nhập
-                </Link>
-                <Link
-                  to={ROUTES.AUTH.REGISTER}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-md"
-                >
-                  <span>Tham gia ngay</span>
-                  <IconArrowRight className="w-4 h-4" />
-                </Link>
-              </>
+              <Link
+                to={ROUTES.AUTH.LOGIN}
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-md"
+              >
+                <span>Đăng nhập Quản trị viên</span>
+                <IconArrowRight className="w-4 h-4" />
+              </Link>
             )}
           </div>
         </div>
