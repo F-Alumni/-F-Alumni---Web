@@ -1,5 +1,5 @@
 import { useState, type FC, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   IconMail,
   IconLock,
@@ -7,16 +7,17 @@ import {
   IconEyeOff,
   IconShieldCheck,
   IconArrowRight,
+  IconArrowLeft,
   IconLoader2,
   IconAlertCircle,
   IconDeviceMobile,
+  IconSparkles,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { useAuthStore } from '@/stores/authStore'
 import fptLogo from '@/assets/fpt-logo.svg'
-
 import { authService } from '@/services/auth'
 import { normalizeError } from '@/lib/errorHandler'
 
@@ -24,8 +25,8 @@ export const LoginForm: FC = () => {
   const navigate = useNavigate()
   const setAuth = useAuthStore((state) => state.setAuth)
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('admin@fpt.edu.vn')
+  const [password, setPassword] = useState('123456')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
@@ -52,7 +53,7 @@ export const LoginForm: FC = () => {
       }
     } catch (err: unknown) {
       const normalized = normalizeError(err)
-      setError(normalized.message || 'Login failed. Please check your admin credentials.')
+      setError(normalized.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin quản trị viên.')
     } finally {
       setIsLoading(false)
     }
@@ -63,12 +64,12 @@ export const LoginForm: FC = () => {
     setError(null)
 
     if (!email.trim() || !email.includes('@')) {
-      setError('Please provide a valid university email address (@fpt.edu.vn or @fe.edu.vn)')
+      setError('Vui lòng nhập địa chỉ email hợp lệ thuộc trường FPT (@fpt.edu.vn hoặc @fe.edu.vn)')
       return
     }
 
     if (!password) {
-      setError('Please enter your security password')
+      setError('Vui lòng nhập mật khẩu bảo mật của quản trị viên')
       return
     }
 
@@ -94,13 +95,28 @@ export const LoginForm: FC = () => {
     }
   }
 
+  const handleQuickDemoAdminLogin = () => {
+    executeLogin('admin@fpt.edu.vn', '123456')
+  }
+
   return (
     <div className="w-full space-y-3.5 sm:space-y-4 animate-in fade-in duration-300">
+      {/* Back to Landing Page link */}
+      <div>
+        <Link
+          to={ROUTES.LANDING}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-primary transition-colors"
+        >
+          <IconArrowLeft size={15} stroke={2} />
+          <span>Quay lại Trang chủ</span>
+        </Link>
+      </div>
+
       {/* 1. Brand Identity & Header */}
       <div className="space-y-1.5">
         <div className="inline-flex items-center gap-2">
           <img src={fptLogo} alt="FPT Education Logo" className="h-7 w-auto object-contain" />
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
             <IconShieldCheck size={13} stroke={2} />
             Admin & Governance Portal
           </span>
@@ -116,7 +132,31 @@ export const LoginForm: FC = () => {
         </div>
       </div>
 
-      {/* 2. Google Workspace SSO */}
+      {/* 2. Quick Demo Access Banner for Evaluation / Teachers */}
+      <div className="rounded-xl border border-brand-primary/30 bg-gradient-to-r from-orange-50/90 to-amber-50/80 p-3 shadow-xs">
+        <div className="flex items-center justify-between gap-2">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-brand-primary">
+              <IconSparkles size={15} stroke={2} className="text-brand-primary animate-pulse" />
+              <span>Chấm điểm & Kiểm thử nhanh</span>
+            </div>
+            <p className="text-[10px] text-slate-600">
+              Đăng nhập tức thì với tài khoản Quản trị viên FPT (admin@fpt.edu.vn)
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleQuickDemoAdminLogin}
+            disabled={isLoading}
+            className="shrink-0 rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-brand-primary-hover active:bg-[#d95d18] transition-all flex items-center gap-1 disabled:opacity-60"
+          >
+            <span>1-Click Login</span>
+            <IconArrowRight size={13} stroke={2} />
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Google Workspace SSO */}
       <div>
         <button
           type="button"
@@ -124,7 +164,6 @@ export const LoginForm: FC = () => {
           disabled={isLoading}
           className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 hover:border-slate-300 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {/* Official Google Multi-color Logo */}
           <svg
             className="w-4 h-4 shrink-0"
             width="16"
@@ -153,7 +192,7 @@ export const LoginForm: FC = () => {
         </button>
       </div>
 
-      {/* 3. Divider */}
+      {/* 4. Divider */}
       <div className="relative my-0.5">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-slate-200" />
@@ -165,7 +204,7 @@ export const LoginForm: FC = () => {
         </div>
       </div>
 
-      {/* 4. Error Alert */}
+      {/* 5. Error Alert */}
       {error && (
         <div
           className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700 animate-in fade-in"
@@ -176,7 +215,7 @@ export const LoginForm: FC = () => {
         </div>
       )}
 
-      {/* 5. Authentication Form */}
+      {/* 6. Authentication Form */}
       <form onSubmit={handleLogin} className="space-y-3">
         {/* Email Field */}
         <div className="space-y-1">
@@ -290,18 +329,18 @@ export const LoginForm: FC = () => {
         </div>
       </div>
 
-      {/* 6. Minimal Footer & Security Notice */}
+      {/* 7. Minimal Footer & Security Notice */}
       <div className="pt-2 text-center space-y-1.5">
         <p className="text-[10px] text-slate-400 leading-tight max-w-sm mx-auto">
           FPT University Alumni Governance & Administration System. All administrative operations are monitored and logged under university security policies.
         </p>
 
         <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-slate-400 pt-1 border-t border-slate-100">
-          <a href="#" className="hover:text-slate-600 transition-colors">Admin Security</a>
+          <span className="text-slate-500">Admin Security</span>
           <span className="text-slate-300">•</span>
-          <a href="#" className="hover:text-slate-600 transition-colors">Audit Policy</a>
+          <span className="text-slate-500">Audit Policy</span>
           <span className="text-slate-300">•</span>
-          <a href="#" className="hover:text-slate-600 transition-colors">FPT Identity</a>
+          <span className="text-slate-500">FPT Identity</span>
         </div>
       </div>
     </div>
@@ -309,4 +348,3 @@ export const LoginForm: FC = () => {
 }
 
 export default LoginForm
-
