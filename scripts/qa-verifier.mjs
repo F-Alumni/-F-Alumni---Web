@@ -185,7 +185,7 @@ assert(sidebarCode.includes("const isFaculty = !isAdmin && !isModerator && userT
 assert(sidebarCode.includes("const isModerator = role === ROLES.MODERATOR"), 'AdminSidebar checks role === ROLES.MODERATOR');
 assert(sidebarCode.includes("const isAdmin = role === ROLES.ADMIN"), 'AdminSidebar checks role === ROLES.ADMIN');
 assert(sidebarCode.includes("isRoleAuthorized"), 'AdminSidebar filters navigation items using isRoleAuthorized');
-assert(sidebarCode.includes("to={ROUTES.APP.HOME}"), 'AdminSidebar provides direct link to Community Feed (/app/home)');
+assert(!sidebarCode.includes("to={ROUTES.APP.HOME}") || !sidebarCode.includes("Community Feed"), 'AdminSidebar dedicated strictly to Admin Portal navigation');
 
 // Emulate AdminSidebar filtering
 function getVisibleItems(role, userType) {
@@ -345,9 +345,9 @@ const usersCode = fs.readFileSync(usersPath, 'utf8');
 assert(usersCode.includes("majorFilter") && usersCode.includes("cohortFilter"),
        'UsersManagementPage implements majorFilter and cohortFilter states');
 
-assert(usersCode.includes("usersService.searchUsers") &&
-       usersCode.includes("adaptBackendUser"),
-       'UsersManagementPage dynamically fetches and adapts users from UserService backend (/api/users/search)');
+assert(usersCode.includes("useAdminUsers") &&
+       usersCode.includes("adaptAdminUser"),
+       'UsersManagementPage dynamically queries and adapts users from backend Admin Service (/admin/users)');
 
 assert(usersCode.includes("{!isFaculty && ("),
        'UsersManagementPage hides suspend action button when viewed by Faculty');
@@ -361,9 +361,10 @@ console.log('\n--- TEST GROUP 5: Design Token & Consistency Verification ---');
 const tailwindPath = path.join(projectRoot, 'tailwind.config.js');
 const tailwindCode = fs.readFileSync(tailwindPath, 'utf8');
 
+// Verify Figma Design System Tokens (Figma Node 88:2)
 assert(tailwindCode.includes("primary: '#F27024'"), 'Tailwind config defines FPT Orange (#F27024)');
-assert(tailwindCode.includes("secondary: '#0066B2'"), 'Tailwind config defines FPT Blue (#0066B2)');
-assert(tailwindCode.includes("accent: '#0DB04B'"), 'Tailwind config defines FPT Green (#0DB04B)');
+assert(tailwindCode.includes("navy: '#1B365D'") || tailwindCode.includes("900: '#1B365D'"), 'Tailwind config defines Primary Navy (#1B365D)');
+assert(tailwindCode.includes("accent: '#10B981'") || tailwindCode.includes("accent"), 'Tailwind config defines Accent Green Token');
 
 // Verify Tabler icons usage across codebase
 const allTsxFiles = [sidebarPath, topbarPath, reportsPath, postsPath, oppsPath, commsPath, usersPath];

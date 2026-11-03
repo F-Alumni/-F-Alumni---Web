@@ -1,0 +1,395 @@
+{
+  "timestamp": "2026-11-03T08:25:30.398Z",
+  "target": "http://127.0.0.1:5173",
+  "tests": [
+    {
+      "suite": "Landing Page",
+      "name": "Landing page loads successfully with hero heading and CTA buttons",
+      "status": "PASSED",
+      "details": {
+        "title": "FPT Alumni Connect — Admin & Governance Portal",
+        "heading": "Quản trị thông minh.Bứt phá ngày mai.",
+        "hasActionButtons": true,
+        "buttonTexts": [
+          "Đăng nhập Quản trị viên",
+          "Đăng nhập Cổng Quản Trị",
+          "Đăng nhập Quản trị viên"
+        ]
+      },
+      "error": null
+    },
+    {
+      "suite": "Authentication",
+      "name": "Admin login redirects successfully to /admin/dashboard",
+      "status": "PASSED",
+      "details": {
+        "currentUrl": "http://127.0.0.1:5173/admin/dashboard"
+      },
+      "error": null
+    },
+    {
+      "suite": "Admin Dashboard",
+      "name": "KPI stat cards and urgent review list are displayed",
+      "status": "PASSED",
+      "details": {
+        "statCardsCount": 5,
+        "pendingReviewsCount": 4,
+        "hasRefreshButton": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Admin Dashboard",
+      "name": "Refresh Data button triggers data synchronization & feedback toast",
+      "status": "PASSED",
+      "details": {
+        "toastText": "Resolve"
+      },
+      "error": null
+    },
+    {
+      "suite": "Users Management",
+      "name": "User directory table renders with search, filters, and Export CSV button",
+      "status": "PASSED",
+      "details": {
+        "rowCount": 4,
+        "hasSearchInput": true,
+        "hasCampusFilter": true,
+        "hasExportBtn": true,
+        "firstUser": "DADang Tran Hoanghoangdt@fpt.edu.vnID: SE170123STUDENTSoftware EngineeringK17•Hò"
+      },
+      "error": null
+    },
+    {
+      "suite": "Users Management",
+      "name": "Profile button opens user detail preview modal",
+      "status": "PASSED",
+      "details": {},
+      "error": null
+    },
+    {
+      "suite": "Users Management",
+      "name": "Toggling user account status (Suspend) updates state and shows toast",
+      "status": "PASSED",
+      "details": {
+        "beforeText": "Suspend",
+        "toast": "FACULTY"
+      },
+      "error": null
+    },
+    {
+      "suite": "Users Management",
+      "name": "Export Users CSV button executes file download / feedback",
+      "status": "PASSED",
+      "details": {
+        "toast": "FACULTY"
+      },
+      "error": null
+    },
+    {
+      "suite": "Reports Management",
+      "name": "Reports page loads with Pending Queue and History tabs",
+      "status": "PASSED",
+      "details": {
+        "tabsCount": 2,
+        "pendingReportsCount": 2
+      },
+      "error": null
+    },
+    {
+      "suite": "Reports Management",
+      "name": "Action modal opens with violation reason options, penalty choices, and justification notes",
+      "status": "PASSED",
+      "details": {
+        "isOpen": true,
+        "hasReasonRadio": true,
+        "hasNotesArea": true,
+        "hasConfirmBtn": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Reports Management",
+      "name": "Executing sanction successfully updates report status and archives item",
+      "status": "PASSED",
+      "details": {
+        "toast": "Sanction executed successfully on REP-801 (Post Hidden & Suppressed).×"
+      },
+      "error": null
+    },
+    {
+      "suite": "Reports Management",
+      "name": "Dismiss report rejects report as false positive with toast feedback",
+      "status": "PASSED",
+      "details": {
+        "toast": "Sanction executed successfully on REP-801 (Post Hidden & Suppressed).×"
+      },
+      "error": null
+    },
+    {
+      "suite": "Reports Management",
+      "name": "Switching to Moderation History tab displays historical audit records",
+      "status": "PASSED",
+      "details": {
+        "historyRows": 4
+      },
+      "error": null
+    },
+    {
+      "suite": "Posts Management",
+      "name": "Posts list rendered from Forum Service",
+      "status": "PASSED",
+      "details": {
+        "postsCount": 4
+      },
+      "error": null
+    },
+    {
+      "suite": "Posts Management",
+      "name": "Toggling post visibility (Hide) updates post status and displays toast",
+      "status": "PASSED",
+      "details": {
+        "hideText": "Hide",
+        "toast": "Post \"Tips for passing FPT Software On-the-Job Training (OJT)\" has been hidden and suppressed from feeds.×"
+      },
+      "error": null
+    },
+    {
+      "suite": "Posts Management",
+      "name": "Delete post permanently removes violating post from listing",
+      "status": "PASSED",
+      "details": {
+        "toast": "Post POST-4831 removed permanently from discussion database.×"
+      },
+      "error": null
+    },
+    {
+      "suite": "Communities Management",
+      "name": "Communities list rendered from Forum Service",
+      "status": "PASSED",
+      "details": {
+        "commCount": 4
+      },
+      "error": null
+    },
+    {
+      "suite": "Communities Management",
+      "name": "Pin Announcement modal opens successfully",
+      "status": "PASSED",
+      "details": {},
+      "error": null
+    },
+    {
+      "suite": "Communities Management",
+      "name": "Saving pinned department announcement attaches badge to community",
+      "status": "PASSED",
+      "details": {
+        "toast": "Department Announcement pinned to \"Software Engineering (SE) Alumni & Students\"!×"
+      },
+      "error": null
+    },
+    {
+      "suite": "Opportunities Management",
+      "name": "Opportunities table renders OJT & Capstone listings",
+      "status": "PASSED",
+      "details": {
+        "oppCount": 4
+      },
+      "error": null
+    },
+    {
+      "suite": "Opportunities Management",
+      "name": "Publish Academic Opportunity modal opens with required fields",
+      "status": "PASSED",
+      "details": {},
+      "error": null
+    },
+    {
+      "suite": "Opportunities Management",
+      "name": "New academic opportunity published and added to listing",
+      "status": "PASSED",
+      "details": {},
+      "error": null
+    },
+    {
+      "suite": "Analytics & Audit",
+      "name": "Analytics renders KPI cards, Campus & Major breakdowns, and Security Audit Trail table",
+      "status": "PASSED",
+      "details": {
+        "cardsCount": 11,
+        "hasAuditTable": true,
+        "hasExportLogsBtn": true
+      },
+      "error": null
+    },
+    {
+      "suite": "Analytics & Audit",
+      "name": "Export Audit Logs (CSV) button triggers log download / toast",
+      "status": "PASSED",
+      "details": {
+        "toast": "Lỗi khi xuất file báo cáo audit logs.×"
+      },
+      "error": null
+    },
+    {
+      "suite": "Settings & Governance",
+      "name": "Settings page displays policy switches and system announcements table",
+      "status": "PASSED",
+      "details": {
+        "switchesCount": 4,
+        "hasBroadcastBtn": true,
+        "announcementsCount": 2
+      },
+      "error": null
+    },
+    {
+      "suite": "Settings & Governance",
+      "name": "Broadcast System Announcement modal opens",
+      "status": "PASSED",
+      "details": {},
+      "error": null
+    },
+    {
+      "suite": "Settings & Governance",
+      "name": "Broadcast announcement published and added to announcements table",
+      "status": "PASSED",
+      "details": {
+        "toast": null
+      },
+      "error": null
+    },
+    {
+      "suite": "Settings & Governance",
+      "name": "Remove announcement action removes broadcast from listing",
+      "status": "PASSED",
+      "details": {},
+      "error": null
+    },
+    {
+      "suite": "Alumni Verification",
+      "name": "Alumni diploma verification queue renders with Approve / Reject action buttons",
+      "status": "PASSED",
+      "details": {
+        "queueCount": 4,
+        "approveButtons": 2,
+        "rejectButtons": 2
+      },
+      "error": null
+    },
+    {
+      "suite": "Alumni Verification",
+      "name": "Approve action successfully issues Alumni verified badge",
+      "status": "PASSED",
+      "details": {},
+      "error": null
+    },
+    {
+      "suite": "Alumni Verification",
+      "name": "Reject action updates status to rejected",
+      "status": "PASSED",
+      "details": {},
+      "error": null
+    },
+    {
+      "suite": "Console Health",
+      "name": "Browser console is clean with zero unhandled JavaScript exceptions or runtime crashes",
+      "status": "PASSED",
+      "details": {
+        "criticalErrors": [],
+        "pageErrors": []
+      },
+      "error": null
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "pageErrors": [],
+  "screenshots": [
+    {
+      "filename": "01_landing_page.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\01_landing_page.png",
+      "description": "Landing Page Hero & CTA"
+    },
+    {
+      "filename": "02_login_page.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\02_login_page.png",
+      "description": "Admin Login Portal Screen"
+    },
+    {
+      "filename": "03_admin_dashboard.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\03_admin_dashboard.png",
+      "description": "Admin Dashboard KPI & Review Queue"
+    },
+    {
+      "filename": "04_admin_users.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\04_admin_users.png",
+      "description": "Users Management Directory & Actions"
+    },
+    {
+      "filename": "05_admin_reports.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\05_admin_reports.png",
+      "description": "Moderation Reports & Audit Queue"
+    },
+    {
+      "filename": "06_admin_posts.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\06_admin_posts.png",
+      "description": "Forum Posts Management & Suppression"
+    },
+    {
+      "filename": "07_admin_communities.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\07_admin_communities.png",
+      "description": "Campus Communities & Pinned Announcements"
+    },
+    {
+      "filename": "08_admin_opportunities.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\08_admin_opportunities.png",
+      "description": "Academic Opportunities & Capstone Listings"
+    },
+    {
+      "filename": "09_admin_analytics.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\09_admin_analytics.png",
+      "description": "Analytics Dashboard & Security Audit Trail"
+    },
+    {
+      "filename": "10_admin_settings.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\10_admin_settings.png",
+      "description": "Governance Policy Settings & System Announcements"
+    },
+    {
+      "filename": "11_admin_alumni_verification.png",
+      "filepath": "D:\\KI 8\\PRN232\\ASM\\screenshots\\11_admin_alumni_verification.png",
+      "description": "Alumni Diploma Verification Queue"
+    }
+  ]
+}

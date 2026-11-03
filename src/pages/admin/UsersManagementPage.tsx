@@ -106,7 +106,7 @@ const FALLBACK_USERS: UserDirectoryRecord[] = [
 
 function adaptAdminUser(u: AdminUserSummary): UserDirectoryRecord {
   const normRole = (u.role || u.accountType || '').toUpperCase()
-  let role: UserDirectoryRecord['role'] = 'STUDENT'
+  let role: UserDirectoryRecord['role']
   if (normRole.includes('ADMIN')) role = 'ADMIN'
   else if (normRole.includes('FACULTY')) role = 'FACULTY'
   else if (normRole.includes('ALUMNI')) role = 'ALUMNI'

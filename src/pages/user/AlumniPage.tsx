@@ -52,7 +52,10 @@ export const AlumniPage: FC = () => {
   }, [keyword, campus, currentUser?.id])
 
   useEffect(() => {
-    fetchAlumni()
+    const timer = setTimeout(() => {
+      void fetchAlumni()
+    }, 0)
+    return () => clearTimeout(timer)
   }, [fetchAlumni])
 
   const handleStartChat = async (targetUser: BackendUserSummary) => {

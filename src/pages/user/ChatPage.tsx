@@ -62,7 +62,10 @@ export const ChatPage: FC = () => {
   }, [activeRoomId])
 
   useEffect(() => {
-    fetchRooms()
+    const timer = setTimeout(() => {
+      void fetchRooms()
+    }, 0)
+    return () => clearTimeout(timer)
   }, [fetchRooms])
 
   // Setup SignalR Hub
