@@ -13,8 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* FPT Brand Primary Color: FPT Orange #F27024 */
-    --primary: 213 100% 22%;
+    /* Figma Design System Tokens (Node 88:2): Primary Navy #1B365D */
+    --primary: 216 55% 24%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
@@ -24,21 +24,22 @@
     --muted-foreground: 215.4 16.3% 46.9%;
 
     --accent: 214 100% 96%;
-    --accent-foreground: 213 100% 22%;
+    --accent-foreground: 216 55% 24%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 213 100% 22%;
+    --ring: 22 89% 55%;
 
     --radius: 0.5rem;
 
-    /* FPT Specific Brand Tokens */
+    /* FPT Specific Brand Tokens: Navy leads (#1B365D), Orange accent (#F27024) */
+    --brand-navy: 216 55% 24%;
     --brand-primary: 22 89% 55%;
-    --brand-secondary: 206 100% 35%;
-    --brand-accent: 143 86% 37%;
+    --brand-secondary: 216 55% 24%;
+    --brand-accent: 142 71% 45%;
   }
 
   .dark {
@@ -51,7 +52,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 213 100% 22%;
+    --primary: 216 55% 24%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -68,11 +69,12 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 213 100% 22%;
+    --ring: 22 89% 55%;
 
+    --brand-navy: 216 55% 24%;
     --brand-primary: 22 89% 55%;
-    --brand-secondary: 206 100% 45%;
-    --brand-accent: 143 86% 45%;
+    --brand-secondary: 216 55% 24%;
+    --brand-accent: 142 71% 45%;
   }
 
   * {

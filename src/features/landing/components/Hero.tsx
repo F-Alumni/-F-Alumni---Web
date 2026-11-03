@@ -85,7 +85,7 @@ export const Hero: FC = () => {
                 {/* Card 1: Alumni Mentor (Linh Nguyễn) */}
                 <div className="relative z-10 bg-white rounded-2xl p-4 sm:p-5 shadow-lg shadow-slate-200/50 border border-slate-100/90 transition-all hover:-translate-y-1">
                   <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-full bg-[#0B2545] text-white flex items-center justify-center font-bold text-sm tracking-wide shadow-sm shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-sm tracking-wide shadow-sm shrink-0">
                       LN
                     </div>
                     <div className="flex-1 min-w-0">

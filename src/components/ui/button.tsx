@@ -18,6 +18,8 @@ const buttonVariants = cva(
         'brand-outline':
           'border border-brand-primary/30 text-brand-primary hover:bg-brand-primary-light hover:text-brand-primary-hover',
         'brand-secondary': 'bg-brand-secondary text-white shadow hover:bg-brand-secondary-hover',
+        'brand-navy': 'bg-navy-900 text-white shadow hover:bg-navy-800 active:bg-navy-950',
+        'navy-outline': 'border border-navy-900 text-navy-900 hover:bg-navy-50',
       },
       size: {
         default: 'h-9 px-4 py-2',

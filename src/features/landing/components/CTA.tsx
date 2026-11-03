@@ -12,9 +12,9 @@ export const CTA: FC = () => {
   return (
     <section className="bg-white py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-[#081B33] px-6 py-12 sm:px-12 sm:py-16 lg:px-16 lg:py-20 shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1B365D] via-[#1B365D] to-[#132644] px-6 py-12 sm:px-12 sm:py-16 lg:px-16 lg:py-20 shadow-2xl">
           {/* Subtle decorative circles & gradients */}
-          <div className="absolute right-0 bottom-0 translate-x-1/4 translate-y-1/4 w-96 h-96 rounded-full bg-blue-600/15 blur-3xl pointer-events-none" />
+          <div className="absolute right-0 bottom-0 translate-x-1/4 translate-y-1/4 w-96 h-96 rounded-full bg-navy-600/20 blur-3xl pointer-events-none" />
           <div className="absolute left-1/3 top-0 -translate-y-1/2 w-80 h-80 rounded-full bg-orange-500/10 blur-3xl pointer-events-none" />
           <div className="absolute -right-10 -bottom-10 w-72 h-72 border border-white/5 rounded-full pointer-events-none" />
           <div className="absolute -right-20 -bottom-20 w-96 h-96 border border-white/5 rounded-full pointer-events-none" />
