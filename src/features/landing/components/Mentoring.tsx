@@ -4,132 +4,209 @@ import {
   IconCertificate,
   IconShieldCheck,
   IconChartBar,
-  IconDownload,
+  IconSparkles,
 } from '@tabler/icons-react'
 
 export const Mentoring: FC = () => {
   return (
-    <section id="mentoring" className="bg-white py-16 sm:py-20 lg:py-24">
+    <section id="mentoring" className="bg-white py-16 sm:py-20 lg:py-24 border-b border-slate-200/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         {/* Section Header */}
-        <div className="max-w-3xl mb-12 lg:mb-16">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#F27024] block mb-2">
-            TÍNH NĂNG VẬN HÀNH TOÀN DIỆN
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Mọi công cụ điều phối nằm trong tầm tay
+        <div className="max-w-3xl mb-14">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-xs font-bold text-[#F27024] uppercase tracking-wider mb-3">
+            <IconSparkles size={14} />
+            GIAO DIỆN HỆ THỐNG THỰC TẾ
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-extrabold text-slate-900 tracking-tight leading-tight">
+            Mọi tính năng vận hành nằm trong tầm tay
           </h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            Bộ công cụ chuyên biệt hóa dành riêng cho Ban Giám hiệu, Điều phối viên khoa và Cán bộ quản lý Đại học FPT.
+            Xem trước ảnh chụp màn hình thực tế từ các phân hệ quản trị đang vận hành, đảm bảo tính minh bạch và độ tin cậy tuyệt đối của nền tảng F-Alumni Connect.
           </p>
         </div>
 
-        {/* 2x2 Elevated Feature Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-          {/* Card 1: User Directory & Multi-campus */}
-          <div className="bg-gradient-to-br from-white via-white to-orange-50/20 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-orange-200 transition-all group flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-orange-100/80 text-[#F27024] flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-2xs">
-                <IconUsersGroup size={24} stroke={2} />
+        {/* 2x2 Elevated Feature Bento Grid with Real UI Previews inside browser frames */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+          
+          {/* Feature 1: Quản lý người dùng */}
+          <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300 flex flex-col justify-between">
+            <div className="space-y-3 mb-5">
+              <div className="flex items-center justify-between">
+                <div className="w-11 h-11 rounded-2xl bg-orange-100 text-[#F27024] flex items-center justify-center shadow-2xs">
+                  <IconUsersGroup size={22} stroke={2} />
+                </div>
+                <span className="text-[11px] font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200">
+                  Phân hệ Users (AD-02)
+                </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-[#F27024] transition-colors">
-                Quản lý Người dùng & An toàn Đa cơ sở
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                Quản lý Người dùng & Danh bạ Đa cơ sở
               </h3>
-              <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
-                Tra cứu danh bạ cựu sinh viên, phân quyền vai trò (Admin, Moderator, Faculty) và thực thi tạm khóa/mở khóa tài khoản có kèm lý do vi phạm và nhật ký kiểm toán an ninh.
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Tra cứu danh bạ cựu sinh viên theo chuyên ngành, khóa tốt nghiệp và thực thi phân quyền, tạm khóa tài khoản kèm lý do vi phạm.
               </p>
             </div>
 
-            {/* Interactive Preview Element */}
-            <div className="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Cơ sở:</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-orange-50 text-orange-700 border border-orange-100">Hà Nội (Hòa Lạc)</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">TP. Hồ Chí Minh</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">Đà Nẵng</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">Cần Thơ</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">Quy Nhơn</span>
+            {/* Browser Frame with Real Screenshot */}
+            <div className="rounded-2xl bg-white border border-slate-200/90 shadow-md overflow-hidden">
+              <div className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 border-b border-slate-200 text-xs">
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="ml-2 font-mono text-[10px] text-slate-500">
+                  /admin/users (Danh bạ & Trạng thái tài khoản)
+                </span>
+              </div>
+              <div className="aspect-[16/10] overflow-hidden bg-slate-100 group">
+                <img
+                  src="/images/admin-previews/users-management.png"
+                  alt="Ảnh chụp màn hình phân hệ Quản lý Người dùng F-Alumni"
+                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
+              <div className="p-3 bg-white border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+                <span>Bộ lọc Cơ sở, Khóa K, Ngành học & Tạm khóa</span>
+                <span className="font-bold text-[#F27024]">Ảnh chụp thực tế</span>
+              </div>
             </div>
           </div>
 
-          {/* Card 2: Diploma Verification & Verified Badge */}
-          <div className="bg-gradient-to-br from-white via-white to-blue-50/20 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-blue-200 transition-all group flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1B365D] border border-blue-100 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-2xs">
-                <IconCertificate size={24} stroke={2} />
+          {/* Feature 2: Thẩm định bằng cấp */}
+          <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col justify-between">
+            <div className="space-y-3 mb-5">
+              <div className="flex items-center justify-between">
+                <div className="w-11 h-11 rounded-2xl bg-blue-50 text-[#1B365D] border border-blue-100 flex items-center justify-center shadow-2xs">
+                  <IconCertificate size={22} stroke={2} />
+                </div>
+                <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+                  Phân hệ Verification (AD-04)
+                </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-[#1B365D] transition-colors">
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">
                 Thẩm định Bằng cấp & Cấp Huy hiệu Verified
               </h3>
-              <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
-                Hàng đợi kiểm duyệt bằng tốt nghiệp cựu sinh viên trực quan. Xét duyệt hồ sơ để cấp huy hiệu chính danh FPT Verified Alumni, phòng ngừa mạo danh uy tín nhà trường.
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Hàng đợi kiểm duyệt bằng tốt nghiệp cựu sinh viên trực quan. Xét duyệt hồ sơ để cấp huy hiệu chính danh FPT Verified Alumni.
               </p>
             </div>
 
-            {/* Interactive Preview Element */}
-            <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="font-semibold">Hàng đợi xét duyệt:</span>
-                <span className="text-slate-500">Đối chiếu trực tiếp mã sinh viên (MSSV)</span>
+            {/* Browser Frame with Real Screenshot */}
+            <div className="rounded-2xl bg-white border border-slate-200/90 shadow-md overflow-hidden">
+              <div className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 border-b border-slate-200 text-xs">
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="ml-2 font-mono text-[10px] text-slate-500">
+                  /admin/alumni-verification (Xét duyệt hồ sơ)
+                </span>
               </div>
-              <span className="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                1-Click Duyệt
-              </span>
+              <div className="aspect-[16/10] overflow-hidden bg-slate-100 group">
+                <img
+                  src="/images/admin-previews/alumni-verification.png"
+                  alt="Ảnh chụp màn hình phân hệ Thẩm định Bằng cấp F-Alumni"
+                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
+              <div className="p-3 bg-white border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+                <span>Duyệt/Từ chối 1-chạm & Xem văn bằng đính kèm</span>
+                <span className="font-bold text-blue-600">Ảnh chụp thực tế</span>
+              </div>
             </div>
           </div>
 
-          {/* Card 3: Content Moderation & Safety */}
-          <div className="bg-gradient-to-br from-white via-white to-emerald-50/20 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-emerald-200 transition-all group flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-2xs">
-                <IconShieldCheck size={24} stroke={2} />
+          {/* Feature 3: Kiểm duyệt diễn đàn */}
+          <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 flex flex-col justify-between">
+            <div className="space-y-3 mb-5">
+              <div className="flex items-center justify-between">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shadow-2xs">
+                  <IconShieldCheck size={22} stroke={2} />
+                </div>
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                  Phân hệ Moderation (AD-05)
+                </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-emerald-700 transition-colors">
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">
                 Kiểm duyệt Báo cáo & An toàn Diễn đàn
               </h3>
-              <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
-                Tiếp nhận báo cáo vi phạm bài viết, bình luận từ cộng đồng. Cho phép gỡ bài vi phạm, cảnh cáo tài khoản hoặc bác bỏ báo cáo sai, duy trì diễn đàn thảo luận lành mạnh.
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Tiếp nhận báo cáo vi phạm bài viết, bình luận. Cho phép gỡ bài vi phạm, cảnh cáo tài khoản hoặc bác bỏ báo cáo sai.
               </p>
             </div>
 
-            {/* Interactive Preview Element */}
-            <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span className="text-slate-500">Hành động khả dụng:</span>
-              <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                <span className="px-2 py-0.5 rounded bg-slate-100">Ẩn bài viết</span>
-                <span className="px-2 py-0.5 rounded bg-slate-100">Cảnh cáo</span>
-                <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-100">Tạm khóa</span>
+            {/* Browser Frame with Real Screenshot */}
+            <div className="rounded-2xl bg-white border border-slate-200/90 shadow-md overflow-hidden">
+              <div className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 border-b border-slate-200 text-xs">
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="ml-2 font-mono text-[10px] text-slate-500">
+                  /admin/reports (Hàng đợi xử lý vi phạm)
+                </span>
+              </div>
+              <div className="aspect-[16/10] overflow-hidden bg-slate-100 group">
+                <img
+                  src="/images/admin-previews/moderation-reports.png"
+                  alt="Ảnh chụp màn hình phân hệ Kiểm duyệt Báo cáo F-Alumni"
+                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
+              <div className="p-3 bg-white border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+                <span>Tab Chờ xử lý, Lịch sử kỷ luật & Lý do xử phạt</span>
+                <span className="font-bold text-emerald-600">Ảnh chụp thực tế</span>
               </div>
             </div>
           </div>
 
-          {/* Card 4: Analytics & CSV Data Export */}
-          <div className="bg-gradient-to-br from-white via-white to-sky-50/20 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-sky-200 transition-all group flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-2xs">
-                <IconChartBar size={24} stroke={2} />
+          {/* Feature 4: Phân tích & Báo cáo CSV */}
+          <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-purple-200 transition-all duration-300 flex flex-col justify-between">
+            <div className="space-y-3 mb-5">
+              <div className="flex items-center justify-between">
+                <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center shadow-2xs">
+                  <IconChartBar size={22} stroke={2} />
+                </div>
+                <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
+                  Phân hệ Analytics (AD-07)
+                </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-sky-700 transition-colors">
-                Thống kê Hệ thống & Xuất Báo cáo CSV
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                Phân tích Tăng trưởng & Báo cáo CSV
               </h3>
-              <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
-                Bảng điều khiển trực quan hóa phân bổ chuyên ngành, tỷ lệ tương tác mentor, dòng sự kiện quản trị và tính năng xuất file bảng tính CSV phục vụ báo cáo định kỳ.
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Biểu đồ tỷ lệ phân bổ chuyên ngành, cơ sở và tính năng xuất file báo cáo audit log chuẩn UTF-8 phục vụ công tác thanh tra.
               </p>
             </div>
 
-            {/* Interactive Preview Element */}
-            <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-slate-600">
-                <IconDownload size={14} className="text-sky-600" />
-                <span className="font-semibold">Xuất CSV:</span>
-                <span className="text-slate-500">Audit logs & Danh bạ thành viên</span>
+            {/* Browser Frame with Real Screenshot */}
+            <div className="rounded-2xl bg-white border border-slate-200/90 shadow-md overflow-hidden">
+              <div className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 border-b border-slate-200 text-xs">
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="ml-2 font-mono text-[10px] text-slate-500">
+                  /admin/analytics (Chỉ số & Audit Trail)
+                </span>
               </div>
-              <span className="font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-100">
-                Chuẩn UTF-8
-              </span>
+              <div className="aspect-[16/10] overflow-hidden bg-slate-100 group">
+                <img
+                  src="/images/admin-previews/analytics-audit.png"
+                  alt="Ảnh chụp màn hình phân hệ Phân tích Thống kê F-Alumni"
+                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
+              <div className="p-3 bg-white border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+                <span>Thống kê 5 cơ sở & Xuất Audit Logs UTF-8</span>
+                <span className="font-bold text-purple-600">Ảnh chụp thực tế</span>
+              </div>
             </div>
           </div>
+
         </div>
+
       </div>
     </section>
   )

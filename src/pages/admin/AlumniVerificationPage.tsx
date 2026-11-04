@@ -1,5 +1,13 @@
 import { useState, useMemo, type FC } from 'react'
-import { IconCheck, IconX, IconFileCheck, IconEye, IconDownload, IconRefresh } from '@tabler/icons-react'
+import {
+  IconCheck,
+  IconX,
+  IconFileCheck,
+  IconEye,
+  IconDownload,
+  IconRefresh,
+  IconAlertTriangle,
+} from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
@@ -90,7 +98,7 @@ export const AlumniVerificationPage: FC = () => {
   const [statusOverrides, setStatusOverrides] = useState<Record<string, 'approved' | 'rejected'>>({})
 
   // Fetch alumni user records from Admin Service
-  const { data: alumniData, isLoading, refetch } = useAdminUsers({
+  const { data: alumniData, isLoading, isError, refetch } = useAdminUsers({
     role: 'Alumni',
     pageSize: 50,
   })
@@ -236,6 +244,20 @@ export const AlumniVerificationPage: FC = () => {
           </div>
         }
       />
+
+      {isError && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-xs text-amber-900 shadow-xs">
+          <IconAlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1 space-y-1">
+            <p className="font-semibold text-amber-950">
+              Đang hiển thị dữ liệu kiểm thử dự phòng (Offline Mock Data)
+            </p>
+            <p className="text-amber-800">
+              Không thể kết nối trực tiếp tới Backend Admin Service (<code className="font-mono text-[11px] bg-amber-100/80 px-1 py-0.5 rounded">f-alumni-admin-service</code>) do dịch vụ đang khởi động hoặc chưa cấp quyền CORS cho tên miền Vercel. Bạn vẫn có thể thao tác duyệt hồ sơ ngoại tuyến bình thường.
+            </p>
+          </div>
+        </div>
+      )}
 
       <DataTable
         data={requests}

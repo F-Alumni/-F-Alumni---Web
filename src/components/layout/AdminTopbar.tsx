@@ -17,6 +17,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { USER_TYPES } from '@/constants/userTypes'
+import fAlumniIcon from '@/assets/f-alumni-icon.png'
 
 import { authService } from '@/services/auth'
 
@@ -92,6 +93,12 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
         >
           <IconMenu2 size={20} stroke={1.8} />
         </button>
+
+        {/* Brand logo for split-screen & mobile (<lg) */}
+        <div className="flex items-center gap-2 lg:hidden shrink-0">
+          <img src={fAlumniIcon} alt="F-Alumni Logo" className="h-7 w-auto object-contain" />
+          <span className="text-xs font-bold text-slate-900 hidden sm:inline">F-Alumni Connect</span>
+        </div>
 
         {/* Global Admin Search */}
         <div className="relative hidden w-full sm:block max-w-sm">

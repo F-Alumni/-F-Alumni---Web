@@ -43,6 +43,7 @@ export function useAdminUsers(params?: AdminUserFilterQuery) {
     queryKey: ['admin', 'users', params],
     queryFn: () => adminService.getUsers(params),
     staleTime: 20 * 1000,
+    retry: 1,
   })
 }
 
