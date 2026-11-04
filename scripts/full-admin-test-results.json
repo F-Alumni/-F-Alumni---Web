@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-03T08:47:39.896Z",
+  "timestamp": "2026-11-04T02:59:16.388Z",
   "target": "http://127.0.0.1:5173",
   "tests": [
     {
@@ -11,9 +11,10 @@
         "heading": "Quản trị thông minh.Bứt phá ngày mai.",
         "hasActionButtons": true,
         "buttonTexts": [
-          "Đăng nhập Quản trị viên",
+          "Đăng nhập Quản trị",
           "Đăng nhập Cổng Quản Trị",
-          "Đăng nhập Quản trị viên"
+          "Đăng nhập Quản trị viên",
+          "Đăng nhập Quản trị"
         ]
       },
       "error": null
