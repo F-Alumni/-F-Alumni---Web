@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { useAuthStore } from '@/stores/authStore'
-import fptLogo from '@/assets/fpt-logo.svg'
+import fAlumniLogo from '@/assets/f-alumni-logo.png'
 import { authService } from '@/services/auth'
 import { normalizeError } from '@/lib/errorHandler'
 
@@ -115,7 +115,7 @@ export const LoginForm: FC = () => {
       {/* 1. Brand Identity & Header */}
       <div className="space-y-1.5">
         <div className="inline-flex items-center gap-2">
-          <img src={fptLogo} alt="FPT Education Logo" className="h-7 w-auto object-contain" />
+          <img src={fAlumniLogo} alt="F-Alumni Connect Logo" className="h-8 sm:h-9 w-auto object-contain" />
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
             <IconShieldCheck size={13} stroke={2} />
             Admin & Governance Portal

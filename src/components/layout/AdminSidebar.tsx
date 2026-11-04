@@ -19,7 +19,7 @@ import { ROUTES } from '@/constants/routes'
 import { ROLES, type Role } from '@/constants/roles'
 import { USER_TYPES } from '@/constants/userTypes'
 import { useAuthStore } from '@/stores/authStore'
-import fptLogo from '@/assets/fpt-logo.svg'
+import fAlumniIcon from '@/assets/f-alumni-icon.png'
 import { cn } from '@/lib/utils'
 
 interface AdminSidebarProps {
@@ -186,12 +186,12 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
         )}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
+        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
           <div className="flex items-center gap-2.5">
-            <img src={fptLogo} alt="FPT Logo" className="h-8 w-auto object-contain" />
+            <img src={fAlumniIcon} alt="F-Alumni Logo" className="h-9 w-auto object-contain" />
             <div className="flex flex-col">
-              <span className="text-sm font-extrabold tracking-tight text-slate-900">
-                Alumni Connect
+              <span className="text-sm font-extrabold tracking-tight text-slate-900 leading-tight">
+                F-Alumni Connect
               </span>
               <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-brand-primary">
                 {isFaculty ? (

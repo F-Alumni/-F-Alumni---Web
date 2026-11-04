@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ROUTES } from '@/constants/routes'
-import fptLogo from '@/assets/fpt-logo.svg'
+import fAlumniLogo from '@/assets/f-alumni-logo.png'
 
 interface NavbarProps {
   onOpenCreatePost?: () => void
@@ -93,15 +93,7 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
         {/* Left: Brand Logo & Campus Selector */}
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <Link to={ROUTES.APP.HOME} className="flex items-center gap-2 shrink-0">
-            <img src={fptLogo} alt="FPT University Logo" className="h-8 sm:h-9 w-auto object-contain shrink-0" />
-            <div className="hidden flex-col justify-center xl:flex shrink-0">
-              <span className="text-[14px] sm:text-[15px] font-extrabold leading-tight tracking-tight text-slate-900 whitespace-nowrap">
-                Alumni Network
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-semibold tracking-wide text-brand-primary/90 whitespace-nowrap">
-                FPT University Community
-              </span>
-            </div>
+            <img src={fAlumniLogo} alt="F-Alumni Connect Logo" className="h-9 sm:h-10 w-auto object-contain shrink-0" />
           </Link>
 
           {/* Campus Selector Badge */}

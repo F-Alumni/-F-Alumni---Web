@@ -9,7 +9,7 @@ import {
 } from '@tabler/icons-react'
 import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
-import fptLogo from '@/assets/fpt-logo.svg'
+import fAlumniLogo from '@/assets/f-alumni-logo.png'
 
 export const Navbar: FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -30,22 +30,17 @@ export const Navbar: FC = () => {
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand Logo & Authority Badge */}
-        <Link to={ROUTES.LANDING} className="flex items-center gap-3.5 group">
+        <Link to={ROUTES.LANDING} className="flex items-center gap-3 group">
           <img
-            src={fptLogo}
-            alt="FPT Education Logo"
-            className="h-9 w-auto object-contain transition-transform group-hover:scale-105"
+            src={fAlumniLogo}
+            alt="F-Alumni Connect Logo"
+            className="h-10 sm:h-11 w-auto object-contain transition-transform group-hover:scale-105"
           />
           <div className="hidden sm:block h-7 w-[1px] bg-slate-200" />
-          <div className="flex flex-col">
-            <span className="font-extrabold text-slate-900 text-base lg:text-lg tracking-tight leading-none group-hover:text-[#F27024] transition-colors">
-              Alumni Connect
-            </span>
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#F27024] tracking-wider uppercase mt-1">
-              <IconShieldCheck size={12} stroke={2.2} />
-              Admin Portal
-            </span>
-          </div>
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-[#F27024] tracking-wider uppercase bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200/80">
+            <IconShieldCheck size={13} stroke={2.2} />
+            Admin Portal
+          </span>
         </Link>
 
         {/* Desktop Navigation Links */}

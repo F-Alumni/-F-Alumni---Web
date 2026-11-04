@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import { Link } from 'react-router-dom'
 import { IconShieldCheck } from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
-import fptLogo from '@/assets/fpt-logo.svg'
+import fAlumniLogo from '@/assets/f-alumni-logo.png'
 
 export const Footer: FC = () => {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
@@ -22,14 +22,10 @@ export const Footer: FC = () => {
           <div className="max-w-sm space-y-3">
             <Link to={ROUTES.LANDING} className="flex items-center gap-3 group">
               <img
-                src={fptLogo}
-                alt="FPT Education Logo"
-                className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
+                src={fAlumniLogo}
+                alt="F-Alumni Connect Logo"
+                className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
               />
-              <div className="h-6 w-[1px] bg-slate-300" />
-              <span className="font-extrabold text-slate-900 text-base tracking-tight">
-                Alumni Connect
-              </span>
             </Link>
             <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
               Cổng Điều Hành & Quản Trị Mạng Lưới Cựu Sinh Viên Đại Học FPT toàn quốc.

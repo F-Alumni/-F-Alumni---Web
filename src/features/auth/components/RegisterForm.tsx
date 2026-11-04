@@ -24,7 +24,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { authService } from '@/services/auth'
 import type { AuthResponse } from '@/types/auth.types'
 import { normalizeError } from '@/lib/errorHandler'
-import fptLogo from '@/assets/fpt-logo.svg'
+import fAlumniLogo from '@/assets/f-alumni-logo.png'
 
 type Step = 1 | 2 | 3 | 4
 type AccountType = 'STUDENT' | 'ALUMNI'
@@ -218,7 +218,7 @@ export const RegisterForm: FC = () => {
           {/* Pass Top Bar */}
           <div className="flex items-center justify-between border-b border-white/15 pb-2">
             <div className="flex items-center gap-2">
-              <img src={fptLogo} alt="FPT Education" className="h-5 w-auto brightness-0 invert opacity-95" />
+              <img src={fAlumniLogo} alt="F-Alumni Connect" className="h-6 w-auto object-contain brightness-0 invert opacity-95" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-white/70">
                 Member Pass
               </span>
@@ -313,7 +313,7 @@ export const RegisterForm: FC = () => {
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <Link to={ROUTES.AUTH.LOGIN} className="inline-flex items-center gap-2">
-            <img src={fptLogo} alt="FPT Logo" className="h-7 w-auto object-contain" />
+            <img src={fAlumniLogo} alt="F-Alumni Connect Logo" className="h-8 sm:h-9 w-auto object-contain" />
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
               Alumni Connect
             </span>
