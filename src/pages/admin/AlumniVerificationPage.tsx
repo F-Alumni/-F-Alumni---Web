@@ -27,57 +27,6 @@ interface VerificationRequest {
   status: 'pending' | 'approved' | 'rejected'
 }
 
-const SAMPLE_REQUESTS: VerificationRequest[] = [
-  {
-    id: 'VER-001',
-    fullName: 'Dang Tran Hoang',
-    email: 'hoangdt@alumni.fpt.edu.vn',
-    studentId: 'SE150392',
-    major: 'Software Engineering (SE)',
-    cohort: 'K15',
-    gradYear: '2023',
-    documentName: 'Bang_Tot_Nghiep_SE150392.pdf',
-    submissionDate: '2026-10-10 14:32',
-    status: 'pending',
-  },
-  {
-    id: 'VER-002',
-    fullName: 'Nguyen Quoc Dat',
-    email: 'datnq@fpt.edu.vn',
-    studentId: 'SE160982',
-    major: 'Artificial Intelligence (AI)',
-    cohort: 'K16',
-    gradYear: '2024',
-    documentName: 'ChungChi_TotNghiep_DatNQ.jpg',
-    submissionDate: '2026-10-10 11:20',
-    status: 'pending',
-  },
-  {
-    id: 'VER-003',
-    fullName: 'Tran Thi Mai Anh',
-    email: 'maianh.tran@accenture.com',
-    studentId: 'BA140221',
-    major: 'International Business (IB)',
-    cohort: 'K14',
-    gradYear: '2022',
-    documentName: 'FPT_Degree_TranThiMaiAnh.pdf',
-    submissionDate: '2026-10-09 16:45',
-    status: 'approved',
-  },
-  {
-    id: 'VER-004',
-    fullName: 'Pham Duc Thang',
-    email: 'thang.dev99@gmail.com',
-    studentId: 'IA130114',
-    major: 'Information Assurance (IA)',
-    cohort: 'K13',
-    gradYear: '2021',
-    documentName: 'Bang_Tam_Thoi_IA.png',
-    submissionDate: '2026-10-08 09:12',
-    status: 'rejected',
-  },
-]
-
 function adaptAdminUserToVerification(u: AdminUserSummary): VerificationRequest {
   const isPending = !u.emailVerified || u.status === 'PendingVerification'
   return {
@@ -104,17 +53,13 @@ export const AlumniVerificationPage: FC = () => {
   })
 
   const requests = useMemo(() => {
-    let baseList = SAMPLE_REQUESTS
     if (alumniData && alumniData.items && alumniData.items.length > 0) {
-      const liveList = alumniData.items.map(adaptAdminUserToVerification)
-      const existingEmails = new Set(liveList.map((l) => l.email.toLowerCase()))
-      baseList = [...liveList, ...SAMPLE_REQUESTS.filter((s) => !existingEmails.has(s.email.toLowerCase()))]
+      return alumniData.items.map(adaptAdminUserToVerification).map((r) => {
+        const override = statusOverrides[r.id]
+        return override ? { ...r, status: override } : r
+      })
     }
-
-    return baseList.map((r) => {
-      const override = statusOverrides[r.id]
-      return override ? { ...r, status: override } : r
-    })
+    return []
   }, [alumniData, statusOverrides])
 
   const handleApprove = (id: string) => {
@@ -250,7 +195,7 @@ export const AlumniVerificationPage: FC = () => {
           <IconAlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
           <div className="flex-1 space-y-1">
             <p className="font-semibold text-amber-950">
-              Đang hiển thị dữ liệu kiểm thử dự phòng (Offline Mock Data)
+              Không có yêu cầu xác thực cựu sinh viên nào đang chờ xử lý.
             </p>
             <p className="text-amber-800">
               Không thể kết nối trực tiếp tới Backend Admin Service (<code className="font-mono text-[11px] bg-amber-100/80 px-1 py-0.5 rounded">f-alumni-admin-service</code>) do dịch vụ đang khởi động hoặc chưa cấp quyền CORS cho tên miền Vercel. Bạn vẫn có thể thao tác duyệt hồ sơ ngoại tuyến bình thường.

@@ -54,86 +54,6 @@ export interface ReportRecord {
   }
 }
 
-const SAMPLE_REPORTS: ReportRecord[] = [
-  {
-    id: 'REP-801',
-    reportedTarget: 'Post #4829 - "Earn easy money crypto investment"',
-    targetType: 'POST',
-    reportedBy: '5 community members',
-    reason: 'Commercial spam & cryptocurrency phishing scam',
-    reasonCode: 'SPAM',
-    severity: 'urgent',
-    status: 'pending',
-    reportedDate: '2026-10-12 19:45',
-    authorName: 'Spam Bot 99',
-    authorEmail: 'promo123@tempmail.org',
-    authorStrikes: 2,
-    contentSnippet:
-      'Join our private telegram channel now to earn guaranteed 500% profit per day! Zero risks with university student loan funds. Link: t.me/fpt_crypto_easy_cash',
-  },
-  {
-    id: 'REP-802',
-    reportedTarget: 'User account "FakeAlumni_2024"',
-    targetType: 'USER_ACCOUNT',
-    reportedBy: 'Alumni Committee',
-    reason: 'Impersonating FPT Software executive',
-    reasonCode: 'IMPERSONATION',
-    severity: 'urgent',
-    status: 'pending',
-    reportedDate: '2026-10-12 14:10',
-    authorName: 'FakeAlumni_2024',
-    authorEmail: 'vp_phuc@fakealumni.net',
-    authorStrikes: 1,
-    contentSnippet:
-      'User profile claims to be Vice President of FPT Software Japan and solicits direct wire transfers for "exclusive corporate internships" via direct messages.',
-  },
-  {
-    id: 'REP-803',
-    reportedTarget: 'Comment #1902 in SE Academic Community',
-    targetType: 'COMMENT',
-    reportedBy: 'Maya Lin',
-    reason: 'Inappropriate language in academic forum',
-    reasonCode: 'INAPPROPRIATE_LANGUAGE',
-    severity: 'pending',
-    status: 'approved',
-    reportedDate: '2026-10-10 10:20',
-    authorName: 'Anonymous Student',
-    authorEmail: 'student.anon@fpt.edu.vn',
-    authorStrikes: 0,
-    contentSnippet: 'Offensive remarks and personal insults directed at capstone teammates.',
-    resolutionDetails: {
-      action: 'HIDE_POST',
-      policyReason: 'Inappropriate Language in Academic Forum',
-      moderatorName: 'Campus Safety Moderator',
-      resolvedAt: '2026-10-10 11:05',
-      notes: 'Comment hidden from discussion thread. User issued reminder of community conduct guidelines.',
-    },
-  },
-  {
-    id: 'REP-804',
-    reportedTarget: 'Post #4790 - "Selling Capstone Source Code PRN232"',
-    targetType: 'POST',
-    reportedBy: 'Dr. Nguyen Van Faculty',
-    reason: 'Academic Misconduct - Selling past exam & capstone project source',
-    reasonCode: 'ACADEMIC_MISCONDUCT',
-    severity: 'urgent',
-    status: 'approved',
-    reportedDate: '2026-10-09 09:15',
-    authorName: 'K15 Code Trader',
-    authorEmail: 'trade.source@gmail.com',
-    authorStrikes: 3,
-    contentSnippet:
-      'Offering full 10/10 grade source code for PRN232 Assignment and Capstone projects. Contact Zalo for pricing.',
-    resolutionDetails: {
-      action: 'ISSUE_STRIKE',
-      policyReason: 'Academic Misconduct & Cheating',
-      moderatorName: 'FPT Super Admin',
-      resolvedAt: '2026-10-09 10:00',
-      notes: 'Account suspended from publishing. Reported to Department Academic Integrity Board.',
-    },
-  },
-]
-
 function adaptModerationReport(r: ModerationReportItem): ReportRecord {
   const normCategory = (r.reason || '').toUpperCase()
   let reasonCode: ViolationReason = 'SPAM'
@@ -198,9 +118,9 @@ export const ReportsManagementPage: FC = () => {
   // Local overrides for optimistic UI
   const [localReportOverrides, setLocalReportOverrides] = useState<Record<string, Partial<ReportRecord>>>({})
 
-  // Derive reports list
+  // Derive reports list from live backend reports
   const reports = useMemo(() => {
-    let baseList = SAMPLE_REPORTS
+    let baseList: ReportRecord[] = []
     if (beReportsData && beReportsData.items && beReportsData.items.length > 0) {
       baseList = beReportsData.items.map(adaptModerationReport)
     }

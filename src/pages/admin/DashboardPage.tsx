@@ -76,52 +76,8 @@ export const DashboardPage: FC = () => {
     targetRoute: ROUTES.ADMIN.REPORTS,
   }))
 
-  // Baseline standard administrative review items (e.g. diploma verification, chapters)
-  const baselineReviews: PendingReviewItem[] = [
-    {
-      id: 'REV-ALUMNI-01',
-      item: 'Dang Tran Hoang - Alumni Class 2023 (K15 SE)',
-      details: 'Degree Certificate: Bang_Tot_Nghiep_SE150392.pdf',
-      type: 'ALUMNI_VERIFY',
-      submittedBy: 'hoangdt@alumni.fpt.edu.vn',
-      submittedDate: '2026-10-10 14:32',
-      status: 'pending',
-      targetRoute: ROUTES.ADMIN.ALUMNI_VERIFICATION,
-    },
-    {
-      id: 'REV-ALUMNI-02',
-      item: 'Nguyen Quoc Dat - Diploma Degree SE160982 (K16 AI)',
-      details: 'Transcript & Degree: ChungChi_TotNghiep_DatNQ.jpg',
-      type: 'ALUMNI_VERIFY',
-      submittedBy: 'datnq@fpt.edu.vn',
-      submittedDate: '2026-10-10 11:20',
-      status: 'pending',
-      targetRoute: ROUTES.ADMIN.ALUMNI_VERIFICATION,
-    },
-    {
-      id: 'REV-OPP-01',
-      item: 'FPT Alumni Global Master Fellowship 2026 ($15,000 grant)',
-      details: 'Tokyo Chapter • Academic scholarship & tuition assistance',
-      type: 'OPPORTUNITY_REVIEW',
-      submittedBy: 'Tokyo Alumni Chapter',
-      submittedDate: '2026-10-09 16:30',
-      status: 'pending',
-      targetRoute: ROUTES.ADMIN.OPPORTUNITIES,
-    },
-    {
-      id: 'REV-COM-01',
-      item: 'Proposal: FPT Cloud & DevOps Alumni Chapter (Tokyo)',
-      details: 'International campus charter proposed by K12 Alumni team',
-      type: 'NEW_COMMUNITY',
-      submittedBy: 'minh.tokyo@fpt.jp',
-      submittedDate: '2026-10-09 08:15',
-      status: 'pending',
-      targetRoute: ROUTES.ADMIN.COMMUNITIES,
-    },
-  ]
-
-  // Combined active reviews
-  const allCombinedReviews = [...backendPendingReports, ...baselineReviews]
+  // Combined active reviews from live backend reports
+  const allCombinedReviews = backendPendingReports
   const activeReviews = allCombinedReviews.filter((item) => !resolvedIds.includes(item.id))
 
   const filteredReviews =
@@ -295,10 +251,13 @@ export const DashboardPage: FC = () => {
   const viewAllInfo = getViewAllRoute()
   const isGlobalLoading = isSummaryLoading || isManualRefreshing
 
-  // Dynamic Metrics computed from live backend or fallback
-  const totalUsersDisplay = summary?.totalUsers ? summary.totalUsers.toLocaleString() : '32,450'
-  const activeAlumniDisplay = summary?.activeUsers ? summary.activeUsers.toLocaleString() : '7,835'
+  // Dynamic Metrics computed from live backend (0 when no data)
+  const totalUsersDisplay = summary?.totalUsers !== undefined ? summary.totalUsers.toLocaleString() : '0'
+  const activeAlumniDisplay = summary?.activeUsers !== undefined ? summary.activeUsers.toLocaleString() : '0'
   const pendingReportsCount = summary?.pendingReports ?? reportsCount
+  const announcementsCount = summary?.publishedAnnouncements !== undefined ? summary.publishedAnnouncements.toLocaleString() : '0'
+  const auditLogsCount = summary?.totalAuditLogsCount !== undefined ? summary.totalAuditLogsCount.toLocaleString() : '0'
+  const suspendedCount = summary?.suspendedUsers !== undefined ? summary.suspendedUsers.toLocaleString() : '0'
 
   return (
     <div className="space-y-6">
@@ -323,7 +282,7 @@ export const DashboardPage: FC = () => {
         <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-800">
           <div className="flex items-center gap-2">
             <IconAlertTriangle size={16} stroke={1.8} className="text-rose-600 shrink-0" />
-            <span>Connecting to live microservices... displaying cached platform metrics.</span>
+            <span>Không thể kết nối đến backend microservices. Vui lòng kiểm tra API Gateway hoặc đăng nhập lại.</span>
           </div>
           <Button
             size="sm"
@@ -443,41 +402,41 @@ export const DashboardPage: FC = () => {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Community Posts"
-            value="1,240"
-            description="Active academic & career discussions"
+            title="Published Announcements"
+            value={announcementsCount}
+            description="Official announcements published"
             icon={<IconArticle size={20} stroke={1.8} />}
-            trend={{ value: '24 new today', isPositive: true }}
+            trend={{ value: 'Live broadcast', isPositive: true }}
             variant="secondary"
             isLoading={isSummaryLoading}
           />
 
           <StatCard
-            title="Job Opportunities"
-            value="86"
-            description="Full-time & internship vacancies"
+            title="Audit Trail Logs"
+            value={auditLogsCount}
+            description="Security and administrative events"
             icon={<IconBriefcase size={20} stroke={1.8} />}
-            trend={{ value: '12 closing soon', isPositive: true }}
+            trend={{ value: 'Recorded', isPositive: true }}
             variant="primary"
             isLoading={isSummaryLoading}
           />
 
           <StatCard
-            title="Scholarships"
-            value="15"
-            description="Fellowships & global grants"
+            title="Suspended Accounts"
+            value={suspendedCount}
+            description="Restricted user accounts"
             icon={<IconAward size={20} stroke={1.8} />}
-            trend={{ value: '3 active grants', isPositive: true }}
+            trend={{ value: suspendedCount === '0' ? 'Zero restricted' : 'Restricted', isPositive: suspendedCount === '0' }}
             variant="accent"
             isLoading={isSummaryLoading}
           />
 
           <StatCard
-            title="Active Communities"
-            value="46"
-            description="Campus & academic interest chapters"
+            title="Pending Reports"
+            value={pendingReportsCount}
+            description="Content flags awaiting decision"
             icon={<IconBuildingCommunity size={20} stroke={1.8} />}
-            trend={{ value: '5 campus hubs', isPositive: true }}
+            trend={{ value: pendingReportsCount === 0 ? 'Queue clean' : 'Requires review', isPositive: pendingReportsCount === 0 }}
             variant="neutral"
             isLoading={isSummaryLoading}
           />

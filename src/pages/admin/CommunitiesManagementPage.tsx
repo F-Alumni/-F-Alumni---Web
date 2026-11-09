@@ -36,56 +36,6 @@ export interface CommunityRecord {
   }
 }
 
-const SAMPLE_COMMUNITIES: CommunityRecord[] = [
-  {
-    id: 'COM-01',
-    name: 'Software Engineering (SE) Alumni & Students',
-    category: 'ACADEMIC',
-    membersCount: 4250,
-    leader: 'Nguyen Van A (Admin)',
-    isPrivate: false,
-    status: 'active',
-    createdAt: '2022-01-15',
-    pinnedAnnouncement: {
-      title: 'Fall 2026 Capstone Project Guidelines & External Jury Schedule',
-      body: 'All graduating teams must submit final reports to the department office by Nov 15.',
-      pinnedBy: 'Dr. Nguyen Van Faculty',
-      duration: 'Until Capstone Defense',
-      expiresAt: '2026-11-30',
-    },
-  },
-  {
-    id: 'COM-02',
-    name: 'FPT Alumni Tokyo Chapter',
-    category: 'CAMPUS_CHAPTER',
-    membersCount: 890,
-    leader: 'Minh Hoang (K12)',
-    isPrivate: true,
-    status: 'active',
-    createdAt: '2023-04-10',
-  },
-  {
-    id: 'COM-03',
-    name: 'AI & Machine Learning Innovators',
-    category: 'CAREER',
-    membersCount: 1680,
-    leader: 'Dr. Le Van Phuc',
-    isPrivate: false,
-    status: 'active',
-    createdAt: '2022-11-20',
-  },
-  {
-    id: 'COM-04',
-    name: 'Capstones Archive Spring 2024',
-    category: 'ACADEMIC',
-    membersCount: 340,
-    leader: 'Faculty Academic Board',
-    isPrivate: false,
-    status: 'archived',
-    createdAt: '2024-02-01',
-  },
-]
-
 function adaptForumCategory(cat: ForumCategoryItem): CommunityRecord {
   const normSlug = (cat.slug || cat.name || '').toLowerCase()
   let category: CommunityRecord['category'] = 'ACADEMIC'
@@ -129,11 +79,9 @@ export const CommunitiesManagementPage: FC = () => {
 
   // Combine categories
   const communities = useMemo(() => {
-    let list = SAMPLE_COMMUNITIES
+    let list: CommunityRecord[] = []
     if (categoriesData && categoriesData.length > 0) {
-      const liveItems = categoriesData.map(adaptForumCategory)
-      const existingNames = new Set(liveItems.map((i) => i.name.toLowerCase()))
-      list = [...liveItems, ...SAMPLE_COMMUNITIES.filter((s) => !existingNames.has(s.name.toLowerCase()))]
+      list = categoriesData.map(adaptForumCategory)
     }
 
     return list.map((c) => {

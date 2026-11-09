@@ -47,67 +47,6 @@ export interface OpportunityRecord {
   isAcademicVerified?: boolean
 }
 
-const SAMPLE_OPPORTUNITIES: OpportunityRecord[] = [
-  {
-    id: 'OPP-01',
-    title: 'Junior React & Node.js Engineer (Graduate Hire)',
-    company: 'FPT Software Da Nang',
-    type: 'JOB',
-    location: 'Da Nang (F-Complex)',
-    postedBy: 'Hoang Minh (K12 SE)',
-    applicantsCount: 42,
-    status: 'active',
-    deadline: '2026-11-15',
-    description: 'Full-time junior software engineer position for recent FPT graduates with strong JavaScript/TypeScript skills.',
-    contactEmail: 'recruitment.danang@fpt.com',
-  },
-  {
-    id: 'OPP-02',
-    title: 'AI Research Assistant (Spring 2026 Capstone & OJT)',
-    company: 'FPT AI Lab & Research Center',
-    type: 'RESEARCH_ASSISTANT',
-    location: 'Hanoi (Hoa Lac Campus)',
-    postedBy: 'Dr. Le Van Phuc',
-    department: 'Software Engineering',
-    targetCohort: 'K17, K18',
-    applicantsCount: 18,
-    status: 'active',
-    deadline: '2026-10-30',
-    description: 'Join faculty research on Large Language Model optimization for academic tutoring in Vietnamese universities.',
-    contactEmail: 'phuclv@fe.edu.vn',
-    isAcademicVerified: true,
-  },
-  {
-    id: 'OPP-03',
-    title: 'FPT Alumni Global Master Fellowship 2026',
-    company: 'FPT University Global Alumni Fund',
-    type: 'SCHOLARSHIP',
-    location: 'Tokyo, Japan',
-    postedBy: 'Tokyo Alumni Chapter',
-    applicantsCount: 7,
-    status: 'pending',
-    deadline: '2026-12-01',
-    description: '$15,000 scholarship fellowship for outstanding engineering alumni pursuing graduate studies abroad.',
-    contactEmail: 'scholarship@alumni.fpt.edu.vn',
-  },
-  {
-    id: 'OPP-04',
-    title: 'Automated Code Review Capstone Mentorship (Fall 2026)',
-    company: 'Department of Software Engineering',
-    type: 'CAPSTONE_PROJECT',
-    location: 'Hoa Lac Campus',
-    postedBy: 'Dr. Nguyen Van Faculty',
-    department: 'Software Engineering',
-    targetCohort: 'K17 Seniors',
-    applicantsCount: 14,
-    status: 'active',
-    deadline: '2026-11-20',
-    description: 'Department sponsored capstone project with industry mentor supervision and high performance computing resource grant.',
-    contactEmail: 'faculty.se@fpt.edu.vn',
-    isAcademicVerified: true,
-  },
-]
-
 function adaptEventToOpportunity(ev: CommunityEventItem): OpportunityRecord {
   return {
     id: ev.id,
@@ -167,21 +106,16 @@ export const OpportunitiesManagementPage: FC = () => {
 
   // Derive final opportunities list
   const opportunities: OpportunityRecord[] = useMemo(() => {
-    let baseList = SAMPLE_OPPORTUNITIES
+    let baseList: OpportunityRecord[] = []
     if (eventsData && eventsData.items && eventsData.items.length > 0) {
-      const liveItems = eventsData.items.map(adaptEventToOpportunity)
-      const existingTitles = new Set(liveItems.map((i) => i.title.toLowerCase()))
-      baseList = [...liveItems, ...SAMPLE_OPPORTUNITIES.filter((s) => !existingTitles.has(s.title.toLowerCase()))]
+      baseList = eventsData.items.map(adaptEventToOpportunity)
     }
 
     return [...localAddedOpps, ...baseList]
       .filter((o) => !deletedIds.has(o.id))
       .map((o): OpportunityRecord => {
         const overrideStatus = statusOverrides[o.id]
-        return {
-          ...o,
-          status: overrideStatus || o.status,
-        }
+        return overrideStatus ? { ...o, status: overrideStatus } : o
       })
   }, [eventsData, localAddedOpps, deletedIds, statusOverrides])
 

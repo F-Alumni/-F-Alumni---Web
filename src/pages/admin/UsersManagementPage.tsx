@@ -43,67 +43,6 @@ export interface UserDirectoryRecord {
   isVerified?: boolean
 }
 
-const FALLBACK_USERS: UserDirectoryRecord[] = [
-  {
-    id: 'USR-001',
-    name: 'Dang Tran Hoang',
-    email: 'hoangdt@fpt.edu.vn',
-    role: 'STUDENT',
-    campus: 'Hòa Lạc',
-    major: 'Software Engineering',
-    cohort: 'K17',
-    studentId: 'SE170123',
-    status: 'active',
-    joinedDate: '2024-09-01',
-    bio: 'Junior Software Engineering student interested in Distributed Systems.',
-    isVerified: false,
-  },
-  {
-    id: 'USR-002',
-    name: 'Nguyen Quoc Dat',
-    email: 'datnq@fpt.edu.vn',
-    role: 'ALUMNI',
-    campus: 'Hòa Lạc',
-    major: 'Artificial Intelligence',
-    cohort: 'K15',
-    studentId: 'AI150492',
-    status: 'active',
-    joinedDate: '2022-03-15',
-    currentCompany: 'FPT Software',
-    currentPosition: 'Senior AI Engineer',
-    bio: 'Alumni K15 working on Generative AI and Computer Vision in Tokyo.',
-    isVerified: true,
-  },
-  {
-    id: 'USR-003',
-    name: 'Dr. Nguyen Van Faculty',
-    email: 'faculty.se@fpt.edu.vn',
-    role: 'FACULTY',
-    campus: 'Hòa Lạc',
-    major: 'Software Engineering',
-    cohort: 'Staff',
-    studentId: 'FE00482',
-    status: 'active',
-    joinedDate: '2019-08-01',
-    bio: 'Department Chair of Software Engineering, capstone project advisor.',
-    isVerified: true,
-  },
-  {
-    id: 'USR-004',
-    name: 'Spam Bot 99',
-    email: 'promo123@tempmail.org',
-    role: 'STUDENT',
-    campus: 'TP. Ho Chi Minh',
-    major: 'Business Administration',
-    cohort: 'K18',
-    studentId: 'BA180999',
-    status: 'banned',
-    joinedDate: '2026-10-01',
-    bio: 'Account suspended due to repeated commercial spam posting.',
-    isVerified: false,
-  },
-]
-
 function adaptAdminUser(u: AdminUserSummary): UserDirectoryRecord {
   const normRole = (u.role || u.accountType || '').toUpperCase()
   let role: UserDirectoryRecord['role']
@@ -234,7 +173,7 @@ export const UsersManagementPage: FC = () => {
     if (usersData && usersData.items && usersData.items.length > 0) {
       return usersData.items.map(adaptAdminUser)
     }
-    return FALLBACK_USERS
+    return []
   }, [usersData])
 
   // Filter evaluation on client side for cohort or extra checks

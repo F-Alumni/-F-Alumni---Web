@@ -20,33 +20,6 @@ import {
 } from '@/features/admin'
 import type { SystemAnnouncementItem } from '@/types/admin.types'
 
-const SAMPLE_ANNOUNCEMENTS: SystemAnnouncementItem[] = [
-  {
-    id: 'ANN-001',
-    title: 'Hệ thống chuẩn bị bảo trì định kỳ định dạng máy chủ',
-    content: 'Cổng thông tin sẽ tạm gián đoạn 15 phút vào 02:00 sáng Chủ Nhật để nâng cấp cơ sở dữ liệu và bảo mật.',
-    type: 'Maintenance',
-    priority: 'Normal',
-    isPublished: true,
-    publishedAtUtc: '2026-10-10T08:00:00Z',
-    createdByAdminId: 'ADM-01',
-    createdByAdminEmail: 'admin@fpt.edu.vn',
-    createdAtUtc: '2026-10-10T08:00:00Z',
-  },
-  {
-    id: 'ANN-002',
-    title: 'Hạn chót nộp hồ sơ xét duyệt cựu sinh viên tiêu biểu 2026',
-    content: 'Ban Cựu sinh viên thông báo toàn thể hội viên gửi đề cử giải thưởng FPT Alumni Awards trước 30/11.',
-    type: 'Event',
-    priority: 'High',
-    isPublished: true,
-    publishedAtUtc: '2026-10-12T10:00:00Z',
-    createdByAdminId: 'ADM-01',
-    createdByAdminEmail: 'alumni.committee@fpt.edu.vn',
-    createdAtUtc: '2026-10-12T10:00:00Z',
-  },
-]
-
 export const SettingsPage: FC = () => {
   const [autoVerifyFptEmail, setAutoVerifyFptEmail] = useState(true)
   const [allowPublicJobPosting, setAllowPublicJobPosting] = useState(false)
@@ -77,7 +50,7 @@ export const SettingsPage: FC = () => {
   const [deletedAnnIds, setDeletedAnnIds] = useState<Set<string>>(new Set())
 
   const announcements = useMemo(() => {
-    let baseList = SAMPLE_ANNOUNCEMENTS
+    let baseList: SystemAnnouncementItem[] = []
     if (announcementsData && announcementsData.items && announcementsData.items.length > 0) {
       baseList = announcementsData.items
     }

@@ -31,62 +31,6 @@ export interface PostRecord {
   hiddenReason?: string
 }
 
-const SAMPLE_POSTS: PostRecord[] = [
-  {
-    id: 'POST-4831',
-    authorName: 'Minh Hoang',
-    authorRole: 'Alumni (K12)',
-    community: 'Software Engineering (SE)',
-    title: 'Tips for passing FPT Software On-the-Job Training (OJT)',
-    contentSnippet:
-      'Sharing my personal journey navigating OJT in Da Nang. Focus on Git workflows, unit tests in C# / Java, and proactive communication with Tech Leads.',
-    likesCount: 142,
-    commentsCount: 38,
-    status: 'active',
-    createdAt: '2026-10-10 10:15',
-  },
-  {
-    id: 'POST-4830',
-    authorName: 'Maya Lin',
-    authorRole: 'Student (SE \'25)',
-    community: 'AI & Robotics',
-    title: 'Looking for alumni teammates for FPT Edu Hackathon 2026',
-    contentSnippet:
-      'We are a group of 3 junior students building an autonomous drone for agricultural monitoring. Looking for 1 mentor with Computer Vision experience.',
-    likesCount: 56,
-    commentsCount: 12,
-    status: 'active',
-    createdAt: '2026-10-09 20:45',
-  },
-  {
-    id: 'POST-4829',
-    authorName: 'Spam Bot 99',
-    authorRole: 'Student',
-    community: 'General Announcements',
-    title: 'Earn easy money with crypto investment link here',
-    contentSnippet:
-      'Join our telegram channel to earn 500% profit with zero risks. University students get fast loans with zero deposit required.',
-    likesCount: 1,
-    commentsCount: 0,
-    status: 'hidden',
-    hiddenReason: 'Policy violation: Unverified financial scheme & spam',
-    createdAt: '2026-10-09 19:40',
-  },
-  {
-    id: 'POST-4828',
-    authorName: 'Dr. Nguyen Van Faculty',
-    authorRole: 'Faculty (SE Dept)',
-    community: 'Software Engineering (SE)',
-    title: 'Capstone Project Defense Schedule - Fall 2026 Guidelines',
-    contentSnippet:
-      'Official notification regarding final capstone defense review dates, rubric expectations, and external alumni evaluator invitations.',
-    likesCount: 89,
-    commentsCount: 24,
-    status: 'active',
-    createdAt: '2026-10-08 14:00',
-  },
-]
-
 function adaptForumPost(p: ForumPostItem): PostRecord {
   return {
     id: p.id,
@@ -128,7 +72,7 @@ export const PostsManagementPage: FC = () => {
 
   // Derive final posts list
   const posts = useMemo(() => {
-    let baseList = SAMPLE_POSTS
+    let baseList: PostRecord[] = []
     if (postsData && postsData.items && postsData.items.length > 0) {
       baseList = postsData.items.map(adaptForumPost)
     }
