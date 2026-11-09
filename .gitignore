@@ -38,3 +38,5 @@ dist-ssr
 # Test Output & Artifacts
 screenshots/
 *.png
+!src/assets/*.png
+!public/*.png

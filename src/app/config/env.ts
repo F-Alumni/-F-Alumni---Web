@@ -12,27 +12,27 @@ export const env = {
   adminServiceBaseUrl:
     import.meta.env.VITE_ADMIN_SERVICE_URL ||
     import.meta.env.VITE_ADMIN_SERVICE_BASE_URL ||
-    'https://f-alumni-admin-service.onrender.com/api/v1',
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
 
   userServiceBaseUrl:
     import.meta.env.VITE_USER_SERVICE_URL ||
     import.meta.env.VITE_USER_SERVICE_BASE_URL ||
-    'https://f-alumni-user-service.onrender.com/api/v1',
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
 
   forumServiceBaseUrl:
     import.meta.env.VITE_FORUM_SERVICE_URL ||
     import.meta.env.VITE_FORUM_SERVICE_BASE_URL ||
-    'https://f-alumni-forum-service.onrender.com/api/v1',
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
 
   chatServiceBaseUrl:
     import.meta.env.VITE_CHAT_SERVICE_URL ||
     import.meta.env.VITE_CHAT_SERVICE_BASE_URL ||
-    'https://f-alumni-chat-service.onrender.com/api/v1',
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
 
   aiServiceBaseUrl:
     import.meta.env.VITE_AI_SERVICE_URL ||
     import.meta.env.VITE_AI_SERVICE_BASE_URL ||
-    'https://f-alumni-ai-service.onrender.com/api/v1',
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
 
   // Real-time WebSockets SignalR Hubs
   chatHubUrl: import.meta.env.VITE_CHAT_HUB_URL || 'http://localhost:5000/hubs/chat',
