@@ -10,7 +10,7 @@ export interface DemoUserConfig extends UserSummary {
 
 export const DEMO_USERS: Record<'ADMIN', DemoUserConfig> = {
   ADMIN: {
-    id: '813b0e01-dc56-42f7-ac03-2adbc7289020',
+    id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     name: 'FPT System Administrator',
     email: 'admin@fpt.edu.vn',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
@@ -21,7 +21,7 @@ export const DEMO_USERS: Record<'ADMIN', DemoUserConfig> = {
     isVerified: true,
     badgeLabel: 'Super Admin',
     description: 'System governance, user lifecycle, verifications & platform configuration',
-    defaultPassword: '123456',
+    defaultPassword: 'Password@123',
   },
 }
 

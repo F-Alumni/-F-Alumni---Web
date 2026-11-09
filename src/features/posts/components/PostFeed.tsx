@@ -1,15 +1,18 @@
-import { useMemo, type FC } from 'react'
+import { useState, useEffect, useCallback, type FC } from 'react'
 import { PostCard, type PostItem } from './PostCard'
 import type { PostCategoryFilter } from './PostFeedFilters'
+import { postsService, type ForumPostItem } from '@/services/posts'
+import { Loader2 } from 'lucide-react'
 
 interface PostFeedProps {
   category: PostCategoryFilter
   community: string
+  refreshTrigger?: number
 }
 
 const INITIAL_POSTS: PostItem[] = [
   {
-    id: '1',
+    id: 'demo-1',
     author: {
       name: 'Dr. Marcus Vance',
       avatar:
@@ -37,7 +40,7 @@ const INITIAL_POSTS: PostItem[] = [
     comments: 28,
   },
   {
-    id: '2',
+    id: 'demo-2',
     author: {
       name: 'Elena Rostova',
       avatar:
@@ -63,7 +66,7 @@ const INITIAL_POSTS: PostItem[] = [
     comments: 24,
   },
   {
-    id: '3',
+    id: 'demo-3',
     author: {
       name: 'Aiden Patel',
       avatar:
@@ -89,75 +92,131 @@ const INITIAL_POSTS: PostItem[] = [
     likes: 47,
     comments: 18,
   },
-  {
-    id: '4',
-    author: {
-      name: 'Trần Minh Đức',
-      avatar:
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=256',
-      role: 'Co-founder & CTO @ AgriAI Tech',
-      major: 'Software Engineering K11',
-      isVerified: true,
-    },
-    timestamp: '8 hours ago',
-    community: '#AI-Robotics-Hub',
-    type: 'EXPERIENCE',
-    title: 'From FPT Capstone Project to Successful $500k Seed Round Startup',
-    content:
-      'Chia sẻ với các bạn sinh viên FPT Hòa Lạc đang bước vào kỳ làm Capstone:\n\n1. Hãy tìm một bài toán thực tế có khách hàng sẵn sàng trả tiền, đừng chỉ chọn đề tài làm đồ án để đối phó.\n2. Chọn đồng đội có kỹ năng bổ trợ lẫn nhau: 1 bạn tập trung Product/AI, 1 bạn System Backend, 1 bạn phụ trách Business/Pitching.\n3. Các thầy cô và mạng lưới Cựu SV là kênh phản biện quý giá nhất!',
-    images: [
-      'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800',
-    ],
-    likes: 215,
-    comments: 43,
-  },
 ]
 
-export const PostFeed: FC<PostFeedProps> = ({ category, community }) => {
-  const filteredPosts = useMemo(() => {
-    return INITIAL_POSTS.filter((post) => {
-      // Category filter
-      if (category === 'EXPERIENCES' && post.type !== 'EXPERIENCE') return false
-      if (category === 'QUESTIONS' && post.type !== 'QUESTION') return false
-      if (category === 'JOBS' && post.type !== 'JOB') return false
-      if (category === 'INTERNSHIPS' && post.type !== 'INTERNSHIP') return false
-      if (category === 'SCHOLARSHIPS' && post.type !== 'SCHOLARSHIP') return false
+function mapBackendPostToPostItem(p: ForumPostItem): PostItem {
+  let type: 'EXPERIENCE' | 'QUESTION' | 'JOB' | 'INTERNSHIP' | 'SCHOLARSHIP' = 'EXPERIENCE'
+  const pt = (p.postType || '').toLowerCase()
+  if (pt.includes('question')) type = 'QUESTION'
+  else if (pt.includes('recruit') || pt.includes('job')) type = 'JOB'
+  else if (pt.includes('intern')) type = 'INTERNSHIP'
+  else if (pt.includes('scholar')) type = 'SCHOLARSHIP'
+  else type = 'EXPERIENCE'
 
-      // Community filter
-      if (community !== 'All Communities') {
-        const normalizedComm = community.toLowerCase()
-        if (
-          normalizedComm.includes('software') &&
-          !post.community.toLowerCase().includes('software')
-        ) {
-          return false
-        }
-        if (
-          normalizedComm.includes('artificial intelligence') &&
-          !post.community.toLowerCase().includes('ai')
-        ) {
-          return false
-        }
+  let timestamp = 'Vừa xong'
+  if (p.createdAt) {
+    const diffMs = Date.now() - new Date(p.createdAt).getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    if (diffHours >= 24) {
+      timestamp = `${Math.floor(diffHours / 24)} ngày trước`
+    } else if (diffHours >= 1) {
+      timestamp = `${diffHours} giờ trước`
+    } else {
+      const diffMins = Math.floor(diffMs / (1000 * 60))
+      timestamp = diffMins > 0 ? `${diffMins} phút trước` : 'Vừa xong'
+    }
+  }
+
+  return {
+    id: p.id,
+    author: {
+      name: p.authorName || 'FPT Alumni',
+      avatar:
+        p.authorAvatarUrl ||
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+      role: p.major ? `Khoa ${p.major}` : 'Thành viên cựu SV',
+      major: p.major || 'FPT University',
+      isVerified: true,
+      isOnline: true,
+    },
+    timestamp,
+    community: p.major ? `#${p.major}` : '#General',
+    type,
+    title: p.title,
+    content: p.content,
+    images: p.images && p.images.length > 0 ? p.images : undefined,
+    likes: p.likeCount || 0,
+    comments: p.commentCount || 0,
+  }
+}
+
+export const PostFeed: FC<PostFeedProps> = ({ category, community, refreshTrigger }) => {
+  const [posts, setPosts] = useState<PostItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchPosts = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      let postType: string | undefined
+      if (category === 'QUESTIONS') postType = 'Question'
+      else if (category === 'JOBS' || category === 'INTERNSHIPS') postType = 'Recruitment'
+      else if (category === 'EXPERIENCES') postType = 'Sharing'
+
+      let major: string | undefined
+      if (community && community !== 'All Communities' && community !== 'Tất cả cộng đồng') {
+        const commLower = community.toLowerCase()
+        if (commLower.includes('software')) major = 'SE'
+        else if (commLower.includes('ai') || commLower.includes('intelligence')) major = 'AI'
+        else if (commLower.includes('design')) major = 'GD'
+        else if (commLower.includes('business')) major = 'IB'
       }
 
-      return true
-    })
+      const res = await postsService.getPosts({
+        postType,
+        major,
+        page: 1,
+        pageSize: 30,
+      })
+
+      const rawItems = res?.items || []
+      if (rawItems.length > 0) {
+        setPosts(rawItems.map(mapBackendPostToPostItem))
+      } else {
+        // Fallback to initial seed demo posts filtered by category
+        const filtered = INITIAL_POSTS.filter((post) => {
+          if (category === 'EXPERIENCES' && post.type !== 'EXPERIENCE') return false
+          if (category === 'QUESTIONS' && post.type !== 'QUESTION') return false
+          if (category === 'JOBS' && post.type !== 'JOB') return false
+          return true
+        })
+        setPosts(filtered)
+      }
+    } catch (err) {
+      console.warn('Could not load forum posts from backend, using fallback demo posts:', err)
+      setPosts(INITIAL_POSTS)
+    } finally {
+      setIsLoading(false)
+    }
   }, [category, community])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchPosts()
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [fetchPosts, refreshTrigger])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-40 items-center justify-center rounded-xl border border-slate-200 bg-white">
+        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
+        <span className="ml-2 text-xs font-semibold text-slate-500">Đang tải bảng tin diễn đàn...</span>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
-      {filteredPosts.length > 0 ? (
-        filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
+      {posts.length > 0 ? (
+        posts.map((post) => <PostCard key={post.id} post={post} />)
       ) : (
         <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-12 text-center">
-          <p className="text-sm font-semibold text-slate-700">No posts found in this category</p>
+          <p className="text-sm font-semibold text-slate-700">Chưa có bài viết nào trong danh mục này</p>
           <p className="mt-1 text-xs text-slate-400">
-            Be the first to share an experience or ask a question in the community!
+            Hãy là người đầu tiên chia sẻ kinh nghiệm hoặc đặt câu hỏi cho cộng đồng!
           </p>
         </div>
       )}
     </div>
   )
 }
-
-

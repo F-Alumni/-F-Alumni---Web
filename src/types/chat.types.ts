@@ -37,6 +37,7 @@ export interface CreateDirectRoomPayload {
 export interface CreateGroupRoomPayload {
   name: string
   major?: string
+  participantUserIds?: string[]
 }
 
 export interface SendMessagePayload {
@@ -57,7 +58,8 @@ export interface ChatConversation {
   id: ChatConversationId
   name?: string
   roomType?: 'Group' | 'Direct'
-  major?: string | null
+  major?: string
+  participantUserIds?: string[] | null
   participantIds?: UserId[]
   lastMessage?: ChatMessage
   updatedAt: string

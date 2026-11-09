@@ -94,34 +94,11 @@ export const authService = {
     let res
     try {
       res = await userApiClient.post('/auth/login', postBody)
-    } catch {
+    } catch (err: unknown) {
       try {
         res = await apiClient.post('/auth/login', postBody)
       } catch {
-        // Fallback to resilient Admin session if backend microservice is offline, sleeping, or blocked by CORS
-        const isMod = postBody.email.includes('mod')
-        const isFaculty = postBody.email.includes('faculty')
-        const fallbackUser: UserSummary = {
-          id: 'adm-session-' + Date.now().toString(36),
-          email: postBody.email,
-          name: isMod
-            ? 'Campus Safety Moderator'
-            : isFaculty
-            ? 'Khoa CNTT - Giảng viên Điều phối'
-            : 'FPT System Administrator',
-          role: isMod ? ROLES.MODERATOR : ROLES.ADMIN,
-          campus: 'Hòa Lạc',
-          userType: USER_TYPES.FACULTY,
-          isVerified: true,
-        }
-        const demoToken = 'fpt-admin-jwt-' + Date.now()
-        localStorage.setItem('access_token', demoToken)
-        localStorage.setItem('accessToken', demoToken)
-        return {
-          token: demoToken,
-          user: fallbackUser,
-          isEmailVerified: true,
-        }
+        throw err
       }
     }
 
@@ -169,8 +146,12 @@ export const authService = {
     let res
     try {
       res = await userApiClient.post('/auth/register', postBody)
-    } catch {
-      res = await apiClient.post('/auth/register', postBody)
+    } catch (err: unknown) {
+      try {
+        res = await apiClient.post('/auth/register', postBody)
+      } catch {
+        throw err
+      }
     }
 
     const beData = res.data?.data || res.data
@@ -202,27 +183,11 @@ export const authService = {
     let res
     try {
       res = await userApiClient.post('/auth/google', postBody)
-    } catch {
+    } catch (err: unknown) {
       try {
         res = await apiClient.post('/auth/google', postBody)
       } catch {
-        const fallbackUser: UserSummary = {
-          id: 'adm-google-session-' + Date.now().toString(36),
-          email: postBody.email || 'admin@fpt.edu.vn',
-          name: postBody.fullName || 'FPT System Administrator',
-          role: ROLES.ADMIN,
-          campus: 'Hòa Lạc',
-          userType: USER_TYPES.FACULTY,
-          isVerified: true,
-        }
-        const demoToken = 'fpt-admin-jwt-google-' + Date.now()
-        localStorage.setItem('access_token', demoToken)
-        localStorage.setItem('accessToken', demoToken)
-        return {
-          token: demoToken,
-          user: fallbackUser,
-          isEmailVerified: true,
-        }
+        throw err
       }
     }
 

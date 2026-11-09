@@ -23,7 +23,7 @@ class ChatHubClient {
   }
 
   public async startConnection(): Promise<signalR.HubConnection | null> {
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken')
     if (!token) return null
 
     if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
@@ -38,12 +38,12 @@ class ChatHubClient {
       }
     }
 
-    const hubUrl = env.chatHubUrl || 'http://localhost:5199/hubs/chat'
+    const hubUrl = env.chatHubUrl || 'http://localhost:5000/hubs/chat'
 
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: () => {
-          return localStorage.getItem('access_token') || ''
+          return localStorage.getItem('access_token') || localStorage.getItem('accessToken') || ''
         },
       })
       .withAutomaticReconnect()
@@ -51,10 +51,10 @@ class ChatHubClient {
       .build()
 
     this.connection.onreconnected(async () => {
-      // Re-join previously joined rooms
+      // Re-join previously joined conversations
       for (const roomId of this.joinedRooms) {
         try {
-          await this.connection?.invoke('JoinRoom', roomId)
+          await this.connection?.invoke('JoinConversation', roomId)
         } catch {
           // Ignore re-join errors
         }
@@ -86,9 +86,9 @@ class ChatHubClient {
     this.joinedRooms.add(roomId)
     if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
       try {
-        await this.connection.invoke('JoinRoom', roomId)
+        await this.connection.invoke('JoinConversation', roomId)
       } catch (err) {
-        console.warn(`Failed to join SignalR room ${roomId}:`, err)
+        console.warn(`Failed to join SignalR conversation ${roomId}:`, err)
       }
     }
   }
@@ -97,38 +97,77 @@ class ChatHubClient {
     this.joinedRooms.delete(roomId)
     if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
       try {
-        await this.connection.invoke('LeaveRoom', roomId)
+        await this.connection.invoke('LeaveConversation', roomId)
       } catch (err) {
-        console.warn(`Failed to leave SignalR room ${roomId}:`, err)
+        console.warn(`Failed to leave SignalR conversation ${roomId}:`, err)
       }
     }
   }
 
   public async sendMessage(roomId: string, content: string): Promise<void> {
     if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('SendMessage', roomId, content)
+      await this.connection.invoke('SendMessage', roomId, { content })
     }
   }
 
   public async sendTyping(roomId: string, isTyping: boolean): Promise<void> {
     if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('SendTyping', roomId, isTyping)
+      await this.connection.invoke('SendTypingIndicator', roomId, isTyping)
+    }
+  }
+
+  public async markConversationRead(roomId: string): Promise<void> {
+    if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+      await this.connection.invoke('MarkConversationRead', roomId)
     }
   }
 
   public onReceiveMessage(callback: (message: BackendChatMessage) => void): () => void {
     if (!this.connection) return () => {}
-    this.connection.on('ReceiveMessage', callback)
+    const handler = (raw: any) => {
+      const msg: BackendChatMessage = {
+        id: raw.id || raw.Id,
+        roomId: raw.conversationId || raw.ConversationId || raw.roomId || raw.RoomId,
+        senderId: raw.senderUserId || raw.SenderUserId || raw.senderId || raw.SenderId,
+        senderName: raw.senderDisplayName || raw.SenderDisplayName || raw.senderName || 'Anonymous',
+        senderAvatarUrl: raw.senderAvatarUrl || raw.SenderAvatarUrl || null,
+        content: raw.content || raw.Content || '',
+        sentAt: raw.sentAt || raw.SentAt || new Date().toISOString(),
+      }
+      callback(msg)
+    }
+    this.connection.on('ReceiveMessage', handler)
     return () => {
-      this.connection?.off('ReceiveMessage', callback)
+      this.connection?.off('ReceiveMessage', handler)
     }
   }
 
   public onUserTyping(callback: (payload: UserTypingEvent) => void): () => void {
     if (!this.connection) return () => {}
-    this.connection.on('UserTyping', callback)
+    const handler = (data: any) => {
+      const roomId = data.conversationId || data.ConversationId || data.roomId
+      const isTyping = data.isTyping ?? data.IsTyping ?? false
+      const userName = data.userName || data.senderDisplayName || (data.userId ? `User ${String(data.userId).slice(0, 4)}` : 'Someone')
+      callback({ roomId, userName, isTyping })
+    }
+    this.connection.on('UserTyping', handler)
     return () => {
-      this.connection?.off('UserTyping', callback)
+      this.connection?.off('UserTyping', handler)
+    }
+  }
+
+  public onMessagesRead(callback: (payload: { conversationId: string; readerUserId: string; markedCount: number }) => void): () => void {
+    if (!this.connection) return () => {}
+    const handler = (data: any) => {
+      callback({
+        conversationId: data.conversationId || data.ConversationId,
+        readerUserId: data.readerUserId || data.ReaderUserId,
+        markedCount: data.markedCount ?? data.MarkedCount ?? 0,
+      })
+    }
+    this.connection.on('MessagesRead', handler)
+    return () => {
+      this.connection?.off('MessagesRead', handler)
     }
   }
 

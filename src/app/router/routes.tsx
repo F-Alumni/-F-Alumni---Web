@@ -2,7 +2,7 @@ import type { RouteObject } from 'react-router-dom'
 import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
-import { AdminLayout, AuthLayout } from '@/layouts'
+import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
 import { LoginPage, ForgotPasswordPage } from '@/pages/auth'
 import {
   DashboardPage,
@@ -15,6 +15,7 @@ import {
   AnalyticsPage,
   SettingsPage,
 } from '@/pages/admin'
+import { HomePage, AlumniPage, ChatPage, ProfilePage } from '@/pages/user'
 import { LandingPage } from '@/pages/LandingPage'
 import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
 
@@ -172,10 +173,37 @@ export const routes: RouteObject[] = [
     ],
   },
 
-  // 4. End-User Routes Redirection (Web application is dedicated to Admin Portal)
+  // 4. End-User Community Portal Section (/app/*)
   {
-    path: '/app/*',
-    element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: ROUTES.APP.ROOT,
+        element: <UserLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.APP.HOME} replace />,
+          },
+          {
+            path: 'home',
+            element: <HomePage />,
+          },
+          {
+            path: 'alumni',
+            element: <AlumniPage />,
+          },
+          {
+            path: 'chat',
+            element: <ChatPage />,
+          },
+          {
+            path: 'profile',
+            element: <ProfilePage />,
+          },
+        ],
+      },
+    ],
   },
 
   // 5. Fallback Wildcard Route

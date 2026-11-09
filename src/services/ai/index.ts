@@ -31,6 +31,26 @@ export interface RagIngestResult {
   message?: string
 }
 
+export interface RecommendMentorPayload {
+  major?: string
+  targetSkills?: string[]
+  careerGoal?: string
+}
+
+export interface MentorItem {
+  id: string
+  userId: string
+  fullName: string
+  email: string
+  major: string
+  currentCompany: string
+  jobTitle: string
+  skills: string
+  bio: string
+  avatarUrl: string
+  matchScore: number
+}
+
 /**
  * AI Service operations connecting to AI Microservice & API Gateway.
  */
@@ -41,6 +61,19 @@ export const aiService = {
    */
   async ask(payload: AiChatPayload): Promise<AiChatResponse> {
     const res = await aiApiClient.post<AiChatResponse>('/ai/chat', payload)
+    return res.data
+  },
+
+  /**
+   * Recommend Alumni mentors matching student's major, target skills, and career aspirations.
+   * POST /api/v1/ai/mentors/recommend
+   */
+  async recommendMentors(payload: RecommendMentorPayload = {}): Promise<MentorItem[]> {
+    const res = await aiApiClient.post<MentorItem[]>('/ai/mentors/recommend', {
+      major: payload.major || 'SE',
+      targetSkills: payload.targetSkills || [],
+      careerGoal: payload.careerGoal || null,
+    })
     return res.data
   },
 

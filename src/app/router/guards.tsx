@@ -23,7 +23,7 @@ export const ProtectedRoute: FC = () => {
 
 /**
  * 2. PublicRoute: Guest-only route guard (e.g. login).
- * Redirects already authenticated admin to /admin/dashboard.
+ * Redirects already authenticated admin to /admin/dashboard, and users to /app/home.
  */
 export const PublicRoute: FC = () => {
   const { isAuthenticated, role } = useAuthStore()
@@ -32,7 +32,7 @@ export const PublicRoute: FC = () => {
     if (role === ROLES.ADMIN || role === ROLES.MODERATOR) {
       return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />
     }
-    return <Navigate to={ROUTES.AUTH.LOGIN} replace />
+    return <Navigate to={ROUTES.APP.HOME} replace />
   }
 
   return <Outlet />
@@ -91,7 +91,7 @@ export const RoleGuard: FC<RoleGuardProps> = ({
   }
 
   if (!isAllowed) {
-    return <Navigate to={fallbackPath || ROUTES.ADMIN.DASHBOARD} replace />
+    return <Navigate to={fallbackPath || (role === ROLES.USER ? ROUTES.APP.HOME : ROUTES.ADMIN.DASHBOARD)} replace />
   }
 
   return children ? <>{children}</> : <Outlet />
@@ -101,6 +101,7 @@ export const RoleGuard: FC<RoleGuardProps> = ({
  * 4. RootRedirect: Dynamic landing page router for path "/".
  * Unauthenticated -> LandingPage
  * Authenticated Admin / Moderator -> /admin/dashboard
+ * Authenticated User / Student / Alumni -> /app/home
  */
 export const RootRedirect: FC = () => {
   const { isAuthenticated, role } = useAuthStore()
@@ -113,5 +114,5 @@ export const RootRedirect: FC = () => {
     return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />
   }
 
-  return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />
+  return <Navigate to={ROUTES.APP.HOME} replace />
 }

@@ -20,6 +20,8 @@ export interface ForumPostItem {
   updatedAt?: string | null
   images: string[]
   tags: string[]
+  hasLiked?: boolean
+  isBookmarked?: boolean
 }
 
 export interface GetPostsParams {
@@ -31,6 +33,16 @@ export interface GetPostsParams {
   sort?: string
   page?: number
   pageSize?: number
+}
+
+export interface CreatePostPayload {
+  title: string
+  content: string
+  postType?: string // Question, Sharing, Recruitment
+  major?: string // SE, AI, IA, etc.
+  campus?: string // FU-HCM, FU-HL, etc.
+  imageUrls?: string[]
+  tags?: string[]
 }
 
 /**
@@ -45,6 +57,32 @@ export const postsService = {
     const res = await forumApiClient.get<PagedResponse<ForumPostItem>>('/posts', {
       params,
     })
+    return res.data
+  },
+
+  /**
+   * FO-01, FO-02, FO-03: Create a new post in the forum.
+   * POST /api/v1/posts
+   */
+  async createPost(payload: CreatePostPayload): Promise<ForumPostItem> {
+    const res = await forumApiClient.post<ForumPostItem>('/posts', {
+      title: payload.title.trim(),
+      content: payload.content.trim(),
+      postType: payload.postType || 'Sharing',
+      major: payload.major || 'All',
+      campus: payload.campus || 'All',
+      imageUrls: payload.imageUrls || [],
+      tags: payload.tags || [],
+    })
+    return res.data
+  },
+
+  /**
+   * FO-08: Like or unlike a post (toggle).
+   * POST /api/v1/posts/{id}/react
+   */
+  async toggleReaction(postId: string): Promise<{ postId: string; isLiked: boolean }> {
+    const res = await forumApiClient.post<{ postId: string; isLiked: boolean }>(`/posts/${postId}/react`)
     return res.data
   },
 

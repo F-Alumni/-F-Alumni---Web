@@ -10,7 +10,6 @@ import {
   IconArrowLeft,
   IconLoader2,
   IconAlertCircle,
-  IconDeviceMobile,
   IconSparkles,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
@@ -26,7 +25,7 @@ export const LoginForm: FC = () => {
   const setAuth = useAuthStore((state) => state.setAuth)
 
   const [email, setEmail] = useState('admin@fpt.edu.vn')
-  const [password, setPassword] = useState('123456')
+  const [password, setPassword] = useState('Password@123')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
@@ -42,18 +41,17 @@ export const LoginForm: FC = () => {
         rememberMe,
       })
 
-      // Enforce Admin-only access on the Web application
+      setAuth({ token: res.token, user: res.user })
+
+      // Route depending on role: Admin/Mod -> Dashboard; User/Student/Alumni -> App Home
       if (res.user.role === ROLES.ADMIN || res.user.role === ROLES.MODERATOR) {
-        setAuth({ token: res.token, user: res.user })
         navigate(ROUTES.ADMIN.DASHBOARD)
       } else {
-        setError(
-          'Cổng Web này dành riêng cho Quản trị viên (Admin & Ban Điều Hành). Tài khoản Sinh viên và Cựu sinh viên vui lòng truy cập ứng dụng di động F-Alumni.'
-        )
+        navigate(ROUTES.APP.HOME)
       }
     } catch (err: unknown) {
       const normalized = normalizeError(err)
-      setError(normalized.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin quản trị viên.')
+      setError(normalized.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin tài khoản.')
     } finally {
       setIsLoading(false)
     }
@@ -69,7 +67,7 @@ export const LoginForm: FC = () => {
     }
 
     if (!password) {
-      setError('Vui lòng nhập mật khẩu bảo mật của quản trị viên')
+      setError('Vui lòng nhập mật khẩu tài khoản')
       return
     }
 
@@ -87,7 +85,11 @@ export const LoginForm: FC = () => {
         role: 'Admin',
       })
       setAuth({ token: res.token, user: res.user })
-      navigate(ROUTES.ADMIN.DASHBOARD)
+      if (res.user.role === ROLES.ADMIN || res.user.role === ROLES.MODERATOR) {
+        navigate(ROUTES.ADMIN.DASHBOARD)
+      } else {
+        navigate(ROUTES.APP.HOME)
+      }
     } catch (err: unknown) {
       setError(normalizeError(err).message)
     } finally {
@@ -96,7 +98,7 @@ export const LoginForm: FC = () => {
   }
 
   const handleQuickDemoAdminLogin = () => {
-    executeLogin('admin@fpt.edu.vn', '123456')
+    executeLogin('admin@fpt.edu.vn', 'Password@123')
   }
 
   return (
@@ -118,16 +120,16 @@ export const LoginForm: FC = () => {
           <img src={fAlumniLogo} alt="F-Alumni Connect Logo" className="h-8 sm:h-9 w-auto object-contain" />
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
             <IconShieldCheck size={13} stroke={2} />
-            Admin & Governance Portal
+            FPT Alumni Portal
           </span>
         </div>
 
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-            Sign in to Admin Portal
+            Đăng nhập hệ thống
           </h1>
           <p className="text-[11px] sm:text-xs text-slate-500 leading-normal">
-            Cổng điều hành & quản trị hệ sinh thái FPT Alumni Connect.
+            Cổng điều hành & kết nối mạng lưới sinh viên, cựu sinh viên FPT.
           </p>
         </div>
       </div>
@@ -141,7 +143,7 @@ export const LoginForm: FC = () => {
               <span>Chấm điểm & Kiểm thử nhanh</span>
             </div>
             <p className="text-[10px] text-slate-600">
-              Đăng nhập tức thì với tài khoản Quản trị viên FPT (admin@fpt.edu.vn)
+              Đăng nhập tức thì với tài khoản Quản trị viên (admin@fpt.edu.vn / Password@123)
             </p>
           </div>
           <button
@@ -188,7 +190,7 @@ export const LoginForm: FC = () => {
               fill="#EA4335"
             />
           </svg>
-          <span>Sign in with Google Workspace Admin (@fpt.edu.vn)</span>
+          <span>Sign in with Google Workspace (@fpt.edu.vn)</span>
         </button>
       </div>
 
@@ -199,7 +201,7 @@ export const LoginForm: FC = () => {
         </div>
         <div className="relative flex justify-center text-[9px] uppercase font-bold tracking-wider">
           <span className="bg-white px-2.5 text-slate-400">
-            Or sign in with Admin credentials
+            Hoặc đăng nhập với tài khoản FPT
           </span>
         </div>
       </div>
@@ -221,10 +223,10 @@ export const LoginForm: FC = () => {
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <label htmlFor="staff-email" className="text-[11px] font-semibold text-slate-700">
-              Admin Email
+              Email
             </label>
             <span className="text-[10px] font-medium text-slate-400">
-              @fpt.edu.vn or @fe.edu.vn
+              @fpt.edu.vn hoặc @fe.edu.vn
             </span>
           </div>
           <div className="relative">
@@ -249,7 +251,7 @@ export const LoginForm: FC = () => {
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <label htmlFor="staff-password" className="text-[11px] font-semibold text-slate-700">
-              Password
+              Mật khẩu
             </label>
           </div>
           <div className="relative">
@@ -263,7 +265,7 @@ export const LoginForm: FC = () => {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your security password"
+              placeholder="Nhập mật khẩu của bạn"
               required
               className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 pl-9 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary/20 transition-all"
             />
@@ -288,7 +290,7 @@ export const LoginForm: FC = () => {
               onChange={(e) => setRememberMe(e.target.checked)}
               className="h-3.5 w-3.5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary focus:ring-offset-0"
             />
-            <span className="text-[11px] text-slate-600">Remember this admin session</span>
+            <span className="text-[11px] text-slate-600">Ghi nhớ đăng nhập</span>
           </label>
         </div>
 
@@ -302,11 +304,11 @@ export const LoginForm: FC = () => {
             {isLoading ? (
               <>
                 <IconLoader2 size={16} className="animate-spin" />
-                <span>Signing in to Admin Portal...</span>
+                <span>Đang đăng nhập...</span>
               </>
             ) : (
               <>
-                <span>Sign In as Administrator</span>
+                <span>Đăng nhập</span>
                 <IconArrowRight size={16} stroke={2} />
               </>
             )}
@@ -314,31 +316,16 @@ export const LoginForm: FC = () => {
         </div>
       </form>
 
-      {/* Notice for Students & Alumni */}
-      <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-left">
-        <div className="flex items-start gap-2.5">
-          <IconDeviceMobile size={18} stroke={1.8} className="text-blue-600 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <p className="text-xs font-bold text-blue-900">
-              Bạn là Sinh viên hoặc Cựu sinh viên?
-            </p>
-            <p className="text-[11px] text-blue-700 leading-relaxed">
-              Cổng Web này dành riêng cho việc quản trị và điều phối hệ thống. Sinh viên và Cựu sinh viên vui lòng sử dụng ứng dụng di động FPT Alumni Connect (iOS / Android) để tham gia mạng lưới cộng đồng.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* 7. Minimal Footer & Security Notice */}
       <div className="pt-2 text-center space-y-1.5">
         <p className="text-[10px] text-slate-400 leading-tight max-w-sm mx-auto">
-          FPT University Alumni Governance & Administration System. All administrative operations are monitored and logged under university security policies.
+          Hệ thống Mạng lưới Cựu sinh viên Đại học FPT (F-Alumni Connect).
         </p>
 
         <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-slate-400 pt-1 border-t border-slate-100">
-          <span className="text-slate-500">Admin Security</span>
+          <span className="text-slate-500">Security</span>
           <span className="text-slate-300">•</span>
-          <span className="text-slate-500">Audit Policy</span>
+          <span className="text-slate-500">Privacy Policy</span>
           <span className="text-slate-300">•</span>
           <span className="text-slate-500">FPT Identity</span>
         </div>

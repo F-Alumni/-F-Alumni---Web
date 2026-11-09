@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
           get().clearAuth()
           return
         }
-        const existingToken = get().token || `fpt-demo-session-${Date.now()}`
+        const existingToken = get().token || ''
         get().setAuth({ token: existingToken, user })
       },
 
