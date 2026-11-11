@@ -6,6 +6,7 @@ import {
   IconFlag,
   IconChartBar,
   IconSettings,
+  IconArticle,
   IconLogout,
   IconX,
   type Icon as TablerIcon,
@@ -89,6 +90,18 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
           to: ROUTES.ADMIN.USERS,
           icon: IconUsers,
           allowedRoles: [ROLES.ADMIN, 'FACULTY'],
+        },
+      ],
+    },
+    {
+      title: 'COMMUNITY FORUM',
+      allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR],
+      items: [
+        {
+          label: 'Forum Posts',
+          to: ROUTES.ADMIN.POSTS,
+          icon: IconArticle,
+          allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR],
         },
       ],
     },
