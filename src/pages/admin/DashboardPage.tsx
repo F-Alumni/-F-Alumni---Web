@@ -7,14 +7,12 @@ import {
   IconAlertTriangle,
   IconArticle,
   IconBriefcase,
-  IconAward,
   IconBuildingCommunity,
   IconArrowRight,
   IconEye,
   IconRefresh,
   IconCircleCheck,
   IconShieldCheck,
-  IconStack2,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -315,35 +313,33 @@ export const DashboardPage: FC = () => {
         }
       />
 
-      {/* 2. KPI Section 1: Member Verification & Trust Governance */}
+      {/* 2. System Metrics & Governance Overview */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <IconShieldCheck size={16} stroke={1.8} className="text-brand-secondary" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Member Verification & Trust Governance
+              System Metrics & Governance Overview
             </h2>
           </div>
-          <span className="text-[11px] font-medium text-slate-400">Core Identity Operations</span>
+          <span className="text-[11px] font-medium text-slate-400">Live Backend Metrics</span>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
-            title="Enrolled Students"
+            title="Total Users"
             value={totalUsersDisplay}
-            description="Active members across all campuses"
+            description="Registered accounts in system"
             icon={<IconSchool size={20} stroke={1.8} />}
-            trend={{ value: '8.4% YoY', isPositive: true }}
             variant="secondary"
             isLoading={isSummaryLoading}
           />
 
           <StatCard
-            title="Verified Alumni"
+            title="Active Users"
             value={activeAlumniDisplay}
-            description="Certified alumni in directory"
+            description="Active accounts without restriction"
             icon={<IconUserCheck size={20} stroke={1.8} />}
-            trend={{ value: '14.2% YoY', isPositive: true }}
             variant="accent"
             isLoading={isSummaryLoading}
           />
@@ -353,69 +349,7 @@ export const DashboardPage: FC = () => {
             value={suspendedCount}
             description="Restricted user accounts"
             icon={<IconAlertTriangle size={20} stroke={1.8} />}
-            trend={{
-              value: suspendedCount === '0' ? 'Zero restricted' : 'Restricted',
-              isPositive: suspendedCount === '0',
-            }}
-            variant="accent"
-            isLoading={isSummaryLoading}
-          />
-
-          <StatCard
-            title="Pending Reports"
-            value={pendingReportsCount}
-            description="Flagged content & account reports"
-            icon={<IconAlertTriangle size={20} stroke={1.8} />}
-            trend={{
-              value: pendingReportsCount > 0 ? 'Requires review' : 'Zero flags',
-              isPositive: pendingReportsCount === 0,
-            }}
             variant="neutral"
-            isLoading={isReportsLoading}
-          />
-        </div>
-      </div>
-
-      {/* 3. KPI Section 2: Content & Opportunity Ecosystem */}
-      <div className="space-y-2.5 pt-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <IconStack2 size={16} stroke={1.8} className="text-brand-primary" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Content & Opportunity Ecosystem
-            </h2>
-          </div>
-          <span className="text-[11px] font-medium text-slate-400">Community Engagement</span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Published Announcements"
-            value={announcementsCount}
-            description="Official announcements published"
-            icon={<IconArticle size={20} stroke={1.8} />}
-            trend={{ value: 'Live broadcast', isPositive: true }}
-            variant="secondary"
-            isLoading={isSummaryLoading}
-          />
-
-          <StatCard
-            title="Audit Trail Logs"
-            value={auditLogsCount}
-            description="Security and administrative events"
-            icon={<IconBriefcase size={20} stroke={1.8} />}
-            trend={{ value: 'Recorded', isPositive: true }}
-            variant="primary"
-            isLoading={isSummaryLoading}
-          />
-
-          <StatCard
-            title="Suspended Accounts"
-            value={suspendedCount}
-            description="Restricted user accounts"
-            icon={<IconAward size={20} stroke={1.8} />}
-            trend={{ value: suspendedCount === '0' ? 'Zero restricted' : 'Restricted', isPositive: suspendedCount === '0' }}
-            variant="accent"
             isLoading={isSummaryLoading}
           />
 
@@ -423,9 +357,26 @@ export const DashboardPage: FC = () => {
             title="Pending Reports"
             value={pendingReportsCount}
             description="Content flags awaiting decision"
-            icon={<IconBuildingCommunity size={20} stroke={1.8} />}
-            trend={{ value: pendingReportsCount === 0 ? 'Queue clean' : 'Requires review', isPositive: pendingReportsCount === 0 }}
-            variant="neutral"
+            icon={<IconAlertTriangle size={20} stroke={1.8} />}
+            variant="primary"
+            isLoading={isReportsLoading}
+          />
+
+          <StatCard
+            title="Published Announcements"
+            value={announcementsCount}
+            description="Official system announcements broadcasted"
+            icon={<IconArticle size={20} stroke={1.8} />}
+            variant="secondary"
+            isLoading={isSummaryLoading}
+          />
+
+          <StatCard
+            title="Audit Trail Logs"
+            value={auditLogsCount}
+            description="Recorded security and administrative events"
+            icon={<IconBriefcase size={20} stroke={1.8} />}
+            variant="primary"
             isLoading={isSummaryLoading}
           />
         </div>

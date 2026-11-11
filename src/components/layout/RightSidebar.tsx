@@ -72,43 +72,8 @@ export const RightSidebar: FC = () => {
         if (isMounted) setIsLoadingMentors(false)
       }
 
-      // Fallback initial list
       if (isMounted) {
-        setMentors([
-          {
-            id: 'demo-1',
-            name: 'Dr. Marcus Vance',
-            role: 'Principal Architect @ Google',
-            major: "Kỹ thuật PM '16",
-            avatar:
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=256',
-            isVerified: true,
-            matchScore: 98,
-            mentorship: true,
-          },
-          {
-            id: 'demo-2',
-            name: 'Sarah Al-Mansoor',
-            role: 'Product Lead @ Stripe',
-            major: "Hệ thống TT '18",
-            avatar:
-              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=256',
-            isVerified: true,
-            matchScore: 92,
-            mentorship: false,
-          },
-          {
-            id: 'demo-3',
-            name: 'David Chen',
-            role: 'VP Engineering @ Hyperion',
-            major: "CS '14",
-            avatar:
-              'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=256',
-            isVerified: true,
-            matchScore: 88,
-            mentorship: true,
-          },
-        ])
+        setMentors([])
       }
     }
 
