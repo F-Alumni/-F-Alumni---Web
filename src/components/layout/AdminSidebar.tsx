@@ -159,7 +159,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
           <div className="flex items-center">
-            <img src={fAlumniIcon} alt="F-Alumni Logo" className="h-9 w-auto object-contain" />
+            <img src={fAlumniIcon} alt="F-Alumni Logo" className="h-11 w-auto object-contain" />
           </div>
           {onClose && (
             <button
