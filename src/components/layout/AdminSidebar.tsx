@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   IconLayoutDashboard,
   IconUsers,
@@ -7,7 +7,6 @@ import {
   IconChartBar,
   IconSettings,
   IconArticle,
-  IconLogout,
   IconX,
   type Icon as TablerIcon,
 } from '@tabler/icons-react'
@@ -15,7 +14,6 @@ import { ROUTES } from '@/constants/routes'
 import { ROLES, type Role } from '@/constants/roles'
 import { USER_TYPES } from '@/constants/userTypes'
 import { useAuthStore } from '@/stores/authStore'
-import { authService } from '@/services/auth'
 import fAlumniIcon from '@/assets/f-alumni-icon.png'
 import { cn } from '@/lib/utils'
 
@@ -41,19 +39,7 @@ interface NavSection {
 }
 
 export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose }) => {
-  const navigate = useNavigate()
-  const { role, userType, clearAuth } = useAuthStore()
-
-  const handleLogout = async () => {
-    try {
-      await authService.logout()
-    } catch {
-      // Ignore
-    } finally {
-      clearAuth()
-      navigate(ROUTES.AUTH.LOGIN)
-    }
-  }
+  const { role, userType } = useAuthStore()
 
   const isAdmin = role === ROLES.ADMIN
   const isModerator = role === ROLES.MODERATOR
@@ -233,16 +219,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
         </div>
 
         {/* Sidebar Footer info */}
-        <div className="border-t border-slate-200 p-4 space-y-3">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-800 transition-colors shadow-2xs"
-          >
-            <IconLogout size={16} stroke={2} className="text-rose-600" />
-            <span>Đăng xuất (Sign Out)</span>
-          </button>
-
+        <div className="border-t border-slate-200 p-4">
           <div className="rounded-xl border border-slate-200/80 bg-[#F8FAFC] p-3 text-xs">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-slate-800">

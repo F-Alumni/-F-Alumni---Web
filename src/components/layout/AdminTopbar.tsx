@@ -219,7 +219,7 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
               >
                 <IconLogout size={16} stroke={1.8} className="text-rose-500" />
-                <span>Sign Out</span>
+                <span>Đăng xuất (Sign Out)</span>
               </button>
             </div>
           )}
