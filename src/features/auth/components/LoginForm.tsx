@@ -10,7 +10,6 @@ import {
   IconArrowLeft,
   IconLoader2,
   IconAlertCircle,
-  IconSparkles,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
@@ -97,10 +96,6 @@ export const LoginForm: FC = () => {
     }
   }
 
-  const handleQuickDemoAdminLogin = () => {
-    executeLogin('admin@fpt.edu.vn', 'Password@123')
-  }
-
   return (
     <div className="w-full space-y-3.5 sm:space-y-4 animate-in fade-in duration-300">
       {/* Back to Landing Page link */}
@@ -134,31 +129,7 @@ export const LoginForm: FC = () => {
         </div>
       </div>
 
-      {/* 2. Quick Demo Access Banner for Evaluation / Teachers */}
-      <div className="rounded-xl border border-brand-primary/30 bg-gradient-to-r from-orange-50/90 to-amber-50/80 p-3 shadow-xs">
-        <div className="flex items-center justify-between gap-2">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-brand-primary">
-              <IconSparkles size={15} stroke={2} className="text-brand-primary animate-pulse" />
-              <span>Chấm điểm & Kiểm thử nhanh</span>
-            </div>
-            <p className="text-[10px] text-slate-600">
-              Đăng nhập tức thì với tài khoản Quản trị viên (admin@fpt.edu.vn / Password@123)
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleQuickDemoAdminLogin}
-            disabled={isLoading}
-            className="shrink-0 rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-brand-primary-hover active:bg-[#d95d18] transition-all flex items-center gap-1 disabled:opacity-60"
-          >
-            <span>1-Click Login</span>
-            <IconArrowRight size={13} stroke={2} />
-          </button>
-        </div>
-      </div>
-
-      {/* 3. Google Workspace SSO */}
+      {/* 2. Google Workspace SSO */}
       <div>
         <button
           type="button"
