@@ -137,38 +137,7 @@ export const SettingsPage: FC = () => {
   // RAG Knowledge Base State (AD-09)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isIndexing, setIsIndexing] = useState(false)
-  const [ragDocs, setRagDocs] = useState<RagDocumentItem[]>([
-    {
-      id: 'RAG-DOC-01',
-      title: 'BBA International Business K18B Syllabus',
-      fileName: 'Curriculum_BBA_IB_K18B.docx',
-      fileType: 'docx',
-      size: '184 KB',
-      uploadedAt: '2026-11-09 14:30',
-      chunkCount: 12,
-      status: 'indexed',
-    },
-    {
-      id: 'RAG-DOC-02',
-      title: 'Quy chế học vụ & Sổ tay Sinh viên FPT 2026',
-      fileName: 'FPT_Student_Handbook_Regulations.md',
-      fileType: 'md',
-      size: '45 KB',
-      uploadedAt: '2026-11-09 14:32',
-      chunkCount: 8,
-      status: 'indexed',
-    },
-    {
-      id: 'RAG-DOC-03',
-      title: 'Từ điển thuật ngữ & Văn hóa FPT Hola Cóc',
-      fileName: 'FPT_Slang_Dictionary.md',
-      fileType: 'md',
-      size: '12 KB',
-      uploadedAt: '2026-11-09 14:35',
-      chunkCount: 4,
-      status: 'indexed',
-    },
-  ])
+  const [ragDocs, setRagDocs] = useState<RagDocumentItem[]>([])
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -514,74 +483,84 @@ export const SettingsPage: FC = () => {
             </div>
 
             <div className="space-y-2">
-              {ragDocs.map((doc) => {
-                const isPdf = doc.fileType === 'pdf'
-                const isMd = doc.fileType === 'md'
-                return (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50/80 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`rounded-lg p-2 shrink-0 ${
-                          isPdf
-                            ? 'bg-rose-100 text-rose-600'
-                            : isMd
-                            ? 'bg-sky-100 text-sky-600'
-                            : 'bg-emerald-100 text-emerald-600'
-                        }`}
-                      >
-                        {isPdf ? (
-                          <IconFileTypePdf size={18} />
-                        ) : isMd ? (
-                          <IconFileCode size={18} />
-                        ) : (
-                          <IconFileText size={18} />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-900 text-xs truncate">
-                            {doc.title}
-                          </span>
-                          <span className="rounded bg-slate-100 px-1.5 py-0.2 text-[9px] font-mono text-slate-600">
-                            .{doc.fileType}
-                          </span>
+              {ragDocs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+                  <IconFileCode size={32} stroke={1.5} className="text-slate-300 mb-2" />
+                  <p className="text-xs font-semibold text-slate-600">Chưa có tài liệu nào được tải lên</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Chọn hoặc kéo thả file <span className="font-semibold text-slate-600">.md, .pdf, .docx, .txt</span> vào khung bên trên để AI tiến hành vector hóa RAG.
+                  </p>
+                </div>
+              ) : (
+                ragDocs.map((doc) => {
+                  const isPdf = doc.fileType === 'pdf'
+                  const isMd = doc.fileType === 'md'
+                  return (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50/80 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={`rounded-lg p-2 shrink-0 ${
+                            isPdf
+                              ? 'bg-rose-100 text-rose-600'
+                              : isMd
+                              ? 'bg-sky-100 text-sky-600'
+                              : 'bg-emerald-100 text-emerald-600'
+                          }`}
+                        >
+                          {isPdf ? (
+                            <IconFileTypePdf size={18} />
+                          ) : isMd ? (
+                            <IconFileCode size={18} />
+                          ) : (
+                            <IconFileText size={18} />
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                          <span>{doc.fileName}</span>
-                          <span>•</span>
-                          <span>{doc.size}</span>
-                          <span>•</span>
-                          <span>Uploaded {doc.uploadedAt}</span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-900 text-xs truncate">
+                              {doc.title}
+                            </span>
+                            <span className="rounded bg-slate-100 px-1.5 py-0.2 text-[9px] font-mono text-slate-600">
+                              .{doc.fileType}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                            <span>{doc.fileName}</span>
+                            <span>•</span>
+                            <span>{doc.size}</span>
+                            <span>•</span>
+                            <span>Uploaded {doc.uploadedAt}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
-                          <IconDatabase size={11} />
-                          {doc.chunkCount} Chunks
-                        </span>
-                        <span className="rounded-full bg-brand-primary/10 text-brand-primary px-2 py-0.5 text-[10px] font-bold">
-                          Indexed
-                        </span>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
+                            <IconDatabase size={11} />
+                            {doc.chunkCount} Chunks
+                          </span>
+                          <span className="rounded-full bg-brand-primary/10 text-brand-primary px-2 py-0.5 text-[10px] font-bold">
+                            Indexed
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteDoc(doc.id)}
+                          className="h-7 w-7 p-0 border-slate-200 text-rose-600 hover:bg-rose-50"
+                          title="Remove document from RAG index"
+                        >
+                          <IconTrash size={13} stroke={1.8} />
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteDoc(doc.id)}
-                        className="h-7 w-7 p-0 border-slate-200 text-rose-600 hover:bg-rose-50"
-                        title="Remove document from RAG index"
-                      >
-                        <IconTrash size={13} stroke={1.8} />
-                      </Button>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
           </div>
         </Card>
