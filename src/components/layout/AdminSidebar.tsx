@@ -8,8 +8,6 @@ import {
   IconSettings,
   IconLogout,
   IconX,
-  IconShield,
-  IconBook,
   type Icon as TablerIcon,
 } from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
@@ -141,13 +139,6 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
     }))
     .filter((section) => section.items.length > 0)
 
-  // Portal subtitle tag
-  const portalSubtitle = isFaculty
-    ? 'Faculty Portal'
-    : isModerator
-    ? 'Safety Moderation'
-    : 'Administration'
-
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -167,21 +158,8 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
       >
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center">
             <img src={fAlumniIcon} alt="F-Alumni Logo" className="h-9 w-auto object-contain" />
-            <div className="flex flex-col">
-              <span className="text-sm font-extrabold tracking-tight text-slate-900 leading-tight">
-                F-Alumni Connect
-              </span>
-              <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-brand-primary">
-                {isFaculty ? (
-                  <IconBook size={12} stroke={2} />
-                ) : (
-                  <IconShield size={12} stroke={2} />
-                )}
-                {portalSubtitle}
-              </span>
-            </div>
           </div>
           {onClose && (
             <button

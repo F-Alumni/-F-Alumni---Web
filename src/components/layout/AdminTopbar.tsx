@@ -95,9 +95,8 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
         </button>
 
         {/* Brand logo for split-screen & mobile (<lg) */}
-        <div className="flex items-center gap-2 lg:hidden shrink-0">
+        <div className="flex items-center lg:hidden shrink-0">
           <img src={fAlumniIcon} alt="F-Alumni Logo" className="h-7 w-auto object-contain" />
-          <span className="text-xs font-bold text-slate-900 hidden sm:inline">F-Alumni Connect</span>
         </div>
 
         {/* Global Admin Search */}
