@@ -7,10 +7,6 @@ import { LoginPage, ForgotPasswordPage } from '@/pages/auth'
 import {
   DashboardPage,
   UsersManagementPage,
-  AlumniVerificationPage,
-  CommunitiesManagementPage,
-  PostsManagementPage,
-  OpportunitiesManagementPage,
   ReportsManagementPage,
   AnalyticsPage,
   SettingsPage,
@@ -109,46 +105,10 @@ export const routes: RouteObject[] = [
             ),
           },
           {
-            path: 'posts',
-            element: (
-              <RoleGuard allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]}>
-                <PostsManagementPage />
-              </RoleGuard>
-            ),
-          },
-
-          // Academic Coordination & Chapters (Admin & Faculty)
-          {
-            path: 'communities',
-            element: (
-              <RoleGuard allowedRoles={[ROLES.ADMIN, 'FACULTY']}>
-                <CommunitiesManagementPage />
-              </RoleGuard>
-            ),
-          },
-          {
-            path: 'opportunities',
-            element: (
-              <RoleGuard allowedRoles={[ROLES.ADMIN, 'FACULTY']}>
-                <OpportunitiesManagementPage />
-              </RoleGuard>
-            ),
-          },
-          {
             path: 'users',
             element: (
               <RoleGuard allowedRoles={[ROLES.ADMIN, 'FACULTY']}>
                 <UsersManagementPage />
-              </RoleGuard>
-            ),
-          },
-
-          // System Administration Only (Admin)
-          {
-            path: 'alumni-verification',
-            element: (
-              <RoleGuard allowedRoles={[ROLES.ADMIN]}>
-                <AlumniVerificationPage />
               </RoleGuard>
             ),
           },
@@ -167,6 +127,23 @@ export const routes: RouteObject[] = [
                 <SettingsPage />
               </RoleGuard>
             ),
+          },
+          // Fallback redirects for obsolete routes
+          {
+            path: 'posts',
+            element: <Navigate to={ROUTES.ADMIN.REPORTS} replace />,
+          },
+          {
+            path: 'communities',
+            element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
+          },
+          {
+            path: 'opportunities',
+            element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
+          },
+          {
+            path: 'alumni-verification',
+            element: <Navigate to={ROUTES.ADMIN.USERS} replace />,
           },
         ],
       },

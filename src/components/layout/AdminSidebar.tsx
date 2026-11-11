@@ -3,10 +3,6 @@ import { NavLink } from 'react-router-dom'
 import {
   IconLayoutDashboard,
   IconUsers,
-  IconUserCheck,
-  IconBuildingCommunity,
-  IconArticle,
-  IconBriefcase,
   IconFlag,
   IconChartBar,
   IconSettings,
@@ -80,36 +76,6 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
           facultyLabel: 'Users Directory',
           to: ROUTES.ADMIN.USERS,
           icon: IconUsers,
-          allowedRoles: [ROLES.ADMIN, 'FACULTY'],
-        },
-        {
-          label: 'Alumni Verification',
-          to: ROUTES.ADMIN.ALUMNI_VERIFICATION,
-          icon: IconUserCheck,
-          allowedRoles: [ROLES.ADMIN],
-        },
-      ],
-    },
-    {
-      title: 'CONTENT MANAGEMENT',
-      allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR, 'FACULTY'],
-      items: [
-        {
-          label: 'Communities',
-          to: ROUTES.ADMIN.COMMUNITIES,
-          icon: IconBuildingCommunity,
-          allowedRoles: [ROLES.ADMIN, 'FACULTY'],
-        },
-        {
-          label: 'Posts',
-          to: ROUTES.ADMIN.POSTS,
-          icon: IconArticle,
-          allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR],
-        },
-        {
-          label: 'Opportunities',
-          to: ROUTES.ADMIN.OPPORTUNITIES,
-          icon: IconBriefcase,
           allowedRoles: [ROLES.ADMIN, 'FACULTY'],
         },
       ],

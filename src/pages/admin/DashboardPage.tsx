@@ -85,11 +85,8 @@ export const DashboardPage: FC = () => {
       ? activeReviews
       : activeReviews.filter((item) => item.type === activeCategory)
 
-  // Counts for tabs
-  const alumniVerifyCount = activeReviews.filter((r) => r.type === 'ALUMNI_VERIFY').length
-  const reportsCount = activeReviews.filter((r) => r.type === 'REPORTED_CONTENT').length
-  const oppsCount = activeReviews.filter((r) => r.type === 'OPPORTUNITY_REVIEW').length
-  const communitiesCount = activeReviews.filter((r) => r.type === 'NEW_COMMUNITY').length
+  // Counts for reports
+  const reportsCount = activeReviews.length
 
   // Quick data reload calling both backend queries
   const handleRefresh = useCallback(async () => {
@@ -234,18 +231,9 @@ export const DashboardPage: FC = () => {
     },
   ]
 
-  // Dynamic route for View All link based on current filter
+  // Dynamic route for View All link
   const getViewAllRoute = () => {
-    switch (activeCategory) {
-      case 'REPORTED_CONTENT':
-        return { label: 'View all moderation reports', route: ROUTES.ADMIN.REPORTS }
-      case 'OPPORTUNITY_REVIEW':
-        return { label: 'View all career opportunities', route: ROUTES.ADMIN.OPPORTUNITIES }
-      case 'NEW_COMMUNITY':
-        return { label: 'View all campus communities', route: ROUTES.ADMIN.COMMUNITIES }
-      default:
-        return { label: 'View all alumni verification requests', route: ROUTES.ADMIN.ALUMNI_VERIFICATION }
-    }
+    return { label: 'View all moderation reports', route: ROUTES.ADMIN.REPORTS }
   }
 
   const viewAllInfo = getViewAllRoute()
@@ -361,15 +349,15 @@ export const DashboardPage: FC = () => {
           />
 
           <StatCard
-            title="Pending Verification"
-            value={alumniVerifyCount}
-            description="Alumni awaiting degree audit"
-            icon={<IconClockHour4 size={20} stroke={1.8} />}
+            title="Suspended Accounts"
+            value={suspendedCount}
+            description="Restricted user accounts"
+            icon={<IconAlertTriangle size={20} stroke={1.8} />}
             trend={{
-              value: alumniVerifyCount > 0 ? 'Requires action' : 'All clear',
-              isPositive: alumniVerifyCount === 0,
+              value: suspendedCount === '0' ? 'Zero restricted' : 'Restricted',
+              isPositive: suspendedCount === '0',
             }}
-            variant="primary"
+            variant="accent"
             isLoading={isSummaryLoading}
           />
 
@@ -466,61 +454,9 @@ export const DashboardPage: FC = () => {
         <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-2">
           <button
             onClick={() => setActiveCategory('ALL')}
-            className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeCategory === 'ALL'
-                ? 'bg-slate-900 text-white'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className="rounded-md px-3 py-1.5 text-xs font-semibold bg-slate-900 text-white transition-colors"
           >
-            All Tasks ({activeReviews.length})
-          </button>
-
-          <button
-            onClick={() => setActiveCategory('ALUMNI_VERIFY')}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeCategory === 'ALUMNI_VERIFY'
-                ? 'bg-brand-secondary text-white'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <IconUserCheck size={14} stroke={1.8} />
-            <span>Alumni Verification ({alumniVerifyCount})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveCategory('REPORTED_CONTENT')}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeCategory === 'REPORTED_CONTENT'
-                ? 'bg-rose-600 text-white'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <IconAlertTriangle size={14} stroke={1.8} />
-            <span>Reports ({reportsCount})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveCategory('OPPORTUNITY_REVIEW')}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeCategory === 'OPPORTUNITY_REVIEW'
-                ? 'bg-amber-600 text-white'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <IconBriefcase size={14} stroke={1.8} />
-            <span>Opportunities ({oppsCount})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveCategory('NEW_COMMUNITY')}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeCategory === 'NEW_COMMUNITY'
-                ? 'bg-brand-accent text-white'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <IconBuildingCommunity size={14} stroke={1.8} />
-            <span>Communities ({communitiesCount})</span>
+            All Pending Reports ({reportsCount})
           </button>
         </div>
 
