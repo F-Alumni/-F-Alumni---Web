@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { isTrustedImageUrl } from '@/services/media'
 
 interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string
@@ -49,7 +50,7 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
             isVerified && 'ring-2 ring-brand-secondary/40 ring-offset-1'
           )}
         >
-          {src && !imageError ? (
+          {src && isTrustedImageUrl(src) && !imageError ? (
             <img
               src={src}
               alt={alt ?? 'User avatar'}
