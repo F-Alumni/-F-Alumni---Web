@@ -115,6 +115,16 @@ export const usersService = {
   },
 
   /**
+   * Update current user avatar URL.
+   * Matches BE contract: PUT /api/v1/users/me/avatar
+   */
+  async updateAvatar(avatarUrl: string): Promise<BackendMyProfileResponse> {
+    const res = await userApiClient.put<any>('/users/me/avatar', { avatarUrl })
+    const raw = res.data?.data || res.data
+    return mapUserProfileResponseToBackendMyProfile(raw)
+  },
+
+  /**
    * Update privacy flags.
    * Matches BE contract: PUT /api/v1/users/me/privacy
    */

@@ -7,6 +7,7 @@ import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
 import {
   DashboardPage,
   UsersManagementPage,
+  PostsManagementPage,
   ReportsManagementPage,
   AnalyticsPage,
   SettingsPage,
@@ -136,10 +137,14 @@ export const routes: RouteObject[] = [
               </RoleGuard>
             ),
           },
-          // Fallback redirects for obsolete routes
+          // Forum & Content Moderation (AD-04, AD-05)
           {
             path: 'posts',
-            element: <Navigate to={ROUTES.ADMIN.REPORTS} replace />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, ROLES.MODERATOR]}>
+                <PostsManagementPage />
+              </RoleGuard>
+            ),
           },
           {
             path: 'communities',

@@ -1,22 +1,19 @@
 import type { FC } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   IconLayoutDashboard,
   IconUsers,
   IconFlag,
   IconChartBar,
   IconSettings,
-  IconLogout,
+  IconArticle,
   IconX,
-  IconShield,
-  IconBook,
   type Icon as TablerIcon,
 } from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
 import { ROLES, type Role } from '@/constants/roles'
 import { USER_TYPES } from '@/constants/userTypes'
 import { useAuthStore } from '@/stores/authStore'
-import { authService } from '@/services/auth'
 import fAlumniIcon from '@/assets/f-alumni-icon.png'
 import { cn } from '@/lib/utils'
 
@@ -42,19 +39,7 @@ interface NavSection {
 }
 
 export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose }) => {
-  const navigate = useNavigate()
-  const { role, userType, clearAuth } = useAuthStore()
-
-  const handleLogout = async () => {
-    try {
-      await authService.logout()
-    } catch {
-      // Ignore
-    } finally {
-      clearAuth()
-      navigate(ROUTES.AUTH.LOGIN)
-    }
-  }
+  const { role, userType } = useAuthStore()
 
   const isAdmin = role === ROLES.ADMIN
   const isModerator = role === ROLES.MODERATOR
@@ -91,6 +76,18 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
           to: ROUTES.ADMIN.USERS,
           icon: IconUsers,
           allowedRoles: [ROLES.ADMIN, 'FACULTY'],
+        },
+      ],
+    },
+    {
+      title: 'COMMUNITY FORUM',
+      allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR],
+      items: [
+        {
+          label: 'Forum Posts',
+          to: ROUTES.ADMIN.POSTS,
+          icon: IconArticle,
+          allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR],
         },
       ],
     },
@@ -141,13 +138,6 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
     }))
     .filter((section) => section.items.length > 0)
 
-  // Portal subtitle tag
-  const portalSubtitle = isFaculty
-    ? 'Faculty Portal'
-    : isModerator
-    ? 'Safety Moderation'
-    : 'Administration'
-
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -167,21 +157,8 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
       >
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
-          <div className="flex items-center gap-2.5">
-            <img src={fAlumniIcon} alt="F-Alumni Logo" className="h-9 w-auto object-contain" />
-            <div className="flex flex-col">
-              <span className="text-sm font-extrabold tracking-tight text-slate-900 leading-tight">
-                F-Alumni Connect
-              </span>
-              <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-brand-primary">
-                {isFaculty ? (
-                  <IconBook size={12} stroke={2} />
-                ) : (
-                  <IconShield size={12} stroke={2} />
-                )}
-                {portalSubtitle}
-              </span>
-            </div>
+          <div className="flex items-center">
+            <img src={fAlumniIcon} alt="F-Alumni Logo" className="h-11 w-auto object-contain" />
           </div>
           {onClose && (
             <button
@@ -242,16 +219,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
         </div>
 
         {/* Sidebar Footer info */}
-        <div className="border-t border-slate-200 p-4 space-y-3">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-800 transition-colors shadow-2xs"
-          >
-            <IconLogout size={16} stroke={2} className="text-rose-600" />
-            <span>Đăng xuất (Sign Out)</span>
-          </button>
-
+        <div className="border-t border-slate-200 p-4">
           <div className="rounded-xl border border-slate-200/80 bg-[#F8FAFC] p-3 text-xs">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-slate-800">

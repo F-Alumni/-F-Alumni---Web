@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type FC } from 'react'
+import { useState, useEffect, useCallback, useRef, type FC } from 'react'
 import {
   IconMail,
   IconSchool,
@@ -15,6 +15,7 @@ import {
   IconTrash,
   IconHeart,
   IconMessage,
+  IconCamera,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -22,6 +23,7 @@ import { usersService } from '@/services/users'
 import { postsService, type ForumPostItem } from '@/services/posts'
 import { useAuthStore } from '@/stores/authStore'
 import { normalizeError } from '@/lib/errorHandler'
+import { uploadImageViaBackend, validateImageFile } from '@/services/media'
 import type { BackendMyProfileResponse, BackendPrivacySetting } from '@/types/user.types'
 
 export const ProfilePage: FC = () => {
@@ -33,6 +35,8 @@ export const ProfilePage: FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -49,6 +53,39 @@ export const ProfilePage: FC = () => {
   const [batch, setBatch] = useState('')
   const [bio, setBio] = useState('')
   const [googleCalendarUrl, setGoogleCalendarUrl] = useState('')
+
+  const handleAvatarFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const validation = validateImageFile(file)
+    if (!validation.isValid) {
+      setErrorMessage(validation.error || 'Tệp tin hình ảnh không hợp lệ.')
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    setErrorMessage(null)
+
+    try {
+      // 1. Upload via secure Backend-Mediated Upload
+      const uploadRes = await uploadImageViaBackend(file, '/users/media/upload')
+      const uploadedUrl = uploadRes.secureUrl
+
+      // 2. Persist avatar URL to user profile
+      const updated = await usersService.updateAvatar(uploadedUrl)
+      setProfile(updated)
+      updateCurrentUser({ avatarUrl: uploadedUrl })
+      setToastMessage('Ảnh đại diện đã được cập nhật thành công!')
+      setTimeout(() => setToastMessage(null), 3000)
+    } catch (err: unknown) {
+      setErrorMessage(normalizeError(err).message || 'Không thể tải lên ảnh đại diện.')
+    } finally {
+      setIsUploadingAvatar(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -205,11 +242,35 @@ export const ProfilePage: FC = () => {
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Avatar
-              fallback={(profile?.fullName || currentUser?.name || 'U').slice(0, 2).toUpperCase()}
-              size="lg"
-              className="h-20 w-20 text-xl font-bold bg-brand-primary text-white"
-            />
+            <div className="relative group">
+              <Avatar
+                src={profile?.avatarUrl || currentUser?.avatarUrl}
+                fallback={(profile?.fullName || currentUser?.name || 'U').slice(0, 2).toUpperCase()}
+                size="lg"
+                className="h-20 w-20 text-xl font-bold bg-brand-primary text-white ring-2 ring-slate-100"
+              />
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="absolute -bottom-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-brand-secondary text-white shadow-md transition-all hover:bg-brand-secondary-hover hover:scale-105 active:scale-95 disabled:opacity-50"
+                title="Thay đổi ảnh đại diện (Tối đa 5MB: JPG, PNG, WEBP)"
+              >
+                {isUploadingAvatar ? (
+                  <IconLoader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <IconCamera className="h-4 w-4" />
+                )}
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarFileSelect}
+                disabled={isUploadingAvatar}
+              />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold text-slate-900">{profile?.fullName}</h1>

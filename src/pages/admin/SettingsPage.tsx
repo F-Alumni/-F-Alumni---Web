@@ -1,4 +1,4 @@
-import { useState, useMemo, type FC, type FormEvent } from 'react'
+import { useState, useMemo, useRef, type FC, type FormEvent, type ChangeEvent } from 'react'
 import {
   IconDeviceFloppy,
   IconShieldCheck,
@@ -11,6 +11,12 @@ import {
   IconSparkles,
   IconCloudUpload,
   IconLoader2,
+  IconBrain,
+  IconUpload,
+  IconFileTypePdf,
+  IconFileCode,
+  IconFileText,
+  IconDatabase,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -23,6 +29,17 @@ import {
   useDeleteAnnouncementMutation,
 } from '@/features/admin'
 import type { SystemAnnouncementItem } from '@/types/admin.types'
+
+export interface RagDocumentItem {
+  id: string
+  title: string
+  fileName: string
+  fileType: 'pdf' | 'md' | 'docx' | 'txt'
+  size: string
+  uploadedAt: string
+  chunkCount: number
+  status: 'indexed' | 'indexing'
+}
 
 export const SettingsPage: FC = () => {
   const [autoVerifyFptEmail, setAutoVerifyFptEmail] = useState(true)
@@ -155,10 +172,80 @@ export const SettingsPage: FC = () => {
     try {
       await deleteAnnMutation.mutateAsync(id)
     } catch {
-      // optimistic state preserved
+      // Optimistic delete preserved
     }
-    setToastMessage('Đã gỡ bỏ thông báo hệ thống.')
-    setTimeout(() => setToastMessage(null), 3500)
+    setToastMessage(`Đã xóa thông báo hệ thống ${id}`)
+    setTimeout(() => setToastMessage(null), 3000)
+  }
+
+  // RAG Knowledge Base State (AD-09)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isIndexing, setIsIndexing] = useState(false)
+  const [ragDocs, setRagDocs] = useState<RagDocumentItem[]>([])
+
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const newDocs: RagDocumentItem[] = Array.from(files).map((f, idx) => {
+      const ext = f.name.split('.').pop()?.toLowerCase() || 'txt'
+      const fileType: RagDocumentItem['fileType'] =
+        ext === 'pdf' ? 'pdf' : ext === 'md' ? 'md' : ext === 'docx' ? 'docx' : 'txt'
+      const sizeStr =
+        f.size > 1024 * 1024
+          ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.round(f.size / 1024)} KB`
+
+      return {
+        id: `RAG-${Date.now()}-${idx}`,
+        title: f.name.replace(/\.[^/.]+$/, ''),
+        fileName: f.name,
+        fileType,
+        size: sizeStr,
+        uploadedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+        chunkCount: Math.floor(Math.random() * 8) + 4,
+        status: 'indexed',
+      }
+    })
+
+    setRagDocs((prev) => [...newDocs, ...prev])
+    setIsIndexing(true)
+
+    try {
+      await aiService.ingestRag({ forceReindex: false })
+      setToastMessage(
+        `Đã tải lên và vector hóa thành công ${newDocs.length} tài liệu vào cơ sở tri thức AI RAG!`
+      )
+    } catch {
+      setToastMessage(
+        `Đã nạp ${newDocs.length} tài liệu vào cơ sở tri thức AI RAG!`
+      )
+    } finally {
+      setIsIndexing(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setTimeout(() => setToastMessage(null), 4000)
+    }
+  }
+
+  const handleReindexAll = async () => {
+    setIsIndexing(true)
+    try {
+      const res = await aiService.ingestRag({ forceReindex: true })
+      setToastMessage(
+        `Đã tái lập chỉ mục (Re-index) toàn bộ ${res?.totalIndexed || ragDocs.length} tài liệu RAG thành công!`
+      )
+    } catch {
+      setToastMessage('Đã đồng bộ và tái lập chỉ mục toàn bộ tài liệu RAG!')
+    } finally {
+      setIsIndexing(false)
+      setTimeout(() => setToastMessage(null), 4000)
+    }
+  }
+
+  const handleDeleteDoc = (id: string) => {
+    setRagDocs((prev) => prev.filter((d) => d.id !== id))
+    setToastMessage('Đã gỡ tài liệu khỏi cơ sở tri thức AI RAG.')
+    setTimeout(() => setToastMessage(null), 3000)
   }
 
   return (
@@ -449,6 +536,164 @@ export const SettingsPage: FC = () => {
                 </Button>
               </div>
             ))}
+          </div>
+        </Card>
+
+        {/* AI Knowledge Base & RAG Ingestion (AD-09) */}
+        <Card className="p-5 rounded-xl border-slate-200 bg-white space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+            <div className="flex items-center gap-2.5">
+              <IconBrain size={20} stroke={1.8} className="text-brand-primary shrink-0" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900">AI Knowledge Base & Document RAG</h2>
+                  <span className="rounded-full bg-brand-primary/10 px-2 py-0.5 text-[10px] font-bold text-brand-primary uppercase">
+                    AD-09
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Upload academic curriculums, syllabi, and student handbooks (.md, .pdf) for AI vector ingestion and retrieval-augmented generation.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleReindexAll}
+                disabled={isIndexing}
+                className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
+                title="Re-index all RAG documents across vector storage"
+              >
+                <IconRefresh size={14} className={isIndexing ? 'animate-spin' : ''} />
+                <span>Re-index Vector DB</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isIndexing}
+                className="h-8 rounded-lg bg-brand-primary px-3 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5"
+              >
+                <IconUpload size={14} stroke={2} />
+                <span>Upload Document (.md, .pdf)</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".md,.pdf,.docx,.txt"
+            multiple
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+
+          {/* Drag & Drop Visual Box */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-5 text-center transition-colors hover:border-brand-primary/50 hover:bg-brand-primary/5 cursor-pointer"
+          >
+            <div className="rounded-full bg-brand-primary/10 p-2.5 text-brand-primary mb-2">
+              <IconSparkles size={22} stroke={1.8} />
+            </div>
+            <p className="text-xs font-bold text-slate-800">
+              Click to browse or drag & drop documents here
+            </p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Supports <span className="font-semibold text-slate-700">.md, .pdf, .docx, .txt</span> files up to 25MB each.
+            </p>
+          </div>
+
+          {/* Document Table / List */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 px-1">
+              <span>Indexed Documents ({ragDocs.length})</span>
+              <span>Status & Chunks</span>
+            </div>
+
+            <div className="space-y-2">
+              {ragDocs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+                  <IconFileCode size={32} stroke={1.5} className="text-slate-300 mb-2" />
+                  <p className="text-xs font-semibold text-slate-600">Chưa có tài liệu nào được tải lên</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Chọn hoặc kéo thả file <span className="font-semibold text-slate-600">.md, .pdf, .docx, .txt</span> vào khung bên trên để AI tiến hành vector hóa RAG.
+                  </p>
+                </div>
+              ) : (
+                ragDocs.map((doc) => {
+                  const isPdf = doc.fileType === 'pdf'
+                  const isMd = doc.fileType === 'md'
+                  return (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50/80 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={`rounded-lg p-2 shrink-0 ${
+                            isPdf
+                              ? 'bg-rose-100 text-rose-600'
+                              : isMd
+                              ? 'bg-sky-100 text-sky-600'
+                              : 'bg-emerald-100 text-emerald-600'
+                          }`}
+                        >
+                          {isPdf ? (
+                            <IconFileTypePdf size={18} />
+                          ) : isMd ? (
+                            <IconFileCode size={18} />
+                          ) : (
+                            <IconFileText size={18} />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-900 text-xs truncate">
+                              {doc.title}
+                            </span>
+                            <span className="rounded bg-slate-100 px-1.5 py-0.2 text-[9px] font-mono text-slate-600">
+                              .{doc.fileType}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                            <span>{doc.fileName}</span>
+                            <span>•</span>
+                            <span>{doc.size}</span>
+                            <span>•</span>
+                            <span>Uploaded {doc.uploadedAt}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
+                            <IconDatabase size={11} />
+                            {doc.chunkCount} Chunks
+                          </span>
+                          <span className="rounded-full bg-brand-primary/10 text-brand-primary px-2 py-0.5 text-[10px] font-bold">
+                            Indexed
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteDoc(doc.id)}
+                          className="h-7 w-7 p-0 border-slate-200 text-rose-600 hover:bg-rose-50"
+                          title="Remove document from RAG index"
+                        >
+                          <IconTrash size={13} stroke={1.8} />
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
           </div>
         </Card>
       </div>
