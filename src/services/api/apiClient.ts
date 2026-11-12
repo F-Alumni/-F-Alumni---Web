@@ -174,3 +174,16 @@ export const aiApiClient: AxiosInstance = axios.create({
   },
 })
 attachAuthInterceptor(aiApiClient)
+
+/**
+ * 7. Dedicated Notification Service client (port 5006 or Gateway port 5000).
+ */
+export const notificationApiClient: AxiosInstance = axios.create({
+  baseURL: env.notificationServiceBaseUrl || env.apiBaseUrl,
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+})
+attachAuthInterceptor(notificationApiClient)

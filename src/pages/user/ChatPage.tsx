@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type FC } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   IconMessageCircle,
   IconSend,
@@ -27,6 +28,8 @@ import type { BackendUserSummary } from '@/types/user.types'
 
 export const ChatPage: FC = () => {
   const { currentUser } = useAuthStore()
+  const [searchParams] = useSearchParams()
+  const requestedConversationId = searchParams.get('conversationId')
 
   // State
   const [rooms, setRooms] = useState<BackendChatRoom[]>([])
@@ -71,7 +74,9 @@ export const ChatPage: FC = () => {
     try {
       const data = await chatService.getRooms()
       setRooms(data)
-      if (data.length > 0 && !activeRoomId && data[0]) {
+      if (requestedConversationId && data.some((r) => r.id === requestedConversationId)) {
+        setActiveRoomId(requestedConversationId)
+      } else if (data.length > 0 && !activeRoomId && data[0]) {
         setActiveRoomId(data[0].id)
       }
     } catch (err) {
@@ -79,7 +84,7 @@ export const ChatPage: FC = () => {
     } finally {
       setIsLoadingRooms(false)
     }
-  }, [activeRoomId])
+  }, [activeRoomId, requestedConversationId])
 
   useEffect(() => {
     const timer = setTimeout(() => {
