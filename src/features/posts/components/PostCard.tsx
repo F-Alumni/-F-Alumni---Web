@@ -13,16 +13,21 @@ import {
   Award,
   HelpCircle,
   Clock,
+  Flag,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { PostCommentsSection } from './PostCommentsSection'
+import { ReportPostModal } from './ReportPostModal'
+import { postsService } from '@/services/posts'
 
 export interface PostItem {
   id: string
   author: {
+    id?: string
     name: string
     avatar: string
     role: string
@@ -55,10 +60,31 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(post.likes)
   const [isSaved, setIsSaved] = useState(false)
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false)
+  const [commentsCount, setCommentsCount] = useState(post.comments)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const handleToggleLike = () => {
-    setIsLiked(!isLiked)
-    setLikesCount(isLiked ? likesCount - 1 : likesCount + 1)
+  const handleToggleLike = async () => {
+    const nextLiked = !isLiked
+    setIsLiked(nextLiked)
+    setLikesCount(nextLiked ? likesCount + 1 : likesCount - 1)
+    try {
+      await postsService.toggleReaction(post.id)
+    } catch (err) {
+      console.error('Failed to toggle reaction:', err)
+    }
+  }
+
+  const handleToggleBookmark = async () => {
+    const nextSaved = !isSaved
+    setIsSaved(nextSaved)
+    try {
+      await postsService.toggleBookmark(post.id)
+    } catch (err) {
+      console.error('Failed to toggle bookmark:', err)
+      setIsSaved(!nextSaved)
+    }
   }
 
   const getTypeBadge = () => {
@@ -143,15 +169,34 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             {getTypeBadge()}
-            <button
-              type="button"
-              className="rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-              title="More options"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                title="Tùy chọn bài viết"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+
+              {isMenuOpen && (
+                <div className="absolute right-0 top-8 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg animate-in fade-in zoom-in-95">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      setIsReportModalOpen(true)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                  >
+                    <Flag className="h-3.5 w-3.5" />
+                    <span>Báo cáo bài viết</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -261,25 +306,31 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
             {/* Comment Button */}
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-blue-50 hover:text-brand-secondary"
+              onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-colors',
+                isCommentsOpen
+                  ? 'bg-blue-100 text-brand-secondary font-bold'
+                  : 'text-slate-600 hover:bg-blue-50 hover:text-brand-secondary'
+              )}
             >
               <MessageSquare className="h-4 w-4" />
-              <span>{post.comments} comments</span>
+              <span>{commentsCount} comments</span>
             </button>
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Save / Bookmark Button */}
+            {/* Save / Bookmark Button (FO-09) */}
             <button
               type="button"
-              onClick={() => setIsSaved(!isSaved)}
+              onClick={handleToggleBookmark}
               className={cn(
                 'rounded-full p-2 transition-colors',
                 isSaved
                   ? 'bg-slate-100 text-brand-primary'
                   : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
               )}
-              title={isSaved ? 'Saved' : 'Save post'}
+              title={isSaved ? 'Đã lưu' : 'Lưu bài viết'}
             >
               <Bookmark className={cn('h-4 w-4', isSaved && 'fill-current text-brand-primary')} />
             </button>
@@ -287,14 +338,35 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
             {/* Share Button */}
             <button
               type="button"
+              onClick={() => {
+                void navigator.clipboard.writeText(window.location.href)
+              }}
               className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-              title="Share"
+              title="Chia sẻ liên kết"
             >
               <Share2 className="h-4 w-4" />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Expandable Comments Section */}
+      {isCommentsOpen && (
+        <PostCommentsSection
+          postId={post.id}
+          postAuthorId={post.author.id}
+          isQuestion={post.type === 'QUESTION'}
+          onCommentAdded={() => setCommentsCount((prev) => prev + 1)}
+        />
+      )}
+
+      {/* Report Post Modal */}
+      <ReportPostModal
+        postId={post.id}
+        postTitle={post.title}
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+      />
     </Card>
   )
 }

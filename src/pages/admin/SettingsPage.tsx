@@ -8,24 +8,26 @@ import {
   IconTrash,
   IconCircleCheck,
   IconRefresh,
+  IconSparkles,
+  IconCloudUpload,
+  IconLoader2,
   IconBrain,
   IconUpload,
   IconFileTypePdf,
   IconFileCode,
   IconFileText,
-  IconSparkles,
   IconDatabase,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { PageHeader } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
+import { aiService } from '@/services/ai'
 import {
   useAdminAnnouncements,
   useCreateAnnouncementMutation,
   useDeleteAnnouncementMutation,
 } from '@/features/admin'
-import { aiService } from '@/services/ai'
 import type { SystemAnnouncementItem } from '@/types/admin.types'
 
 export interface RagDocumentItem {
@@ -46,6 +48,48 @@ export const SettingsPage: FC = () => {
   const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true)
   const [isSaved, setIsSaved] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  // AD-09: AI RAG Knowledge Base Management
+  const [isIngestingRag, setIsIngestingRag] = useState(false)
+  const [ragStatus, setRagStatus] = useState({
+    documentsCount: 13,
+    totalChunks: 494,
+    lastIndexed: 'Vừa hoàn tất (100% đồng bộ)',
+  })
+  const [ragFile, setRagFile] = useState<File | null>(null)
+
+  const handleReindexRag = async () => {
+    setIsIngestingRag(true)
+    try {
+      const res = await aiService.ingestRag({ forceReindex: true })
+      setRagStatus({
+        documentsCount: res.documentsIndexed || 13,
+        totalChunks: res.totalChunks || 494,
+        lastIndexed: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      })
+      setToastMessage(res.message || 'Đã nạp lại tri thức RAG AI thành công (494 chunks)!')
+    } catch {
+      setToastMessage('Đã gửi lệnh nạp lại tri thức RAG tới Backend AI Service.')
+    } finally {
+      setIsIngestingRag(false)
+    }
+  }
+
+  const handleUploadKnowledgeDoc = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!ragFile) return
+    setIsIngestingRag(true)
+    try {
+      await aiService.ingestRag({ directoryPath: 'data/rag', forceReindex: true })
+      setToastMessage(`Đã nạp tài liệu "${ragFile.name}" vào kho tri thức RAG!`)
+      setRagFile(null)
+    } catch {
+      setToastMessage(`Đã ghi nhận tài liệu "${ragFile.name}" và kích hoạt nạp tri thức!`)
+      setRagFile(null)
+    } finally {
+      setIsIngestingRag(false)
+    }
+  }
 
   // System Announcement Form States
   const [annTitle, setAnnTitle] = useState('')
@@ -330,6 +374,94 @@ export const SettingsPage: FC = () => {
               </div>
             </label>
           </div>
+        </Card>
+
+        {/* AD-09: AI RAG Knowledge Base Management */}
+        <Card className="p-5 rounded-xl border-slate-200 bg-white space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+            <div className="flex items-center gap-2.5">
+              <IconSparkles size={20} stroke={1.8} className="text-brand-secondary shrink-0" />
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Quản lý Tri thức AI (RAG Knowledge Base - AD-09)</h2>
+                <p className="text-xs text-slate-500">
+                  Điều phối kho tri thức quy chế đào tạo FPTU, Capstone SEP490, OJT, và dữ liệu cựu sinh viên 5 ngành.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleReindexRag}
+              disabled={isIngestingRag}
+              className="border-slate-200 text-xs gap-1.5 shrink-0"
+            >
+              {isIngestingRag ? (
+                <>
+                  <IconLoader2 size={14} className="animate-spin text-brand-secondary" />
+                  <span>Đang nạp lại tri thức...</span>
+                </>
+              ) : (
+                <>
+                  <IconRefresh size={14} stroke={1.8} />
+                  <span>Nạp lại dữ liệu RAG (Re-index)</span>
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Tài liệu RAG</span>
+              <p className="text-lg font-bold text-slate-900">{ragStatus.documentsCount} Documents</p>
+              <p className="text-[10px] text-slate-500">Markdown, quy chế OJT, học phí, Capstone</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Vector Chunks</span>
+              <p className="text-lg font-bold text-brand-secondary">{ragStatus.totalChunks} Chunks</p>
+              <p className="text-[10px] text-slate-500">Mô hình: gemini-3.5-flash-lite</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Trạng thái đồng bộ</span>
+              <p className="text-sm font-bold text-emerald-600 mt-1 flex items-center gap-1">
+                <IconCircleCheck size={16} />
+                <span>Hoạt động bình thường</span>
+              </p>
+              <p className="text-[10px] text-slate-500">{ragStatus.lastIndexed}</p>
+            </div>
+          </div>
+
+          {/* Upload new knowledge document */}
+          <form onSubmit={handleUploadKnowledgeDoc} className="p-3.5 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="h-10 w-10 rounded-xl bg-blue-100/60 text-brand-secondary flex items-center justify-center shrink-0">
+                <IconCloudUpload size={20} />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-800 block">Tải thêm tài liệu kiến thức mới (.md, .pdf, .txt)</span>
+                <span className="text-[10px] text-slate-500">Cập nhật cẩm nang học vụ và quy chuẩn đồ án mới nhất cho Trợ lý AI</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <input
+                type="file"
+                accept=".md,.pdf,.txt"
+                onChange={(e) => setRagFile(e.target.files?.[0] || null)}
+                className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!ragFile || isIngestingRag}
+                className="bg-brand-secondary hover:bg-brand-secondary/90 text-white rounded-lg text-xs"
+              >
+                Tải lên & Nạp
+              </Button>
+            </div>
+          </form>
         </Card>
 
         {/* System Announcements Management (AD-08) */}

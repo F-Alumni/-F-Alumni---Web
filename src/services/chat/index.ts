@@ -1,4 +1,4 @@
-import { chatApiClient } from '@/services/api/apiClient'
+import { chatApiClient, userApiClient } from '@/services/api/apiClient'
 import type {
   BackendChatRoom,
   BackendChatMessage,
@@ -19,6 +19,9 @@ export function mapBackendChatMessage(raw: any): BackendChatMessage {
     senderName: raw.senderDisplayName || raw.SenderDisplayName || raw.senderName || 'Anonymous',
     senderAvatarUrl: raw.senderAvatarUrl || raw.SenderAvatarUrl || null,
     content: raw.content || raw.Content || '',
+    mediaUrl: raw.mediaUrl || raw.MediaUrl || null,
+    messageType: raw.messageType || raw.MessageType || (raw.mediaUrl || raw.MediaUrl ? 'Image' : 'Text'),
+    isRead: raw.isRead ?? raw.IsRead ?? false,
     sentAt: raw.sentAt || raw.SentAt || new Date().toISOString(),
   }
 }
@@ -42,6 +45,8 @@ export const chatService = {
       major: null,
       createdAt: c.createdAt || new Date().toISOString(),
       lastMessage: c.lastMessage ? mapBackendChatMessage(c.lastMessage) : null,
+      isMuted: c.isMuted ?? false,
+      unreadCount: c.unreadCount ?? 0,
     }))
   },
 
@@ -115,7 +120,62 @@ export const chatService = {
   async sendMessage(roomId: string, payload: SendMessagePayload): Promise<BackendChatMessage> {
     const res = await chatApiClient.post<any>(`/chats/conversations/${roomId}/messages`, {
       content: payload.content.trim(),
+      mediaUrl: payload.mediaUrl || null,
+      messageType: payload.messageType || (payload.mediaUrl ? 'Image' : 'Text'),
     })
     return mapBackendChatMessage(res.data)
   },
+
+  /**
+   * CH-05: Mark messages in a conversation as read.
+   * Matches BE contract: POST /api/v1/chats/conversations/{conversationId}/read
+   */
+  async markRead(roomId: string): Promise<{ success: boolean; readCount: number }> {
+    try {
+      const res = await chatApiClient.post<any>(`/chats/conversations/${roomId}/read`)
+      return {
+        success: true,
+        readCount: res.data?.readCount || 0,
+      }
+    } catch {
+      return { success: false, readCount: 0 }
+    }
+  },
+
+  /**
+   * CH-08: Search message history in a conversation by keyword.
+   * Matches BE contract: GET /api/v1/chats/conversations/{conversationId}/messages?search={q}
+   */
+  async searchMessages(roomId: string, search: string, page = 1, pageSize = 30): Promise<BackendChatMessage[]> {
+    const res = await chatApiClient.get<any>(`/chats/conversations/${roomId}/messages`, {
+      params: { search, page, pageSize },
+    })
+    const raw = res.data
+    return (raw.items || (Array.isArray(raw) ? raw : [])).map(mapBackendChatMessage)
+  },
+
+  /**
+   * CH-09: Update conversation participant settings (Mute/Hide).
+   * Matches BE contract: PUT /api/v1/chats/conversations/{conversationId}/settings
+   */
+  async updateSettings(roomId: string, settings: { isMuted?: boolean; isHidden?: boolean }): Promise<void> {
+    await chatApiClient.put(`/chats/conversations/${roomId}/settings`, {
+      isMuted: settings.isMuted,
+      isHidden: settings.isHidden,
+    })
+  },
+
+  /**
+   * CH-07: Upload image to Cloudinary via User Service media endpoint.
+   * Matches BE contract: POST /api/v1/users/media/upload
+   */
+  async uploadChatMedia(file: File): Promise<string> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await userApiClient.post<any>('/users/media/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return res.data?.secureUrl || res.data?.url || ''
+  },
 }
+

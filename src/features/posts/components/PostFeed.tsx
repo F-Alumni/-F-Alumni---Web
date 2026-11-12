@@ -36,6 +36,7 @@ function mapBackendPostToPostItem(p: ForumPostItem): PostItem {
   return {
     id: p.id,
     author: {
+      id: p.authorId,
       name: p.authorName || 'FPT Alumni',
       avatar:
         p.authorAvatarUrl ||

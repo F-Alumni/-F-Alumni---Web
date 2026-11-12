@@ -38,6 +38,24 @@ export interface GetEventsParams {
   pageSize?: number
 }
 
+export interface EventAttendeeItem {
+  id: string
+  eventId: string
+  userId: string
+  fullName: string
+  avatarUrl: string
+  status: string // 'Going' | 'Interested' | 'NotGoing'
+  createdAt: string
+}
+
+export type EventRsvpStatus = 'Going' | 'Interested' | 'NotGoing'
+
+export interface RsvpResponse {
+  eventId: string
+  status: EventRsvpStatus
+  message: string
+}
+
 /**
  * Opportunities & Community Events service connecting to Forum Service & API Gateway.
  */
@@ -68,6 +86,24 @@ export const opportunitiesService = {
    */
   async createEvent(payload: CreateEventPayload): Promise<CommunityEventItem> {
     const res = await forumApiClient.post<CommunityEventItem>('/events', payload)
+    return res.data
+  },
+
+  /**
+   * Join or update RSVP status for an event (Going, Interested, NotGoing).
+   * POST /api/v1/events/{id}/rsvp
+   */
+  async rsvpEvent(id: string, status: EventRsvpStatus): Promise<RsvpResponse> {
+    const res = await forumApiClient.post<RsvpResponse>(`/events/${id}/rsvp`, { status })
+    return res.data
+  },
+
+  /**
+   * List all attendees/participants for an event.
+   * GET /api/v1/events/{id}/attendees
+   */
+  async getAttendees(id: string): Promise<EventAttendeeItem[]> {
+    const res = await forumApiClient.get<EventAttendeeItem[]>(`/events/${id}/attendees`)
     return res.data
   },
 

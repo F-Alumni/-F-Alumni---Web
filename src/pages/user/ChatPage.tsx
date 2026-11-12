@@ -9,6 +9,12 @@ import {
   IconLoader2,
   IconSearch,
   IconX,
+  IconPhoto,
+  IconChecks,
+  IconCheck,
+  IconDotsVertical,
+  IconBellOff,
+  IconBell,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -31,6 +37,20 @@ export const ChatPage: FC = () => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [typingUser, setTypingUser] = useState<string | null>(null)
+
+  // CH-07: Image upload state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // CH-08: In-room search state
+  const [isSearchingHistory, setIsSearchingHistory] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredMessages, setFilteredMessages] = useState<BackendChatMessage[] | null>(null)
+
+  // CH-09: Room settings menu
+  const [isRoomMenuOpen, setIsRoomMenuOpen] = useState(false)
 
   // Modals
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
@@ -117,6 +137,10 @@ export const ChatPage: FC = () => {
     if (!activeRoomId) return
 
     let isMounted = true
+    setFilteredMessages(null)
+    setSearchQuery('')
+    setIsSearchingHistory(false)
+
     const loadRoomMessages = async () => {
       setIsLoadingMessages(true)
       try {
@@ -124,6 +148,8 @@ export const ChatPage: FC = () => {
         const res = await chatService.getMessages(activeRoomId, 1, 50)
         if (isMounted) {
           setMessages(res.items || [])
+          // CH-05: Mark messages as Read in Backend
+          chatService.markRead(activeRoomId).catch(() => {})
         }
       } catch (err) {
         console.error('Failed to load room messages:', err)
@@ -143,20 +169,106 @@ export const ChatPage: FC = () => {
   // Scroll to bottom on message change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, filteredMessages])
 
-  // Send Message
+  // Image Selection Handler (CH-07)
+  const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedImage(file)
+      setImagePreviewUrl(URL.createObjectURL(file))
+    }
+  }
+
+  const handleRemoveImage = () => {
+    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
+    setSelectedImage(null)
+    setImagePreviewUrl(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  // Search in conversation history (CH-08)
+  const handleSearchHistory = async (q: string) => {
+    setSearchQuery(q)
+    if (!activeRoomId) return
+    if (!q.trim()) {
+      setFilteredMessages(null)
+      return
+    }
+
+    try {
+      const results = await chatService.searchMessages(activeRoomId, q.trim())
+      setFilteredMessages(results)
+    } catch (err) {
+      console.error('Failed to search messages in room:', err)
+    }
+  }
+
+  // Toggle Mute (CH-09)
+  const handleToggleMute = async () => {
+    if (!activeRoomId) return
+    const activeRoom = rooms.find((r) => r.id === activeRoomId)
+    const nextMuted = !activeRoom?.isMuted
+
+    setRooms((prev) =>
+      prev.map((r) => (r.id === activeRoomId ? { ...r, isMuted: nextMuted } : r))
+    )
+    setIsRoomMenuOpen(false)
+
+    try {
+      await chatService.updateSettings(activeRoomId, { isMuted: nextMuted })
+    } catch (err) {
+      console.error('Failed to update mute settings:', err)
+    }
+  }
+
+  // Hide conversation (CH-09)
+  const handleHideConversation = async () => {
+    if (!activeRoomId) return
+    setIsRoomMenuOpen(false)
+    const targetRoomId = activeRoomId
+
+    setRooms((prev) => prev.filter((r) => r.id !== targetRoomId))
+    const remaining = rooms.filter((r) => r.id !== targetRoomId)
+    setActiveRoomId(remaining.length > 0 && remaining[0] ? remaining[0].id : null)
+
+    try {
+      await chatService.updateSettings(targetRoomId, { isHidden: true })
+    } catch (err) {
+      console.error('Failed to hide conversation:', err)
+    }
+  }
+
+  // Send Message (CH-02, CH-07)
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputText.trim() || !activeRoomId || isSending) return
+    if ((!inputText.trim() && !selectedImage) || !activeRoomId || isSending) return
 
-    const content = inputText.trim()
+    const content = inputText.trim() || (selectedImage ? 'Đã gửi một hình ảnh' : '')
     setInputText('')
     setIsSending(true)
 
+    let uploadedMediaUrl: string | null = null
+    if (selectedImage) {
+      setIsUploadingImage(true)
+      try {
+        uploadedMediaUrl = await chatService.uploadChatMedia(selectedImage)
+      } catch (uploadErr) {
+        console.error('Failed to upload image to Cloudinary:', uploadErr)
+      } finally {
+        setIsUploadingImage(false)
+        handleRemoveImage()
+      }
+    }
+
     try {
-      // Send via REST endpoint (which also triggers ReceiveMessage broadcast in BE)
-      const newMsg = await chatService.sendMessage(activeRoomId, { content })
+      // Send via REST endpoint (broadcast via SignalR Hub in BE)
+      const newMsg = await chatService.sendMessage(activeRoomId, {
+        content,
+        mediaUrl: uploadedMediaUrl,
+        messageType: uploadedMediaUrl ? 'Image' : 'Text',
+      })
+
       setMessages((prev) => {
         if (prev.some((m) => m.id === newMsg.id)) return prev
         return [...prev, newMsg]
@@ -337,14 +449,21 @@ export const ChatPage: FC = () => {
       <div className="flex-1 flex flex-col h-full bg-white">
         {activeRoom ? (
           <>
-            {/* Room Header */}
-            <div className="px-6 py-3.5 border-b border-slate-200 flex items-center justify-between bg-white">
+            {/* Room Header (CH-08, CH-09) */}
+            <div className="px-6 py-3 border-b border-slate-200 flex items-center justify-between bg-white relative">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-brand-secondary/10 text-brand-secondary flex items-center justify-center font-bold">
                   {activeRoom.roomType === 'Group' ? <IconUsers className="h-4 w-4" /> : <IconUser className="h-4 w-4" />}
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">{activeRoom.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-slate-900 text-sm">{activeRoom.name}</h3>
+                    {activeRoom.isMuted && (
+                      <span title="Đã tắt thông báo">
+                        <IconBellOff className="h-3.5 w-3.5 text-amber-500" />
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-slate-500">
                     {activeRoom.roomType === 'Group'
                       ? `Phòng thảo luận cộng đồng ${activeRoom.major ? `• ${activeRoom.major}` : ''}`
@@ -353,12 +472,109 @@ export const ChatPage: FC = () => {
                 </div>
               </div>
 
-              {typingUser && (
-                <span className="text-xs text-brand-secondary font-medium italic animate-pulse">
-                  {typingUser} is typing...
-                </span>
-              )}
+              {/* Header Right Actions */}
+              <div className="flex items-center gap-2">
+                {typingUser && (
+                  <span className="text-xs text-brand-secondary font-medium italic animate-pulse mr-2">
+                    {typingUser} is typing...
+                  </span>
+                )}
+
+                {/* Search Toggle (CH-08) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSearchingHistory(!isSearchingHistory)
+                    if (isSearchingHistory) {
+                      setFilteredMessages(null)
+                      setSearchQuery('')
+                    }
+                  }}
+                  title="Tìm kiếm tin nhắn (CH-08)"
+                  className={`rounded-lg p-1.5 transition-colors ${
+                    isSearchingHistory
+                      ? 'bg-brand-secondary/10 text-brand-secondary'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <IconSearch className="h-4 w-4" />
+                </button>
+
+                {/* Room Settings Menu (CH-09) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsRoomMenuOpen(!isRoomMenuOpen)}
+                    title="Tùy chọn hội thoại (CH-09)"
+                    className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                  >
+                    <IconDotsVertical className="h-4 w-4" />
+                  </button>
+
+                  {isRoomMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white p-1.5 shadow-lg border border-slate-200 z-30 text-xs">
+                      <button
+                        type="button"
+                        onClick={handleToggleMute}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors text-left font-medium"
+                      >
+                        {activeRoom.isMuted ? (
+                          <>
+                            <IconBell className="h-4 w-4 text-slate-500" />
+                            <span>Bật thông báo</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconBellOff className="h-4 w-4 text-amber-500" />
+                            <span>Tắt thông báo</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleHideConversation}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors text-left font-medium"
+                      >
+                        <IconX className="h-4 w-4" />
+                        <span>Ẩn cuộc trò chuyện</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+
+            {/* CH-08: In-room Search Bar */}
+            {isSearchingHistory && (
+              <div className="px-6 py-2.5 bg-slate-100/80 border-b border-slate-200 flex items-center gap-2">
+                <IconSearch className="h-4 w-4 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchHistory(e.target.value)}
+                  placeholder="Nhập từ khóa tìm kiếm tin nhắn trong phòng..."
+                  className="flex-1 bg-transparent text-xs text-slate-800 placeholder:text-slate-400 outline-none"
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setFilteredMessages(null)
+                    }}
+                    className="text-slate-400 hover:text-slate-600 p-0.5"
+                  >
+                    <IconX className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                {filteredMessages && (
+                  <span className="text-[11px] font-semibold text-brand-secondary bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                    {filteredMessages.length} kết quả
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Messages Scroll Area */}
             <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/30">
@@ -367,14 +583,18 @@ export const ChatPage: FC = () => {
                   <IconLoader2 className="h-5 w-5 animate-spin" />
                   <span>Loading messages...</span>
                 </div>
-              ) : messages.length === 0 ? (
+              ) : (filteredMessages || messages).length === 0 ? (
                 <div className="flex flex-col h-full items-center justify-center text-slate-400 space-y-2">
                   <IconMessageCircle className="h-10 w-10 text-slate-200" />
-                  <p className="text-sm font-medium text-slate-600">No messages yet</p>
-                  <p className="text-xs text-slate-400">Say hello and start the community conversation!</p>
+                  <p className="text-sm font-medium text-slate-600">
+                    {filteredMessages ? 'Không tìm thấy tin nhắn phù hợp' : 'No messages yet'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {filteredMessages ? 'Thử tìm kiếm với từ khóa khác' : 'Say hello and start the community conversation!'}
+                  </p>
                 </div>
               ) : (
-                messages.map((msg) => {
+                (filteredMessages || messages).map((msg) => {
                   const isMine =
                     msg.senderId === currentUser?.id || msg.senderName === currentUser?.name
 
@@ -394,6 +614,16 @@ export const ChatPage: FC = () => {
                             minute: '2-digit',
                           })}
                         </span>
+                        {/* CH-05: Double check seen receipt icon */}
+                        {isMine && (
+                          <span title={msg.isRead ? 'Đã xem' : 'Đã gửi'}>
+                            {msg.isRead ? (
+                              <IconChecks className="h-3.5 w-3.5 text-blue-500 inline-block ml-0.5" />
+                            ) : (
+                              <IconCheck className="h-3.5 w-3.5 text-slate-400 inline-block ml-0.5" />
+                            )}
+                          </span>
+                        )}
                       </div>
 
                       <div
@@ -403,6 +633,17 @@ export const ChatPage: FC = () => {
                             : 'bg-white border border-slate-200 text-slate-800 rounded-bl-xs'
                         }`}
                       >
+                        {/* CH-07: Display Image Attachment */}
+                        {msg.mediaUrl && (
+                          <div className="mb-2 overflow-hidden rounded-xl bg-black/5">
+                            <img
+                              src={msg.mediaUrl}
+                              alt="Đính kèm"
+                              className="max-h-60 w-auto rounded-xl object-contain cursor-pointer hover:opacity-95 transition-opacity"
+                              onClick={() => window.open(msg.mediaUrl!, '_blank')}
+                            />
+                          </div>
+                        )}
                         {msg.content}
                       </div>
                     </div>
@@ -412,21 +653,69 @@ export const ChatPage: FC = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Form */}
-            <form onSubmit={handleSendMessage} className="p-3.5 border-t border-slate-200 bg-white flex items-center gap-2">
+            {/* CH-07: Image Selection Preview Bar */}
+            {imagePreviewUrl && (
+              <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src={imagePreviewUrl}
+                    alt="Preview"
+                    className="h-10 w-10 rounded-lg object-cover border border-slate-200"
+                  />
+                  <div>
+                    <span className="text-xs font-semibold text-slate-700 block truncate max-w-xs">
+                      {selectedImage?.name}
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Sẵn sàng gửi hình ảnh đính kèm
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                >
+                  <IconX className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Input Form with Photo Upload (CH-07) */}
+            <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleSelectImage}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                title="Đính kèm hình ảnh (CH-07)"
+                className="rounded-xl p-2.5 text-slate-500 hover:bg-slate-100 hover:text-brand-primary transition-colors shrink-0"
+              >
+                <IconPhoto className="h-5 w-5" />
+              </button>
+
               <input
                 type="text"
                 value={inputText}
                 onChange={handleInputChange}
-                placeholder={`Message #${activeRoom.name}...`}
+                placeholder={`Nhắn tin trong #${activeRoom.name}...`}
                 className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-brand-primary focus:outline-none"
               />
               <Button
                 type="submit"
-                disabled={!inputText.trim() || isSending}
+                disabled={(!inputText.trim() && !selectedImage) || isSending || isUploadingImage}
                 className="bg-brand-secondary hover:bg-brand-secondary/90 text-white rounded-xl px-4 py-2.5 shrink-0"
               >
-                {isSending ? <IconLoader2 className="h-4 w-4 animate-spin" /> : <IconSend className="h-4 w-4" />}
+                {isSending || isUploadingImage ? (
+                  <IconLoader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <IconSend className="h-4 w-4" />
+                )}
               </Button>
             </form>
           </>

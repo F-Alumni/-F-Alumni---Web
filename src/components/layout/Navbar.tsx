@@ -11,6 +11,8 @@ import {
   Briefcase,
   ChevronDown,
   LogOut,
+  CheckCircle2,
+  Calendar,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -65,6 +67,139 @@ const CampusDropdown = () => {
               <span className={campus === selectedCampus ? 'font-semibold text-brand-primary' : 'font-medium'}>{campus}</span>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const NotificationDropdown = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(3)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const notifications = [
+    {
+      id: '1',
+      title: 'Câu trả lời được chấp nhận',
+      desc: 'Nguyễn Văn A đã chấp nhận câu trả lời Best Answer của bạn trong chủ đề "Phỏng vấn FPT Software K17".',
+      time: '15 phút trước',
+      type: 'best-answer',
+      isUnread: true,
+      link: ROUTES.APP.HOME,
+    },
+    {
+      id: '2',
+      title: 'Nhắc nhở sự kiện RSVP',
+      desc: 'Hội thảo "AI & Cloud Career Day 2026" sắp diễn ra lúc 09:00 ngày mai tại Hall A.',
+      time: '2 giờ trước',
+      type: 'event',
+      isUnread: true,
+      link: ROUTES.APP.JOBS,
+    },
+    {
+      id: '3',
+      title: 'Cơ hội việc làm & thực tập mới',
+      desc: 'FPT Telecom vừa đăng tuyển vị trí "DevOps Engineer Intern" phù hợp hồ sơ của bạn.',
+      time: '5 giờ trước',
+      type: 'job',
+      isUnread: true,
+      link: ROUTES.APP.INTERNSHIPS,
+    },
+  ]
+
+  const handleMarkAllRead = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setUnreadCount(0)
+  }
+
+  return (
+    <div className="relative shrink-0" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 shrink-0"
+        title="Thông báo"
+      >
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-primary px-1 text-[10px] font-bold text-white shadow-xs">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-50">
+          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-slate-800">Thông báo</span>
+              {unreadCount > 0 && (
+                <span className="rounded-full bg-brand-primary/10 px-2 py-0.5 text-[11px] font-bold text-brand-primary">
+                  {unreadCount} mới
+                </span>
+              )}
+            </div>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className="text-[11px] font-semibold text-brand-primary hover:text-brand-primary-hover hover:underline"
+              >
+                Đánh dấu đã đọc
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 py-1">
+            {notifications.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => {
+                  setIsOpen(false)
+                  navigate(item.link)
+                }}
+                className={`flex items-start gap-3 p-3 transition-colors hover:bg-slate-50 cursor-pointer rounded-xl ${
+                  item.isUnread && unreadCount > 0 ? 'bg-orange-50/40' : ''
+                }`}
+              >
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                  {item.type === 'best-answer' && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+                  {item.type === 'event' && <Calendar className="h-4 w-4 text-brand-primary" />}
+                  {item.type === 'job' && <Briefcase className="h-4 w-4 text-brand-secondary" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-slate-900 leading-snug">{item.title}</p>
+                  <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">{item.desc}</p>
+                  <span className="text-[10px] text-slate-400 mt-1 block">{item.time}</span>
+                </div>
+                {item.isUnread && unreadCount > 0 && (
+                  <span className="h-2 w-2 rounded-full bg-brand-primary shrink-0 mt-1.5" />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-slate-100 pt-2 text-center">
+            <Link
+              to={ROUTES.APP.NOTIFICATIONS}
+              onClick={() => setIsOpen(false)}
+              className="block rounded-lg py-1.5 text-xs font-semibold text-brand-primary hover:bg-slate-50 transition-colors"
+            >
+              Xem tất cả thông báo &rarr;
+            </Link>
+          </div>
         </div>
       )}
     </div>
@@ -156,17 +291,8 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
             <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-secondary" />
           </Link>
 
-          {/* Notifications */}
-          <Link
-            to={ROUTES.APP.NOTIFICATIONS}
-            className="relative rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 shrink-0"
-            title="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-primary px-1 text-[10px] font-bold text-white">
-              3
-            </span>
-          </Link>
+          {/* Notifications Dropdown */}
+          <NotificationDropdown />
 
           {/* Divider */}
           <div className="mx-1 hidden h-6 w-px bg-slate-200 sm:block shrink-0" />

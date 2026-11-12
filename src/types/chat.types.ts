@@ -10,6 +10,9 @@ export interface BackendChatMessage {
   senderName: string
   senderAvatarUrl: string | null
   content: string
+  mediaUrl?: string | null
+  messageType?: 'Text' | 'Image'
+  isRead?: boolean
   sentAt: string
 }
 
@@ -20,6 +23,8 @@ export interface BackendChatRoom {
   major: string | null
   createdAt: string
   lastMessage: BackendChatMessage | null
+  isMuted?: boolean
+  unreadCount?: number
 }
 
 export interface BackendChatMessagesPage {
@@ -42,6 +47,8 @@ export interface CreateGroupRoomPayload {
 
 export interface SendMessagePayload {
   content: string
+  mediaUrl?: string | null
+  messageType?: 'Text' | 'Image'
 }
 
 export interface ChatMessage {

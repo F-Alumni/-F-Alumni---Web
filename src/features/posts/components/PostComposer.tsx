@@ -1,4 +1,5 @@
-import { useState, type FC } from 'react'
+import { useState, useEffect, type FC } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Sparkles,
   HelpCircle,
@@ -21,6 +22,7 @@ interface PostComposerProps {
 
 export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
   const { currentUser } = useAuthStore()
+  const [searchParams] = useSearchParams()
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -28,6 +30,12 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (searchParams.get('compose') === 'true') {
+      setIsExpanded(true)
+    }
+  }, [searchParams])
 
   const handleSubmit = async () => {
     const trimmedContent = content.trim()
@@ -81,7 +89,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
   ]
 
   return (
-    <Card className="overflow-hidden border-slate-200/90 bg-white shadow-sm transition-all">
+    <Card id="post-composer" className="overflow-hidden border-slate-200/90 bg-white shadow-sm transition-all scroll-mt-24">
       <div className="p-4">
         {errorMessage && (
           <div className="mb-3 flex items-center gap-2 rounded-lg bg-rose-50 p-2.5 text-xs text-rose-700 border border-rose-200">

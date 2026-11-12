@@ -140,7 +140,7 @@ export const authService = {
       campus: payload.campus || 'HCM',
       major: payload.department || '',
       studentCode: payload.studentId || '',
-      accountType: beRole === 'ADMIN' ? 'Admin' : 'Alumni',
+      accountType: beRole === 'ADMIN' ? 'Admin' : (payload.userType === USER_TYPES.STUDENT ? 'Student' : 'Alumni'),
     }
 
     let res
