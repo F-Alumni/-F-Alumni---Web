@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react'
+import { useState, useEffect, type FC } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Bell,
@@ -11,11 +11,14 @@ import {
   Check,
   Clock,
   ArrowRight,
+  Loader2,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ROUTES } from '@/constants/routes'
+import { opportunitiesService } from '@/services/opportunities'
+import { postsService } from '@/services/posts'
 
 interface NotificationItem {
   id: string
@@ -27,58 +30,63 @@ interface NotificationItem {
   link: string
 }
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif-1',
-    title: 'Câu trả lời được chấp nhận làm Best Answer',
-    message: 'Nguyễn Văn A (Alumni K14) đã chấp nhận câu trả lời của bạn trong chủ đề "Kinh nghiệm phỏng vấn vị trí Backend Engineer FPT Software". Bạn nhận được +15 Alumni Coins!',
-    type: 'answer',
-    createdAt: '15 phút trước',
-    isRead: false,
-    link: ROUTES.APP.HOME,
-  },
-  {
-    id: 'notif-2',
-    title: 'Nhắc nhở sự kiện: FPT AI & Cloud Career Day 2026',
-    message: 'Hội thảo công nghệ & phỏng vấn trực tiếp sẽ diễn ra vào 09:00 sáng mai tại Hội trường Trống Đồng - Campus Hòa Lạc. Vé tham dự của bạn đã được xác nhận.',
-    type: 'event',
-    createdAt: '2 giờ trước',
-    isRead: false,
-    link: ROUTES.APP.JOBS,
-  },
-  {
-    id: 'notif-3',
-    title: 'Cơ hội thực tập OJT phù hợp với hồ sơ',
-    message: 'FPT Telecom vừa đăng tuyển vị trí "DevOps Engineer Intern" dành riêng cho sinh viên kỳ 5-7. Xem thông tin chi tiết và nộp hồ sơ kết nối cựu sinh viên ngay.',
-    type: 'job',
-    createdAt: '5 giờ trước',
-    isRead: false,
-    link: ROUTES.APP.INTERNSHIPS,
-  },
-  {
-    id: 'notif-4',
-    title: 'FPT AI Assistant cập nhật cơ sở tri thức',
-    message: 'Trợ lý AI đã hoàn tất lập chỉ mục cho bộ tài liệu "Hướng dẫn Capstone và Biểu mẫu OJT kỳ Spring 2026". Hãy thử đặt câu hỏi với trợ lý.',
-    type: 'ai',
-    createdAt: '1 ngày trước',
-    isRead: true,
-    link: `${ROUTES.APP.HOME}?ai=open`,
-  },
-  {
-    id: 'notif-5',
-    title: 'Tin nhắn mới từ Mentor Cựu sinh viên',
-    message: 'Trần Hoài Nam (K14) đã phản hồi lời mời kết nối của bạn trong kênh Thảo luận trực tiếp Mentorship.',
-    type: 'chat',
-    createdAt: '2 ngày trước',
-    isRead: true,
-    link: ROUTES.APP.CHAT,
-  },
-]
-
 export const NotificationsPage: FC = () => {
   const navigate = useNavigate()
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [filterTab, setFilterTab] = useState<'all' | 'unread' | 'events' | 'jobs'>('all')
+
+  useEffect(() => {
+    let isMounted = true
+    const loadNotifications = async () => {
+      setIsLoading(true)
+      try {
+        const [eventsRes, postsRes] = await Promise.all([
+          opportunitiesService.getEvents({ upcomingOnly: true, pageSize: 5 }),
+          postsService.getPosts({ pageSize: 8 }),
+        ])
+        if (!isMounted) return
+
+        const items: NotificationItem[] = []
+
+        for (const ev of eventsRes.items || []) {
+          items.push({
+            id: `ev-${ev.id}`,
+            title: `Sự kiện: ${ev.title}`,
+            message: `${ev.description || ''} • Địa điểm: ${ev.location} (${ev.campus || 'FPT University'})`,
+            type: 'event',
+            createdAt: new Date(ev.startTime).toLocaleDateString('vi-VN'),
+            isRead: false,
+            link: ROUTES.APP.JOBS,
+          })
+        }
+
+        for (const post of postsRes.items || []) {
+          const isJob = post.postType === 'Recruitment'
+          items.push({
+            id: `post-${post.id}`,
+            title: isJob ? `Cơ hội tuyển dụng: ${post.title}` : `Bài thảo luận mới: ${post.title}`,
+            message: post.content.slice(0, 180),
+            type: isJob ? 'job' : post.isAnswered ? 'answer' : 'chat',
+            createdAt: new Date(post.createdAt).toLocaleDateString('vi-VN'),
+            isRead: false,
+            link: isJob ? ROUTES.APP.JOBS : `/app/posts/${post.id}`,
+          })
+        }
+
+        setNotifications(items)
+      } catch (err) {
+        console.error('Failed to load real notifications feed:', err)
+        if (isMounted) setNotifications([])
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+    void loadNotifications()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
@@ -167,7 +175,12 @@ export const NotificationsPage: FC = () => {
 
       {/* 3. Notification List */}
       <div className="space-y-2.5">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <Card className="p-12 text-center bg-white border-slate-200 flex items-center justify-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin text-brand-primary" />
+            <span className="text-xs font-medium text-slate-500">Đang tải thông báo từ hệ thống...</span>
+          </Card>
+        ) : filtered.length === 0 ? (
           <Card className="p-12 text-center bg-white border-slate-200">
             <Bell className="mx-auto h-8 w-8 text-slate-300 mb-2" />
             <p className="text-xs font-medium text-slate-500">Không có thông báo nào trong mục này.</p>

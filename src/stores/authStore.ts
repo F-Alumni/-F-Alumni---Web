@@ -4,7 +4,6 @@ import type { UserSummary } from '@/types/user.types'
 import type { Role } from '@/constants/roles'
 import type { UserType } from '@/constants/userTypes'
 import { getPermissionsForUser } from '@/lib/permissions'
-import { DEMO_USERS } from '@/constants/demoUsers'
 
 export interface AuthState {
   token: string | null
@@ -42,10 +41,6 @@ export const useAuthStore = create<AuthState>()(
         try {
           localStorage.setItem('access_token', token)
           localStorage.setItem('accessToken', token)
-          if (!localStorage.getItem('refresh_token')) {
-            localStorage.setItem('refresh_token', `fpt-refresh-${user.id || Date.now()}`)
-            localStorage.setItem('refreshToken', `fpt-refresh-${user.id || Date.now()}`)
-          }
         } catch {
           // Ignore localStorage errors in non-browser envs
         }
@@ -66,8 +61,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         const existingUser = get().currentUser
-        const userToSet = existingUser || DEMO_USERS.ADMIN
-        get().setAuth({ token, user: userToSet })
+        if (existingUser) {
+          get().setAuth({ token, user: existingUser })
+        }
       },
 
       setUser: (user) => {
@@ -80,8 +76,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       switchUser: (user) => {
-        const token = `fpt-session-${user.role.toLowerCase()}-${user.userType.toLowerCase()}-${Date.now()}`
-        get().setAuth({ token, user })
+        const existingToken = get().token || ''
+        get().setAuth({ token: existingToken, user })
       },
 
       updateCurrentUser: (partialUser) => {

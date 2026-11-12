@@ -17,14 +17,15 @@ import { ROLES } from '@/constants/roles'
 import { useAuthStore } from '@/stores/authStore'
 import fAlumniLogo from '@/assets/f-alumni-logo.png'
 import { authService } from '@/services/auth'
+import { signInWithFirebaseGoogle } from '@/services/auth/firebase'
 import { normalizeError } from '@/lib/errorHandler'
 
 export const LoginForm: FC = () => {
   const navigate = useNavigate()
   const setAuth = useAuthStore((state) => state.setAuth)
 
-  const [email, setEmail] = useState('admin@fpt.edu.vn')
-  const [password, setPassword] = useState('Password@123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
@@ -42,7 +43,6 @@ export const LoginForm: FC = () => {
 
       setAuth({ token: res.token, user: res.user })
 
-      // Route depending on role: Admin/Mod -> Dashboard; User/Student/Alumni -> App Home
       if (res.user.role === ROLES.ADMIN || res.user.role === ROLES.MODERATOR) {
         navigate(ROUTES.ADMIN.DASHBOARD)
       } else {
@@ -50,7 +50,10 @@ export const LoginForm: FC = () => {
       }
     } catch (err: unknown) {
       const normalized = normalizeError(err)
-      setError(normalized.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin tài khoản.')
+      setError(
+        normalized.message ||
+          'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin tài khoản.'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -70,21 +73,16 @@ export const LoginForm: FC = () => {
       return
     }
 
-    executeLogin(email.trim(), password)
+    void executeLogin(email.trim(), password)
   }
 
+  // US-02: Firebase Google Sign-In
   const handleGoogleLogin = async () => {
-    setIsLoading(true)
     setError(null)
+    setIsLoading(true)
     try {
-      // US-02: Authenticate via Google ID Token with Backend
-      const res = await authService.googleLogin({
-        idToken: 'mock-google-id-token-' + Date.now(),
-        email: 'alumni.google@fpt.edu.vn',
-        fullName: 'FPT Alumni (Google User)',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      })
-
+      const fbUser = await signInWithFirebaseGoogle()
+      const res = await authService.googleLogin(fbUser)
       setAuth({ token: res.token, user: res.user })
 
       if (res.user.role === ROLES.ADMIN || res.user.role === ROLES.MODERATOR) {
@@ -116,7 +114,11 @@ export const LoginForm: FC = () => {
       {/* 1. Brand Identity & Header */}
       <div className="space-y-1.5">
         <div className="inline-flex items-center gap-2">
-          <img src={fAlumniLogo} alt="F-Alumni Connect Logo" className="h-8 sm:h-9 w-auto object-contain" />
+          <img
+            src={fAlumniLogo}
+            alt="F-Alumni Connect Logo"
+            className="h-8 sm:h-9 w-auto object-contain"
+          />
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-primary border border-brand-primary/20">
             <IconShieldCheck size={13} stroke={2} />
             FPT Alumni Portal
@@ -133,9 +135,7 @@ export const LoginForm: FC = () => {
         </div>
       </div>
 
-
-
-      {/* 5. Error Alert */}
+      {/* Error Alert */}
       {error && (
         <div
           className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700 animate-in fade-in"
@@ -146,7 +146,7 @@ export const LoginForm: FC = () => {
         </div>
       )}
 
-      {/* 6. Authentication Form */}
+      {/* Authentication Form */}
       <form onSubmit={handleLogin} className="space-y-3">
         {/* Email Field */}
         <div className="space-y-1">
@@ -169,7 +169,7 @@ export const LoginForm: FC = () => {
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@fpt.edu.vn"
+              placeholder="tenban@fpt.edu.vn"
               required
               className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 pl-9 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary/20 transition-all"
             />
@@ -182,6 +182,12 @@ export const LoginForm: FC = () => {
             <label htmlFor="staff-password" className="text-[11px] font-semibold text-slate-700">
               Mật khẩu
             </label>
+            <Link
+              to={ROUTES.AUTH.FORGOT_PASSWORD}
+              className="text-[11px] font-semibold text-brand-primary hover:text-brand-primary-hover hover:underline"
+            >
+              Quên mật khẩu?
+            </Link>
           </div>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
@@ -204,14 +210,21 @@ export const LoginForm: FC = () => {
               aria-label={showPassword ? 'Hide password' : 'Show password'}
               className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
             >
-              {showPassword ? <IconEyeOff size={16} stroke={1.8} /> : <IconEye size={16} stroke={1.8} />}
+              {showPassword ? (
+                <IconEyeOff size={16} stroke={1.8} />
+              ) : (
+                <IconEye size={16} stroke={1.8} />
+              )}
             </button>
           </div>
         </div>
 
         {/* Remember Device Option */}
         <div className="flex items-center justify-between pt-0.5">
-          <label htmlFor="remember-device" className="flex items-center gap-2 cursor-pointer select-none">
+          <label
+            htmlFor="remember-device"
+            className="flex items-center gap-2 cursor-pointer select-none"
+          >
             <input
               id="remember-device"
               type="checkbox"
@@ -246,7 +259,9 @@ export const LoginForm: FC = () => {
           {/* Divider */}
           <div className="relative my-2.5 flex items-center justify-center">
             <div className="w-full border-t border-slate-200" />
-            <span className="absolute bg-[#F8FAFC] px-2 text-[10px] uppercase font-bold text-slate-400">Hoặc</span>
+            <span className="absolute bg-[#F8FAFC] px-2 text-[10px] uppercase font-bold text-slate-400">
+              Hoặc
+            </span>
           </div>
 
           {/* US-02: Google Sign In Button */}
@@ -288,48 +303,9 @@ export const LoginForm: FC = () => {
             Đăng ký tài khoản Sinh viên / Alumni
           </Link>
         </div>
-
-        {/* Quick Demo Account Selector */}
-        <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 text-xs space-y-1.5 mt-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            Chọn nhanh tài khoản thử nghiệm:
-          </span>
-          <div className="grid grid-cols-3 gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('student@fpt.edu.vn')
-                setPassword('Password@123')
-              }}
-              className="rounded-lg border border-slate-200 bg-white py-1 px-1.5 text-[11px] font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary transition-colors text-center"
-            >
-              🎓 Sinh viên
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('alumni.se@fpt.edu.vn')
-                setPassword('Password@123')
-              }}
-              className="rounded-lg border border-slate-200 bg-white py-1 px-1.5 text-[11px] font-semibold text-slate-700 hover:border-brand-secondary hover:text-brand-secondary transition-colors text-center"
-            >
-              💼 Alumni
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('admin@fpt.edu.vn')
-                setPassword('Password@123')
-              }}
-              className="rounded-lg border border-slate-200 bg-white py-1 px-1.5 text-[11px] font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary transition-colors text-center"
-            >
-              🛡️ Admin
-            </button>
-          </div>
-        </div>
       </form>
 
-      {/* 7. Minimal Footer & Security Notice */}
+      {/* Minimal Footer & Security Notice */}
       <div className="pt-2 text-center space-y-1.5">
         <p className="text-[10px] text-slate-400 leading-tight max-w-sm mx-auto">
           Hệ thống Mạng lưới Cựu sinh viên Đại học FPT (F-Alumni Connect).

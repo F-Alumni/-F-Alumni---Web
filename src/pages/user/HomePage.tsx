@@ -1,7 +1,14 @@
 import { useState, useEffect, type FC } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MessageSquare, Calendar } from 'lucide-react'
-import { PostComposer, PostFeedFilters, PostFeed, type PostCategoryFilter } from '@/features/posts'
+import {
+  PostComposer,
+  PostFeedFilters,
+  PostFeed,
+  type PostCategoryFilter,
+  type PostSortOption,
+  type QuestionStatusFilter,
+} from '@/features/posts'
 import { EventsSection } from '@/features/events'
 
 export type HomeTab = 'FEED' | 'EVENTS'
@@ -15,9 +22,18 @@ export const HomePage: FC = () => {
   const [activeTab, setActiveTab] = useState<HomeTab>('FEED')
   const [activeCategory, setActiveCategory] = useState<PostCategoryFilter>('ALL')
   const [selectedCommunity, setSelectedCommunity] = useState<string>('Tất cả cộng đồng')
+  const [selectedCampus, setSelectedCampus] = useState<string>('ALL')
+  const [searchKeyword, setSearchKeyword] = useState<string>(searchParams.get('q') || '')
+  const [sortBy, setSortBy] = useState<PostSortOption>('latest')
+  const [questionStatus, setQuestionStatus] = useState<QuestionStatusFilter>('ALL')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
+    const qParam = searchParams.get('q')
+    if (qParam !== null) {
+      setSearchKeyword(qParam)
+      setActiveTab('FEED')
+    }
     if (searchParams.get('compose') === 'true') {
       setActiveTab('FEED')
       setTimeout(() => {
@@ -71,18 +87,30 @@ export const HomePage: FC = () => {
           {/* 2. "What's on your mind?" Post Composer */}
           <PostComposer onPostCreated={handlePostCreated} />
 
-          {/* 3. Category & Community Filter Bar */}
+          {/* 3. Category, Community, Campus, Search, Sort & Question Status Filter Bar */}
           <PostFeedFilters
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
             selectedCommunity={selectedCommunity}
             onCommunityChange={setSelectedCommunity}
+            selectedCampus={selectedCampus}
+            onCampusChange={setSelectedCampus}
+            searchKeyword={searchKeyword}
+            onSearchChange={setSearchKeyword}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            questionStatus={questionStatus}
+            onQuestionStatusChange={setQuestionStatus}
           />
 
           {/* 4. Community Feed Stream */}
           <PostFeed
             category={activeCategory}
             community={selectedCommunity}
+            campus={selectedCampus}
+            searchKeyword={searchKeyword}
+            sortBy={sortBy}
+            questionStatus={questionStatus}
             refreshTrigger={refreshTrigger}
           />
         </>

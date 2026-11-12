@@ -84,47 +84,16 @@ export const postsService = {
    * POST /api/v1/posts
    */
   async createPost(payload: CreatePostPayload): Promise<ForumPostItem> {
-    try {
-      const res = await forumApiClient.post<ForumPostItem>('/posts', {
-        title: payload.title.trim(),
-        content: payload.content.trim(),
-        postType: payload.postType || 'Sharing',
-        major: payload.major || 'All',
-        campus: payload.campus || 'All',
-        imageUrls: payload.imageUrls || [],
-        tags: payload.tags || [],
-      })
-      return res.data
-    } catch (err: unknown) {
-      const token = localStorage.getItem('access_token') || ''
-      if (token.startsWith('fpt-session-')) {
-        // Optimistic fallback for demo mode sessions
-        const mockPost: ForumPostItem = {
-          id: `demo-${Date.now()}`,
-          authorId: 'demo-user',
-          authorName: 'Thành viên FPT Connect',
-          authorAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
-          title: payload.title.trim(),
-          content: payload.content.trim(),
-          postType: payload.postType || 'Sharing',
-          major: payload.major || 'All',
-          campus: payload.campus || 'All',
-          isAnswered: false,
-          viewCount: 1,
-          likeCount: 0,
-          commentCount: 0,
-          isPinned: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: null,
-          images: payload.imageUrls || [],
-          tags: payload.tags || [],
-          hasLiked: false,
-          isBookmarked: false,
-        }
-        return mockPost
-      }
-      throw err
-    }
+    const res = await forumApiClient.post<ForumPostItem>('/posts', {
+      title: payload.title.trim(),
+      content: payload.content.trim(),
+      postType: payload.postType || 'Sharing',
+      major: payload.major || 'All',
+      campus: payload.campus || 'All',
+      imageUrls: payload.imageUrls || [],
+      tags: payload.tags || [],
+    })
+    return res.data
   },
 
   /**
@@ -173,11 +142,40 @@ export const postsService = {
   },
 
   /**
-   * FO-11: Report violating post.
-   * POST /api/v1/posts/{postId}/report
+   * FO-04: Update an existing post (Post Author or Admin).
+   * PUT /api/v1/posts/{id}
    */
-  async reportPost(postId: string, payload: { reason: string; details?: string }): Promise<void> {
-    await forumApiClient.post(`/posts/${postId}/report`, payload)
+  async updatePost(
+    id: string,
+    payload: CreatePostPayload & { isAnswered?: boolean }
+  ): Promise<ForumPostItem> {
+    const res = await forumApiClient.put<ForumPostItem>(`/posts/${id}`, {
+      title: payload.title.trim(),
+      content: payload.content.trim(),
+      postType: payload.postType || 'Sharing',
+      major: payload.major || 'All',
+      campus: payload.campus || 'All',
+      isAnswered: payload.isAnswered ?? false,
+      imageUrls: payload.imageUrls || [],
+      tags: payload.tags || [],
+    })
+    return res.data
+  },
+
+  /**
+   * FO-11: Report violating post or comment.
+   * POST /api/v1/reports
+   */
+  async reportPost(
+    targetId: string,
+    payload: { reason: string; details?: string; targetType?: 'Post' | 'Comment' }
+  ): Promise<void> {
+    await forumApiClient.post('/reports', {
+      targetType: payload.targetType || 'Post',
+      targetId,
+      reason: payload.details ? `${payload.reason}: ${payload.details}` : payload.reason,
+      details: payload.details,
+    })
   },
 
   /**

@@ -8,6 +8,7 @@ import type {
   GoogleLoginPayload,
   AuthResponse,
 } from '@/types/auth.types'
+import { signOutFirebase } from './firebase'
 
 /**
  * Maps BE user entity / DTO to the Frontend UserSummary domain structure.
@@ -25,6 +26,7 @@ export function mapBackendUserToUserSummary(beUser: {
   campus?: string | null
   major?: string | null
   batch?: string | null
+  graduationYear?: number | string | null
   studentCode?: string | null
   isEmailVerified?: boolean
   emailVerified?: boolean
@@ -53,14 +55,14 @@ export function mapBackendUserToUserSummary(beUser: {
 
   return {
     id: beUser.userId || beUser.id || '',
-    name: beUser.fullName || beUser.email || 'Administrator',
+    name: beUser.fullName || beUser.email || 'FPT Member',
     email: beUser.email || '',
     avatarUrl: beUser.avatarUrl || undefined,
     role,
     userType,
-    campus: beUser.campus || 'HOA_LAC',
+    campus: beUser.campus || 'HCM',
     department: beUser.major || undefined,
-    cohort: beUser.batch || undefined,
+    cohort: beUser.batch || (beUser.graduationYear ? String(beUser.graduationYear) : undefined),
     studentId: beUser.studentCode || undefined,
     isVerified: beUser.emailVerified ?? beUser.isEmailVerified ?? false,
   }
@@ -69,12 +71,17 @@ export function mapBackendUserToUserSummary(beUser: {
 /**
  * Maps FE userType/role to the exact backend role string.
  */
-export function mapFrontendRoleToBackend(role?: Role | string, userType?: UserType | string): string {
+export function mapFrontendRoleToBackend(
+  role?: Role | string,
+  userType?: UserType | string
+): string {
   if (role === ROLES.ADMIN || role === 'ADMIN' || role === 'Admin') return 'ADMIN'
   if (role === ROLES.MODERATOR || role === 'MODERATOR' || role === 'Moderator') return 'MODERATOR'
-  if (userType === USER_TYPES.FACULTY || userType === 'FACULTY' || userType === 'Faculty') return 'Faculty'
-  if (userType === USER_TYPES.ALUMNI || userType === 'ALUMNI' || userType === 'Alumni') return 'Alumni'
-  return 'Student'
+  if (userType === USER_TYPES.FACULTY || userType === 'FACULTY' || userType === 'Faculty')
+    return 'Faculty'
+  if (userType === USER_TYPES.ALUMNI || userType === 'ALUMNI' || userType === 'Alumni')
+    return 'ALUMNI'
+  return 'STUDENT'
 }
 
 /**
@@ -82,7 +89,7 @@ export function mapFrontendRoleToBackend(role?: Role | string, userType?: UserTy
  */
 export const authService = {
   /**
-   * Log in user with email & password.
+   * US-01: Log in user with email & password.
    * Matches BE contract: POST /api/v1/auth/login -> { accessToken, refreshToken, expiresIn, user }
    */
   async login(payload: LoginPayload): Promise<AuthResponse> {
@@ -131,16 +138,20 @@ export const authService = {
    */
   async register(payload: RegisterPayload): Promise<AuthResponse> {
     const beRole = payload.role || mapFrontendRoleToBackend(undefined, payload.userType)
+    const isStudent =
+      beRole.toUpperCase() === 'STUDENT' || payload.userType === USER_TYPES.STUDENT
+    const parsedYear = payload.cohort ? parseInt(String(payload.cohort).slice(0, 4), 10) : undefined
 
     const postBody = {
       email: payload.email.trim().toLowerCase(),
       password: payload.password,
       fullName: payload.name.trim(),
-      role: beRole,
+      role: isStudent ? 'STUDENT' : 'ALUMNI',
       campus: payload.campus || 'HCM',
       major: payload.department || '',
       studentCode: payload.studentId || '',
-      accountType: beRole === 'ADMIN' ? 'Admin' : (payload.userType === USER_TYPES.STUDENT ? 'Student' : 'Alumni'),
+      graduationYear: parsedYear && !isNaN(parsedYear) ? parsedYear : 2025,
+      accountType: isStudent ? 'Student' : 'Alumni',
     }
 
     let res
@@ -157,25 +168,33 @@ export const authService = {
     const beData = res.data?.data || res.data
     const token = beData.accessToken || beData.token || ''
     const rawUser = beData.user || beData
-    const user = mapBackendUserToUserSummary(rawUser)
+    const user = mapBackendUserToUserSummary({
+      ...rawUser,
+      role: postBody.role,
+      accountType: postBody.accountType,
+      campus: postBody.campus,
+      major: postBody.major,
+    })
 
     return {
       token,
       user,
       expiresAt: beData.expiresAt,
-      isEmailVerified: rawUser.emailVerified ?? rawUser.isEmailVerified,
+      isEmailVerified: rawUser.emailVerified ?? rawUser.isEmailVerified ?? false,
+      verificationOtpPreview: beData.verificationOtpPreview,
+      message: beData.message,
     }
   },
 
   /**
-   * Google Workspace authentication.
+   * US-02: Google Workspace / Firebase authentication.
    * Matches BE contract: POST /api/v1/auth/google
    */
   async googleLogin(payload: GoogleLoginPayload): Promise<AuthResponse> {
     const postBody = {
       idToken: payload.idToken,
-      email: payload.email?.trim().toLowerCase() || 'admin@fpt.edu.vn',
-      fullName: payload.fullName?.trim() || 'FPT Administrator',
+      email: payload.email?.trim().toLowerCase() || 'alumni.google@fpt.edu.vn',
+      fullName: payload.fullName?.trim() || 'FPT Alumni (Google)',
       avatarUrl: payload.avatarUrl || '',
       campus: 'HCM',
     }
@@ -210,18 +229,19 @@ export const authService = {
       token,
       user,
       expiresAt: beData.expiresAt,
-      isEmailVerified: rawUser.emailVerified ?? rawUser.isEmailVerified,
+      isEmailVerified: rawUser.emailVerified ?? rawUser.isEmailVerified ?? true,
     }
   },
 
   /**
-   * Invalidate current token session.
+   * US-08: Invalidate current token session.
    * Matches BE contract: POST /api/v1/auth/logout
    */
   async logout(): Promise<{ message: string }> {
     const refreshToken =
       localStorage.getItem('refresh_token') || localStorage.getItem('refreshToken')
     try {
+      await signOutFirebase()
       const res = await userApiClient.post<{ message: string }>('/auth/logout', {
         refreshToken,
       })
@@ -237,10 +257,13 @@ export const authService = {
   },
 
   /**
-   * Change user password.
+   * US-07: Change user password while authenticated.
    * Matches BE contract: POST /api/v1/auth/change-password
    */
-  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+  async changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
     const res = await userApiClient.post<{ message: string }>('/auth/change-password', {
       currentPassword,
       newPassword,
@@ -249,7 +272,7 @@ export const authService = {
   },
 
   /**
-   * Request password reset token / OTP.
+   * US-07: Request password reset token / OTP.
    * Matches BE contract: POST /api/v1/auth/forgot-password
    */
   async forgotPassword(
@@ -264,10 +287,14 @@ export const authService = {
   },
 
   /**
-   * Reset password with OTP code.
+   * US-07: Reset password with OTP code.
    * Matches BE contract: POST /api/v1/auth/reset-password
    */
-  async resetPassword(email: string, otpCode: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(
+    email: string,
+    otpCode: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
     const res = await userApiClient.post<{ message: string }>('/auth/reset-password', {
       email: email.trim().toLowerCase(),
       otpCode: otpCode.trim(),
@@ -277,14 +304,35 @@ export const authService = {
   },
 
   /**
-   * Verify email address with 6-digit OTP code.
-   * Matches BE contract: POST /api/v1/auth/verify-email
+   * US-03: Verify email address with 6-digit OTP code and receive session JWT token.
+   * Matches BE contract: POST /api/v1/auth/verify-email -> AuthTokenResponse
    */
-  async verifyEmail(email: string, otpCode: string): Promise<{ message: string }> {
-    const res = await userApiClient.post<{ message: string }>('/auth/verify-email', {
+  async verifyEmail(email: string, otpCode: string): Promise<AuthResponse> {
+    const res = await userApiClient.post('/auth/verify-email', {
       email: email.trim().toLowerCase(),
       otpCode: otpCode.trim(),
     })
-    return res.data
+
+    const beData = res.data?.data || res.data
+    const token = beData.accessToken || beData.token || ''
+    const refreshToken = beData.refreshToken
+    const rawUser = beData.user || beData
+    const user = mapBackendUserToUserSummary(rawUser)
+
+    if (token) {
+      localStorage.setItem('access_token', token)
+      localStorage.setItem('accessToken', token)
+    }
+    if (refreshToken) {
+      localStorage.setItem('refresh_token', refreshToken)
+      localStorage.setItem('refreshToken', refreshToken)
+    }
+
+    return {
+      token,
+      user: { ...user, isVerified: true },
+      expiresAt: beData.expiresAt,
+      isEmailVerified: true,
+    }
   },
 }

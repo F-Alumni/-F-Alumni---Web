@@ -122,30 +122,24 @@ export const UsersManagementPage: FC = () => {
     const isBanned = (localStatusOverrides[user.id] || user.status) === 'banned'
     const newStatus: UserDirectoryRecord['status'] = isBanned ? 'active' : 'banned'
 
-    // Optimistic UI update
-    setLocalStatusOverrides((prev) => ({ ...prev, [user.id]: newStatus }))
-
     try {
       if (isBanned) {
         await unsuspendMutation.mutateAsync({
           id: user.id,
           payload: { reason: 'Admin restored account access.' },
         })
+        setLocalStatusOverrides((prev) => ({ ...prev, [user.id]: newStatus }))
         setToastMessage(`Tài khoản "${user.name}" đã được kích hoạt lại.`)
       } else {
         await suspendMutation.mutateAsync({
           id: user.id,
           payload: { reason: 'Admin suspended account access due to violation.' },
         })
+        setLocalStatusOverrides((prev) => ({ ...prev, [user.id]: newStatus }))
         setToastMessage(`Tài khoản "${user.name}" đã bị tạm khóa truy cập.`)
       }
     } catch {
-      // Keep optimistic feedback or inform user
-      setToastMessage(
-        isBanned
-          ? `Tài khoản "${user.name}" đã được mở khóa (cập nhật cục bộ).`
-          : `Tài khoản "${user.name}" đã bị tạm khóa (cập nhật cục bộ).`
-      )
+      setToastMessage(`Lỗi khi cập nhật trạng thái tài khoản "${user.name}" trên máy chủ.`)
     }
     setTimeout(() => setToastMessage(null), 3500)
   }

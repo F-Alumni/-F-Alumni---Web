@@ -1,4 +1,5 @@
 import { userApiClient } from '@/services/api/apiClient'
+import { env } from '@/app/config/env'
 import { normalizeError } from '@/lib/errorHandler'
 
 /**
@@ -139,9 +140,20 @@ export function isTrustedImageUrl(url: string | null | undefined): boolean {
     lower.startsWith('javascript:') ||
     lower.startsWith('vbscript:') ||
     lower.startsWith('data:text/') ||
-    lower.startsWith('data:application/')
+    lower.startsWith('data:application/') ||
+    lower.startsWith('data:image/svg')
   ) {
     return false
+  }
+
+  // Allow safe raster image data URLs (jpeg, png, webp)
+  if (
+    lower.startsWith('data:image/jpeg;base64,') ||
+    lower.startsWith('data:image/jpg;base64,') ||
+    lower.startsWith('data:image/png;base64,') ||
+    lower.startsWith('data:image/webp;base64,')
+  ) {
+    return true
   }
 
   // Safe local previews
@@ -155,7 +167,10 @@ export function isTrustedImageUrl(url: string | null | undefined): boolean {
     const parsed = new URL(trimmed)
     // Enforce HTTPS in production; allow localhost HTTP in development
     if (parsed.protocol === 'https:') return true
-    if (parsed.protocol === 'http:' && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1')) {
+    if (
+      parsed.protocol === 'http:' &&
+      (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1')
+    ) {
       return true
     }
     return false
@@ -181,30 +196,73 @@ export function revokeSafePreviewUrl(previewUrl: string): void {
 }
 
 /**
- * Secure Backend-Mediated Upload:
- * Frontend -> Backend Upload API (multipart/form-data + JWT) -> Cloudinary (Server-side Secret) -> Frontend.
- *
- * Frontend NEVER holds or transmits the Cloudinary API Secret.
+ * Computes SHA-1 signature for Cloudinary signed upload using Web Crypto API.
+ */
+async function computeSha1Hex(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message)
+  const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/**
+ * Direct signed Cloudinary upload using configured Cloudinary credentials.
+ */
+export async function uploadDirectlyToCloudinary(
+  file: File,
+  folder = 'falumni/uploads'
+): Promise<UploadMediaResult> {
+  const { cloudName, apiKey, apiSecret } = env.cloudinary
+  const timestamp = Math.floor(Date.now() / 1000).toString()
+  const strToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`
+  const signature = await computeSha1Hex(strToSign)
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('api_key', apiKey)
+  formData.append('timestamp', timestamp)
+  formData.append('signature', signature)
+  formData.append('folder', folder)
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!res.ok) {
+    throw new Error(`Cloudinary upload failed with status ${res.status}`)
+  }
+
+  const data = await res.json()
+  return {
+    secureUrl: data.secure_url,
+    publicId: data.public_id,
+    format: data.format,
+    bytes: data.bytes || file.size,
+  }
+}
+
+/**
+ * Secure Image Upload via Backend (`/users/media/upload`) or Signed Cloudinary API (`fxco0zeu`).
  */
 export async function uploadImageViaBackend(
   file: File,
   endpoint: string = '/users/media/upload'
 ): Promise<UploadMediaResult> {
-  // 1. Prevent duplicate simultaneous submissions
   if (isUploadInProgress) {
     throw new Error('Đang có một tệp khác được xử lý tải lên. Vui lòng chờ trong giây lát.')
   }
 
-  // 2. Client-side static validation
   const validation = validateImageFile(file)
   if (!validation.isValid) {
     throw new Error(validation.error || 'Tệp tin không hợp lệ.')
   }
 
-  // 3. Magic bytes signature inspection
   const hasValidMagicBytes = await verifyImageMagicBytes(file)
   if (!hasValidMagicBytes) {
-    throw new Error('Chữ ký tệp (File signature) không khớp với ảnh hợp lệ. Tệp có thể đã bị đổi đuôi hoặc hỏng.')
+    throw new Error(
+      'Chữ ký tệp (File signature) không khớp với ảnh hợp lệ. Tệp có thể đã bị đổi đuôi hoặc hỏng.'
+    )
   }
 
   isUploadInProgress = true
@@ -213,7 +271,6 @@ export async function uploadImageViaBackend(
     const formData = new FormData()
     formData.append('file', file)
 
-    // Send through authenticated userApiClient (JWT Bearer attached automatically)
     const response = await userApiClient.post<any>(endpoint, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -223,9 +280,8 @@ export async function uploadImageViaBackend(
     const payload = response.data?.data || response.data
     const secureUrl = payload.secureUrl || payload.avatarUrl || payload.url
 
-    // 4. Validate returned URL from backend
     if (!isTrustedImageUrl(secureUrl)) {
-      throw new Error('Đường dẫn ảnh trả về từ máy chủ không đáp ứng tiêu chuẩn an toàn HTTPS.')
+      throw new Error('URL hình ảnh trả về từ máy chủ không hợp lệ.')
     }
 
     return {
@@ -235,20 +291,6 @@ export async function uploadImageViaBackend(
       bytes: payload.bytes || file.size,
     }
   } catch (err: any) {
-    // Standardized sanitized error reporting according to HTTP status code
-    const status = err.response?.status
-    if (status === 400) {
-      throw new Error('Yêu cầu không hợp lệ. Vui lòng kiểm tra lại định dạng tệp ảnh.')
-    } else if (status === 401) {
-      throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.')
-    } else if (status === 403) {
-      throw new Error('Bạn không có quyền thực hiện tải lên tệp tin.')
-    } else if (status === 413) {
-      throw new Error('Dung lượng tệp vượt quá giới hạn 5 MB của hệ thống.')
-    } else if (status >= 500) {
-      throw new Error('Hệ thống máy chủ lưu trữ đang bận hoặc gián đoạn. Vui lòng thử lại sau.')
-    }
-
     const normalized = normalizeError(err)
     throw new Error(normalized.message || 'Không thể tải lên hình ảnh.')
   } finally {
@@ -257,10 +299,9 @@ export async function uploadImageViaBackend(
 }
 
 /**
- * Backward compatibility alias: uploadToCloudinary now delegates directly
- * to the secure backend-mediated upload mechanism.
+ * Upload directly to Cloudinary using the configured Cloudinary credentials.
  */
 export async function uploadToCloudinary(file: File): Promise<string> {
-  const result = await uploadImageViaBackend(file)
+  const result = await uploadDirectlyToCloudinary(file)
   return result.secureUrl
 }

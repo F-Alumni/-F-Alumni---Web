@@ -75,11 +75,16 @@ export const usersService = {
    * Matches BE contract: PUT /api/v1/users/me
    */
   async updateMe(payload: UpdateProfilePayload): Promise<BackendMyProfileResponse> {
+    const parsedYear = payload.batch
+      ? parseInt(String(payload.batch).replace(/\D/g, ''), 10)
+      : undefined
     const res = await userApiClient.put<any>('/users/me', {
       fullName: payload.fullName,
       avatarUrl: payload.avatarUrl || '',
       campus: payload.campus || 'HCM',
       major: payload.major || '',
+      graduationYear: parsedYear && !isNaN(parsedYear) && parsedYear > 1990 ? parsedYear : undefined,
+      studentCode: payload.batch || '',
       bio: payload.bio || '',
       googleCalendarUrl: payload.googleCalendarUrl || '',
     })
@@ -191,6 +196,9 @@ export const usersService = {
       major: u.major || null,
       batch: u.graduationYear ? String(u.graduationYear) : (u.studentCode || u.batch || null),
       role: u.role || 'USER',
+      bio: u.bio || null,
+      googleCalendarUrl: u.googleCalendarUrl || null,
+      email: u.showEmailPublicly ? u.email : null,
     }))
 
     return {

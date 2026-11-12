@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   DollarSign,
   Users,
+  Loader2,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import {
   opportunitiesService,
   type CommunityEventItem,
 } from '@/services/opportunities'
+import { postsService, type ForumPostItem } from '@/services/posts'
 import { useAuthStore } from '@/stores/authStore'
 
 export type OpportunityTab = 'all' | 'jobs' | 'internships' | 'scholarships' | 'events'
@@ -42,80 +44,35 @@ interface OpportunityItem {
   }
 }
 
-const SAMPLE_OPPORTUNITIES: OpportunityItem[] = [
-  {
-    id: 'opp-1',
-    title: 'Junior Backend Engineer (.NET 10 & Microservices)',
-    company: 'FPT Software Global',
-    companyLogo: 'https://images.unsplash.com/photo-1549923746-c502d488b3ea?auto=format&fit=crop&q=80&w=128',
-    type: 'job',
-    campus: 'Hoa Lac',
-    location: 'F-Town 3, Khu Công Nghệ Cao Q9 / F-Ville 2 Hòa Lạc',
-    stipendOrSalary: '15.000.000 - 25.000.000 VND',
-    tags: ['C#', '.NET', 'Microservices', 'Kafka', 'SQL Server'],
-    description: 'Tham gia dự án chuyển đổi số ngân hàng quốc tế. Yêu cầu nắm vững OOP, Clean Architecture, REST API & gRPC. Ưu tiên cựu sinh viên FPT K15-K17.',
-    deadline: '30/11/2026',
+function mapRecruitmentPostToOpportunity(post: ForumPostItem): OpportunityItem {
+  const lowerTitle = (post.title || '').toLowerCase()
+  const lowerContent = (post.content || '').toLowerCase()
+  let type: 'job' | 'internship' | 'scholarship' = 'job'
+  if (lowerTitle.includes('intern') || lowerTitle.includes('ojt') || lowerTitle.includes('thực tập')) {
+    type = 'internship'
+  } else if (lowerTitle.includes('học bổng') || lowerTitle.includes('scholarship') || lowerContent.includes('học bổng')) {
+    type = 'scholarship'
+  }
+
+  return {
+    id: post.id,
+    title: post.title,
+    company: post.major ? `Khoa ${post.major} • FPT Alumni Partner` : 'FPT Alumni Network',
+    companyLogo: post.authorAvatarUrl,
+    type,
+    campus: post.campus || 'All',
+    location: post.campus || 'FPT University',
+    stipendOrSalary: 'Thỏa thuận theo năng lực',
+    tags: post.tags && post.tags.length > 0 ? post.tags : [post.major || 'FPT', post.postType || 'Recruitment'],
+    description: post.content,
+    deadline: new Date(post.createdAt).toLocaleDateString('vi-VN'),
     alumniContact: {
-      name: 'Nguyễn Tuấn Anh',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=128',
-      title: 'Engineering Lead K13',
+      name: post.authorName || 'FPT Alumni',
+      avatar: post.authorAvatarUrl || '',
+      title: `Alumni • ${post.major || 'FPTU'}`,
     },
-  },
-  {
-    id: 'opp-2',
-    title: 'Thực tập sinh OJT AI & LLM Engineering (Full-time / Part-time)',
-    company: 'FPT Smart Cloud & AI Center',
-    companyLogo: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=128',
-    type: 'internship',
-    campus: 'HCM',
-    location: 'FPT Complex & Remote Hybrid',
-    stipendOrSalary: '6.000.000 - 9.000.000 VND / tháng + Trợ cấp',
-    tags: ['Python', 'PyTorch', 'RAG', 'LangChain', 'FastAPI'],
-    description: 'Dành riêng cho sinh viên FPT kỳ 5-7 chuẩn bị đi OJT. Huấn luyện 1-1 với AI Scientist cựu sinh viên FPT. Cơ hội lên nhân viên chính thức sau 3 tháng.',
-    deadline: '15/12/2026',
-    alumniContact: {
-      name: 'Trần Hoài Nam',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=128',
-      title: 'Senior AI Specialist K14',
-    },
-  },
-  {
-    id: 'opp-3',
-    title: 'Học bổng Cựu sinh viên FPT - Ươm mầm Khởi nghiệp & Thạc sĩ Tech 2026',
-    company: 'FPT Alumni Angel Fund & ĐH FPT',
-    companyLogo: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=128',
-    type: 'scholarship',
-    campus: 'Toàn quốc',
-    location: 'Online Mentor & Campus Pitching',
-    stipendOrSalary: '50.000.000 VND / suất (Tài trợ 100%)',
-    tags: ['Scholarship', 'Startup', 'Research', 'Capstone Funding'],
-    description: 'Quỹ Cựu sinh viên FPT tài trợ chi phí nghiên cứu và làm đồ án Capstone xuất sắc cho các nhóm sinh viên có đề tài ứng dụng thực tế hoặc khởi nghiệp.',
-    deadline: '20/12/2026',
-    alumniContact: {
-      name: 'Lê Minh Quân',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=128',
-      title: 'Founder & Alumni K11',
-    },
-  },
-  {
-    id: 'opp-4',
-    title: 'Frontend React / Next.js Developer (OJT Intern to Fresher)',
-    company: 'Base.vn (FPT Ecosystem)',
-    companyLogo: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=128',
-    type: 'internship',
-    campus: 'Hoa Lac',
-    location: 'Tòa nhà FPT Cầu Giấy, Hà Nội',
-    stipendOrSalary: '7.000.000 - 10.000.000 VND / tháng',
-    tags: ['React', 'TypeScript', 'TailwindCSS', 'Zustand'],
-    description: 'Phát triển các module SaaS quản trị doanh nghiệp. Môi trường agile năng động, hỗ trợ dấu mộc thực tập OJT và báo cáo thực tập tại trường.',
-    deadline: '05/12/2026',
-    alumniContact: {
-      name: 'Võ Quốc Huy',
-      avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=128',
-      title: 'Frontend Team Lead K15',
-    },
-  },
-]
+  }
+}
 
 interface OpportunitiesPageProps {
   defaultTab?: OpportunityTab
@@ -127,6 +84,8 @@ export const OpportunitiesPage: FC<OpportunitiesPageProps> = ({ defaultTab = 'al
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCampus, setSelectedCampus] = useState('All')
   const [appliedIds, setAppliedIds] = useState<string[]>([])
+  const [opportunities, setOpportunities] = useState<OpportunityItem[]>([])
+  const [isLoadingOpportunities, setIsLoadingOpportunities] = useState(true)
   const [events, setEvents] = useState<CommunityEventItem[]>([])
   const [rsvpStatusMap, setRsvpStatusMap] = useState<Record<string, string>>({})
   const [selectedApplyOpp, setSelectedApplyOpp] = useState<OpportunityItem | null>(null)
@@ -136,63 +95,40 @@ export const OpportunitiesPage: FC<OpportunitiesPageProps> = ({ defaultTab = 'al
     setActiveTab(defaultTab)
   }, [defaultTab])
 
-  // Fetch Community Events
+  // Fetch Real Recruitment Posts & Community Events from ForumService
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchAllData = async () => {
+      setIsLoadingOpportunities(true)
       try {
-        const res = await opportunitiesService.getEvents({ upcomingOnly: true, pageSize: 6 })
-        const eventList = res.items || []
+        const [postsRes, eventsRes] = await Promise.all([
+          postsService.getPosts({ postType: 'Recruitment', pageSize: 30 }),
+          opportunitiesService.getEvents({ upcomingOnly: true, pageSize: 10 }),
+        ])
+        const oppList = (postsRes.items || []).map(mapRecruitmentPostToOpportunity)
+        setOpportunities(oppList)
+
+        const eventList = eventsRes.items || []
         setEvents(eventList)
         const statusObj: Record<string, string> = {}
         eventList.forEach((e) => {
           if (e.myStatus) statusObj[e.id] = e.myStatus
         })
         setRsvpStatusMap(statusObj)
-      } catch {
-        // Fallback demo events
-        setEvents([
-          {
-            id: 'ev-demo-1',
-            creatorId: 'c1',
-            creatorName: 'Alumni Tech Club',
-            creatorAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=128',
-            title: 'FPT AI & Cloud Career Day 2026',
-            description: 'Ngày hội kết nối tuyển dụng trực tiếp giữa 30 doanh nghiệp công nghệ và 500 sinh viên, cựu sinh viên FPT.',
-            location: 'Hội trường Trống Đồng - FPT University Hòa Lạc',
-            campus: 'Hoa Lac',
-            startTime: '2026-11-20T09:00:00Z',
-            endTime: '2026-11-20T17:00:00Z',
-            goingCount: 142,
-            interestedCount: 89,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 'ev-demo-2',
-            creatorId: 'c2',
-            creatorName: 'FPT Startup Incubator',
-            creatorAvatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=128',
-            title: 'Workshop: Từ Đồ án Tốt nghiệp (Capstone) Đến Gọi vốn Vòng Seed',
-            description: 'Chia sẻ kinh nghiệm thực chiến từ 4 Founder cựu sinh viên FPT đã gọi vốn thành công từ 100k - 1M USD.',
-            location: 'Online qua Zoom & FPT HCM Hall B',
-            campus: 'HCM',
-            startTime: '2026-11-25T19:30:00Z',
-            endTime: '2026-11-25T21:30:00Z',
-            goingCount: 96,
-            interestedCount: 65,
-            createdAt: new Date().toISOString(),
-          },
-        ])
+      } catch (err) {
+        console.error('Failed to load opportunities & events:', err)
+      } finally {
+        setIsLoadingOpportunities(false)
       }
     }
-    fetchEvents()
+    void fetchAllData()
   }, [])
 
   const handleRsvp = async (eventId: string, status: 'Going' | 'Interested') => {
     try {
       await opportunitiesService.rsvpEvent(eventId, status)
       setRsvpStatusMap((prev) => ({ ...prev, [eventId]: status }))
-    } catch {
-      setRsvpStatusMap((prev) => ({ ...prev, [eventId]: status }))
+    } catch (err) {
+      console.error('Failed to RSVP event:', err)
     }
   }
 
@@ -209,7 +145,7 @@ export const OpportunitiesPage: FC<OpportunitiesPageProps> = ({ defaultTab = 'al
     }
   }
 
-  const filteredOpportunities = SAMPLE_OPPORTUNITIES.filter((opp) => {
+  const filteredOpportunities = opportunities.filter((opp) => {
     const matchesTab =
       activeTab === 'all' ||
       (activeTab === 'jobs' && opp.type === 'job') ||
@@ -223,7 +159,7 @@ export const OpportunitiesPage: FC<OpportunitiesPageProps> = ({ defaultTab = 'al
       opp.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const matchesCampus =
-      selectedCampus === 'All' || opp.campus === 'Toàn quốc' || opp.campus === selectedCampus
+      selectedCampus === 'All' || opp.campus === 'All' || opp.campus === 'Toàn quốc' || opp.campus === selectedCampus
 
     return matchesTab && matchesSearch && matchesCampus
   })
@@ -312,7 +248,12 @@ export const OpportunitiesPage: FC<OpportunitiesPageProps> = ({ defaultTab = 'al
       </div>
 
       {/* 3. Tab Content */}
-      {activeTab === 'events' ? (
+      {isLoadingOpportunities ? (
+        <Card className="p-12 text-center bg-white border-slate-200 flex items-center justify-center gap-2">
+          <Loader2 className="h-5 w-5 animate-spin text-brand-primary" />
+          <span className="text-xs font-medium text-slate-500">Đang tải cơ hội nghề nghiệp & sự kiện...</span>
+        </Card>
+      ) : activeTab === 'events' ? (
         /* Events & Workshops RSVP Section */
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">

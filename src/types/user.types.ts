@@ -36,6 +36,9 @@ export interface BackendUserSummary {
   major: string | null
   batch: string | null
   role: string
+  bio?: string | null
+  googleCalendarUrl?: string | null
+  email?: string | null
 }
 
 export interface BackendPrivacySetting {

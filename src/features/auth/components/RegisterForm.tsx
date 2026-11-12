@@ -37,6 +37,13 @@ export const RegisterForm: FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // US-03: Email OTP Verification state
+  const [otpCode, setOtpCode] = useState('')
+  const [otpPreview, setOtpPreview] = useState<string | null>(null)
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
+  const [isOtpVerified, setIsOtpVerified] = useState(false)
+  const [otpError, setOtpError] = useState<string | null>(null)
+
   // Form Fields
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -126,14 +133,42 @@ export const RegisterForm: FC = () => {
         campus,
         department: major,
         cohort: gradYear,
+        studentId: studentId.trim(),
       })
 
       setRegisteredAuth(res)
+      if (res.verificationOtpPreview) {
+        setOtpPreview(res.verificationOtpPreview)
+        setOtpCode(res.verificationOtpPreview)
+      }
+      setIsOtpVerified(Boolean(res.isEmailVerified && res.token))
       setStep(4)
     } catch (err: unknown) {
       setError(normalizeError(err).message)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // US-03: Verify email with 6-digit OTP code
+  const handleVerifyEmailOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!otpCode.trim() || otpCode.trim().length < 4) {
+      setOtpError('Vui lòng nhập mã xác thực OTP gồm 6 chữ số.')
+      return
+    }
+
+    setIsVerifyingOtp(true)
+    setOtpError(null)
+    try {
+      const verifiedRes = await authService.verifyEmail(email.trim().toLowerCase(), otpCode.trim())
+      setRegisteredAuth(verifiedRes)
+      setAuth({ token: verifiedRes.token, user: verifiedRes.user })
+      setIsOtpVerified(true)
+    } catch (err: unknown) {
+      setOtpError(normalizeError(err).message || 'Mã OTP không chính xác hoặc đã hết hạn.')
+    } finally {
+      setIsVerifyingOtp(false)
     }
   }
 
@@ -279,30 +314,76 @@ export const RegisterForm: FC = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="space-y-2 pt-1">
-          <Button
-            onClick={() => {
-              if (registeredAuth) {
-                setAuth({ token: registeredAuth.token, user: registeredAuth.user })
-              }
-              navigate(ROUTES.APP.HOME)
-            }}
-            className="w-full h-10.5 rounded-xl bg-gradient-to-r from-brand-primary via-[#e86317] to-brand-primary-hover hover:opacity-95 text-xs sm:text-sm font-bold text-white shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all"
+        {/* Action Buttons / US-03 Email OTP Verification */}
+        {!isOtpVerified ? (
+          <form
+            onSubmit={handleVerifyEmailOtp}
+            className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3.5 text-left space-y-2.5"
           >
-            <span>Enter Community Platform</span>
-            <ArrowRight size={16} stroke={2} />
-          </Button>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-900">
+                Xác minh địa chỉ Email (US-03)
+              </span>
+              {otpPreview && (
+                <button
+                  type="button"
+                  onClick={() => setOtpCode(otpPreview)}
+                  className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-[10px] font-bold text-amber-950 hover:bg-amber-300"
+                >
+                  Mã OTP Demo: {otpPreview}
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] text-amber-800 leading-snug">
+              Mã OTP 6 chữ số đã được gửi tới <strong>{email}</strong>. Vui lòng nhập mã để kích hoạt tài khoản.
+            </p>
+            {otpError && (
+              <p className="text-[11px] font-semibold text-rose-600">{otpError}</p>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                placeholder="Nhập mã OTP 6 số..."
+                className="flex-1 rounded-xl border border-amber-300 bg-white px-3 py-2 text-center font-mono text-sm font-bold tracking-widest text-slate-900 focus:border-brand-primary focus:outline-none"
+                required
+              />
+              <Button
+                type="submit"
+                disabled={isVerifyingOtp}
+                className="rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-xs font-bold text-white px-4 h-9.5"
+              >
+                {isVerifyingOtp ? 'Đang xác minh...' : 'Xác minh Email'}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-2 pt-1">
+            <Button
+              onClick={() => {
+                if (registeredAuth && registeredAuth.token) {
+                  setAuth({ token: registeredAuth.token, user: registeredAuth.user })
+                }
+                navigate(ROUTES.APP.HOME)
+              }}
+              className="w-full h-10.5 rounded-xl bg-gradient-to-r from-brand-primary via-[#e86317] to-brand-primary-hover hover:opacity-95 text-xs sm:text-sm font-bold text-white shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all"
+            >
+              <span>Vào trang chủ Cộng đồng FPT</span>
+              <ArrowRight size={16} stroke={2} />
+            </Button>
 
-          <Button
-            variant="outline"
-            onClick={() => navigate(ROUTES.AUTH.LOGIN)}
-            className="w-full h-9.5 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2"
-          >
-            <IconLogin size={15} stroke={1.8} className="text-slate-500" />
-            <span>Sign in with credentials</span>
-          </Button>
-        </div>
+            <Button
+              variant="outline"
+              onClick={() => navigate(ROUTES.AUTH.LOGIN)}
+              className="w-full h-9.5 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2"
+            >
+              <IconLogin size={15} stroke={1.8} className="text-slate-500" />
+              <span>Quay lại trang Đăng nhập</span>
+            </Button>
+          </div>
+        )}
       </div>
     )
   }

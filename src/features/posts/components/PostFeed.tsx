@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback, type FC } from 'react'
 import { PostCard, type PostItem } from './PostCard'
-import type { PostCategoryFilter } from './PostFeedFilters'
+import type { PostCategoryFilter, PostSortOption, QuestionStatusFilter } from './PostFeedFilters'
 import { postsService, type ForumPostItem } from '@/services/posts'
 import { Loader2 } from 'lucide-react'
 
 interface PostFeedProps {
   category: PostCategoryFilter
   community: string
+  campus?: string
+  searchKeyword?: string
+  sortBy?: PostSortOption
+  questionStatus?: QuestionStatusFilter
   refreshTrigger?: number
 }
 
@@ -48,6 +52,10 @@ function mapBackendPostToPostItem(p: ForumPostItem): PostItem {
     },
     timestamp,
     community: p.major ? `#${p.major}` : '#General',
+    campus: p.campus,
+    isAnswered: Boolean(p.isAnswered),
+    hasLiked: Boolean(p.hasLiked),
+    isBookmarked: Boolean(p.isBookmarked),
     type,
     title: p.title,
     content: p.content,
@@ -57,7 +65,15 @@ function mapBackendPostToPostItem(p: ForumPostItem): PostItem {
   }
 }
 
-export const PostFeed: FC<PostFeedProps> = ({ category, community, refreshTrigger }) => {
+export const PostFeed: FC<PostFeedProps> = ({
+  category,
+  community,
+  campus = 'ALL',
+  searchKeyword = '',
+  sortBy = 'latest',
+  questionStatus = 'ALL',
+  refreshTrigger,
+}) => {
   const [posts, setPosts] = useState<PostItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -65,27 +81,67 @@ export const PostFeed: FC<PostFeedProps> = ({ category, community, refreshTrigge
     setIsLoading(true)
     try {
       let postType: string | undefined
-      if (category === 'QUESTIONS') postType = 'Question'
+      if (category === 'QUESTIONS' || questionStatus !== 'ALL') postType = 'Question'
       else if (category === 'JOBS' || category === 'INTERNSHIPS') postType = 'Recruitment'
       else if (category === 'EXPERIENCES') postType = 'Sharing'
 
       let major: string | undefined
       if (community && community !== 'All Communities' && community !== 'Tất cả cộng đồng') {
         const commLower = community.toLowerCase()
-        if (commLower.includes('software')) major = 'SE'
+        if (commLower.includes('software') || commLower.includes('(se)')) major = 'SE'
         else if (commLower.includes('ai') || commLower.includes('intelligence')) major = 'AI'
-        else if (commLower.includes('design')) major = 'GD'
-        else if (commLower.includes('business')) major = 'IB'
+        else if (commLower.includes('assurance') || commLower.includes('(ia)')) major = 'IA'
+        else if (commLower.includes('design') || commLower.includes('(gd)')) major = 'GD'
+        else if (commLower.includes('international') || commLower.includes('(ib)')) major = 'IB'
+        else if (commLower.includes('business') || commLower.includes('(ba)')) major = 'BA'
       }
+
+      const isAnsweredParam =
+        questionStatus === 'ANSWERED'
+          ? true
+          : questionStatus === 'UNANSWERED'
+          ? false
+          : undefined
 
       const res = await postsService.getPosts({
         postType,
         major,
+        campus: campus && campus !== 'ALL' ? campus : undefined,
+        search: searchKeyword.trim() || undefined,
+        isAnswered: isAnsweredParam,
+        sort: sortBy,
         page: 1,
         pageSize: 30,
       })
 
-      const rawItems = res?.items || []
+      let rawItems = res?.items || []
+
+      // Client-side filter/sort reinforcement so UI filters always respond accurately
+      if (campus && campus !== 'ALL') {
+        rawItems = rawItems.filter(
+          (item) => !item.campus || item.campus === 'All' || item.campus.toLowerCase().includes(campus.toLowerCase())
+        )
+      }
+      if (searchKeyword.trim()) {
+        const q = searchKeyword.trim().toLowerCase()
+        rawItems = rawItems.filter(
+          (item) =>
+            item.title.toLowerCase().includes(q) ||
+            item.content.toLowerCase().includes(q) ||
+            (item.authorName || '').toLowerCase().includes(q)
+        )
+      }
+      if (questionStatus === 'ANSWERED') {
+        rawItems = rawItems.filter((item) => Boolean(item.isAnswered))
+      } else if (questionStatus === 'UNANSWERED') {
+        rawItems = rawItems.filter((item) => !item.isAnswered)
+      }
+      if (sortBy === 'popular') {
+        rawItems = [...rawItems].sort(
+          (a, b) => (b.likeCount || 0) + (b.commentCount || 0) - ((a.likeCount || 0) + (a.commentCount || 0))
+        )
+      }
+
       setPosts(rawItems.map(mapBackendPostToPostItem))
     } catch (err) {
       console.warn('Could not load forum posts from backend:', err)
@@ -93,7 +149,7 @@ export const PostFeed: FC<PostFeedProps> = ({ category, community, refreshTrigge
     } finally {
       setIsLoading(false)
     }
-  }, [category, community])
+  }, [category, community, campus, searchKeyword, sortBy, questionStatus])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -114,12 +170,21 @@ export const PostFeed: FC<PostFeedProps> = ({ category, community, refreshTrigge
   return (
     <div className="space-y-4">
       {posts.length > 0 ? (
-        posts.map((post) => <PostCard key={post.id} post={post} />)
+        posts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            onPostDeleted={(deletedId) => setPosts((prev) => prev.filter((p) => p.id !== deletedId))}
+            onPostUpdated={(updatedPost) =>
+              setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)))
+            }
+          />
+        ))
       ) : (
         <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-12 text-center">
-          <p className="text-sm font-semibold text-slate-700">Chưa có bài viết nào trong danh mục này</p>
+          <p className="text-sm font-semibold text-slate-700">Chưa có bài viết nào khớp với bộ lọc hiện tại</p>
           <p className="mt-1 text-xs text-slate-400">
-            Hãy là người đầu tiên chia sẻ kinh nghiệm hoặc đặt câu hỏi cho cộng đồng!
+            Hãy thử thay đổi bộ lọc hoặc trở thành người đầu tiên đặt câu hỏi / chia sẻ kinh nghiệm!
           </p>
         </div>
       )}

@@ -162,20 +162,6 @@ export const ReportsManagementPage: FC = () => {
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16)
     const reportId = sanctioningReport.id
 
-    setLocalReportOverrides((prev) => ({
-      ...prev,
-      [reportId]: {
-        status: 'approved',
-        resolutionDetails: {
-          action: selectedPenalty,
-          policyReason: reasonLabels[selectedReason],
-          moderatorName: activeModName,
-          resolvedAt: nowStr,
-          notes: modNotes.trim() || `Sanction applied: ${penaltyLabels[selectedPenalty]}.`,
-        },
-      },
-    }))
-
     const actionTaken =
       selectedPenalty === 'HIDE_POST'
         ? 'ContentRemoved'
@@ -192,30 +178,31 @@ export const ReportsManagementPage: FC = () => {
           deleteTargetContent: selectedPenalty === 'HIDE_POST',
         },
       })
-    } catch {
-      // optimistic fallback
-    }
 
-    setToastMessage(`Sanction executed successfully on ${reportId} (${penaltyLabels[selectedPenalty]}).`)
+      setLocalReportOverrides((prev) => ({
+        ...prev,
+        [reportId]: {
+          status: 'approved',
+          resolutionDetails: {
+            action: selectedPenalty,
+            policyReason: reasonLabels[selectedReason],
+            moderatorName: activeModName,
+            resolvedAt: nowStr,
+            notes: modNotes.trim() || `Sanction applied: ${penaltyLabels[selectedPenalty]}.`,
+          },
+        },
+      }))
+
+      setToastMessage(`Sanction executed successfully on ${reportId} (${penaltyLabels[selectedPenalty]}).`)
+    } catch {
+      setToastMessage(`Lỗi khi xử lý báo cáo ${reportId} trên máy chủ.`)
+    }
     setTimeout(() => setToastMessage(null), 4000)
     setSanctioningReport(null)
   }
 
   const handleDismissReport = async (report: ReportRecord) => {
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16)
-    setLocalReportOverrides((prev) => ({
-      ...prev,
-      [report.id]: {
-        status: 'rejected',
-        resolutionDetails: {
-          action: 'DISMISSED',
-          policyReason: 'False Positive / No Violation Found',
-          moderatorName: activeModName,
-          resolvedAt: nowStr,
-          notes: 'Report dismissed following review. Content remains visible.',
-        },
-      },
-    }))
 
     try {
       await dismissMutation.mutateAsync({
@@ -224,12 +211,26 @@ export const ReportsManagementPage: FC = () => {
           dismissalReason: 'Report dismissed following review. Content remains visible.',
         },
       })
+
+      setLocalReportOverrides((prev) => ({
+        ...prev,
+        [report.id]: {
+          status: 'rejected',
+          resolutionDetails: {
+            action: 'DISMISSED',
+            policyReason: 'False Positive / No Violation Found',
+            moderatorName: activeModName,
+            resolvedAt: nowStr,
+            notes: 'Report dismissed following review. Content remains visible.',
+          },
+        },
+      }))
+      setToastMessage(`Report ${report.id} dismissed as false positive.`)
     } catch {
-      // optimistic fallback
+      setToastMessage(`Lỗi khi bác bỏ báo cáo ${report.id} trên máy chủ.`)
     }
 
     setInspectingReport(null)
-    setToastMessage(`Report ${report.id} dismissed as false positive.`)
     setTimeout(() => setToastMessage(null), 3500)
   }
 

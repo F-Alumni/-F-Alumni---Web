@@ -4,7 +4,6 @@ import {
   TrendingUp,
   Clock,
   Sparkles,
-  Award,
   CheckCircle2,
   ChevronRight,
   Loader2,
@@ -164,38 +163,24 @@ export const RightSidebar: FC = () => {
     }
   }
 
-  const upcomingDeadlines = [
-    {
-      id: '1',
-      title: 'Google Student Research Fellowship 2026',
-      organization: 'Google Research & FPT',
-      deadline: '3 days left',
-      tag: '100% Funded',
-      tagVariant: 'brand-primary' as const,
-    },
-    {
-      id: '2',
-      title: 'Alumni Endowment STEM Grant',
-      organization: 'Quỹ Cựu Sinh Viên FPT',
-      deadline: '5 days left',
-      tag: '$10,000 Grant',
-      tagVariant: 'brand-accent' as const,
-    },
-    {
-      id: '3',
-      title: 'Goldman Sachs Early Insight Series',
-      organization: 'Goldman Sachs Singapore',
-      deadline: 'Ends today',
-      tag: 'OJT / Fast-track',
-      tagVariant: 'destructive' as const,
-    },
-  ]
+  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([])
 
-  const trendingCommunities = [
-    { name: '#AI-Robotics-Hub', members: '1,840 members', growth: '+18% this week' },
-    { name: '#Consulting-Case-Prep', members: '920 members', growth: '+12% this week' },
-    { name: '#FinTech-Founders', members: '650 members', growth: '+24% this week' },
-  ]
+  useEffect(() => {
+    let isMounted = true
+    import('@/services/communities')
+      .then(({ communitiesService }) => communitiesService.getCategories())
+      .then((res) => {
+        if (isMounted && Array.isArray(res)) {
+          setCategories(res)
+        }
+      })
+      .catch(() => {
+        if (isMounted) setCategories([])
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   return (
     <aside className="w-full space-y-4">
@@ -219,6 +204,10 @@ export const RightSidebar: FC = () => {
               <Loader2 className="h-5 w-5 animate-spin text-brand-primary" />
               <span className="ml-2 text-xs text-slate-400">Đang gợi ý mentor...</span>
             </div>
+          ) : mentors.length === 0 ? (
+            <p className="py-3 text-center text-xs text-slate-400">
+              Chưa có dữ liệu gợi ý Mentor từ AI Service.
+            </p>
           ) : (
             mentors.map((alum) => (
               <div key={alum.id} className="flex items-start justify-between gap-2.5">
@@ -279,7 +268,7 @@ export const RightSidebar: FC = () => {
             to={ROUTES.APP.ALUMNI}
             className="flex items-center justify-center gap-1 pt-2 text-xs font-semibold text-brand-primary hover:text-brand-primary-hover hover:underline"
           >
-            <span>Khám phá 1,400+ cựu sinh viên FPT</span>
+            <span>Khám phá danh bạ cựu sinh viên FPT</span>
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </CardContent>
@@ -361,55 +350,36 @@ export const RightSidebar: FC = () => {
               )
             })
           ) : (
-            upcomingDeadlines.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 transition-colors hover:bg-slate-100/70"
-              >
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <Badge variant={item.tagVariant} className="px-1.5 py-0 text-[10px]">
-                    {item.tag}
-                  </Badge>
-                  <span className="flex items-center gap-1 text-[10px] font-bold text-red-600">
-                    <Clock className="h-2.5 w-2.5" />
-                    {item.deadline}
-                  </span>
-                </div>
-                <h4 className="line-clamp-2 text-xs font-semibold leading-snug text-slate-900">
-                  {item.title}
-                </h4>
-                <p className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
-                  <Award className="h-3 w-3 text-slate-400" />
-                  {item.organization}
-                </p>
-              </div>
-            ))
+            <p className="py-3 text-center text-xs text-slate-400">
+              Chưa có sự kiện nào sắp tới.
+            </p>
           )}
         </CardContent>
       </Card>
 
-      {/* 3. Trending Communities Widget */}
+      {/* 3. Forum Categories Widget */}
       <Card className="border-slate-200/90 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-bold text-slate-900">
             <TrendingUp className="h-4 w-4 text-brand-secondary" />
-            Trending Communities
+            <span>Chuyên mục thảo luận</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2.5 pt-0">
-          {trendingCommunities.map((circle) => (
-            <div key={circle.name} className="flex items-center justify-between py-1 text-xs">
-              <div>
-                <p className="cursor-pointer font-semibold text-slate-900 hover:text-brand-primary">
-                  {circle.name}
-                </p>
-                <span className="text-[10px] text-slate-500">{circle.members}</span>
+          {categories.length === 0 ? (
+            <p className="py-2 text-xs text-slate-400">Chưa có chuyên mục nào.</p>
+          ) : (
+            categories.map((cat) => (
+              <div key={cat.id} className="flex items-center justify-between py-1 text-xs">
+                <Link
+                  to={`${ROUTES.APP.COMMUNITIES}?tag=${encodeURIComponent(cat.slug || cat.name)}`}
+                  className="font-semibold text-slate-900 hover:text-brand-primary"
+                >
+                  #{cat.slug || cat.name}
+                </Link>
               </div>
-              <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
-                {circle.growth}
-              </span>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
 

@@ -4,10 +4,14 @@ import {
   IconSchool,
   IconBuildingCommunity,
   IconCalendar,
+  IconCalendarEvent,
+  IconExternalLink,
   IconShieldCheck,
   IconEdit,
   IconCheck,
   IconLock,
+  IconKey,
+  IconShieldX,
   IconLoader2,
   IconAlertCircle,
   IconFileText,
@@ -17,21 +21,32 @@ import {
   IconMessage,
   IconCamera,
 } from '@tabler/icons-react'
+import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { usersService } from '@/services/users'
+import { authService } from '@/services/auth'
 import { postsService, type ForumPostItem } from '@/services/posts'
 import { useAuthStore } from '@/stores/authStore'
 import { normalizeError } from '@/lib/errorHandler'
 import { uploadImageViaBackend, validateImageFile } from '@/services/media'
-import type { BackendMyProfileResponse, BackendPrivacySetting } from '@/types/user.types'
+import type {
+  BackendMyProfileResponse,
+  BackendPrivacySetting,
+  BackendBlockedUser,
+} from '@/types/user.types'
 
 export const ProfilePage: FC = () => {
   const { currentUser, updateCurrentUser } = useAuthStore()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState<'info' | 'my_posts' | 'bookmarks'>('info')
+  const initialTab = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState<'info' | 'my_posts' | 'bookmarks'>(
+    initialTab === 'my_posts' || initialTab === 'bookmarks' ? initialTab : 'info'
+  )
   const [profile, setProfile] = useState<BackendMyProfileResponse | null>(null)
   const [privacy, setPrivacy] = useState<BackendPrivacySetting | null>(null)
+  const [blockedUsers, setBlockedUsers] = useState<BackendBlockedUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -39,6 +54,12 @@ export const ProfilePage: FC = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // US-07: Change password form state
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   // FO-10 & FO-09: User posts and bookmarks
   const [myPosts, setMyPosts] = useState<ForumPostItem[]>([])
@@ -53,6 +74,22 @@ export const ProfilePage: FC = () => {
   const [batch, setBatch] = useState('')
   const [bio, setBio] = useState('')
   const [googleCalendarUrl, setGoogleCalendarUrl] = useState('')
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam === 'my_posts' || tabParam === 'bookmarks' || tabParam === 'info') {
+      setActiveTab(tabParam)
+    }
+  }, [searchParams])
+
+  const handleTabChange = (tab: 'info' | 'my_posts' | 'bookmarks') => {
+    setActiveTab(tab)
+    if (tab === 'info') {
+      setSearchParams({})
+    } else {
+      setSearchParams({ tab })
+    }
+  }
 
   const handleAvatarFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -92,10 +129,14 @@ export const ProfilePage: FC = () => {
     const loadProfile = async () => {
       setIsLoading(true)
       try {
-        const data = await usersService.getMe()
+        const [data, blocked] = await Promise.all([
+          usersService.getMe(),
+          usersService.getBlockedUsers().catch(() => []),
+        ])
         if (isMounted) {
           setProfile(data)
           setPrivacy(data.privacySetting)
+          setBlockedUsers(blocked)
           setFullName(data.fullName || '')
           setCampus(data.campus || '')
           setMajor(data.major || '')
@@ -141,12 +182,51 @@ export const ProfilePage: FC = () => {
         cohort: updated.batch || undefined,
       })
       setIsEditing(false)
-      setToastMessage('Profile updated successfully!')
+      setToastMessage('Cập nhật hồ sơ cá nhân thành công!')
       setTimeout(() => setToastMessage(null), 3000)
     } catch (err) {
       setErrorMessage(normalizeError(err).message)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErrorMessage(null)
+
+    if (newPassword.length < 8) {
+      setErrorMessage('Mật khẩu mới phải có ít nhất 8 ký tự.')
+      return
+    }
+    if (newPassword !== confirmNewPassword) {
+      setErrorMessage('Mật khẩu xác nhận không khớp.')
+      return
+    }
+
+    setIsChangingPassword(true)
+    try {
+      await authService.changePassword(currentPassword, newPassword)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmNewPassword('')
+      setToastMessage('Đổi mật khẩu thành công!')
+      setTimeout(() => setToastMessage(null), 3000)
+    } catch (err) {
+      setErrorMessage(normalizeError(err).message || 'Không thể đổi mật khẩu. Vui lòng kiểm tra mật khẩu hiện tại.')
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
+
+  const handleUnblockUser = async (blockedUserId: string) => {
+    try {
+      await usersService.unblockUser(blockedUserId)
+      setBlockedUsers((prev) => prev.filter((b) => b.blockedUserId !== blockedUserId))
+      setToastMessage('Đã bỏ chặn người dùng.')
+      setTimeout(() => setToastMessage(null), 2500)
+    } catch (err) {
+      setErrorMessage(normalizeError(err).message)
     }
   }
 
@@ -160,7 +240,7 @@ export const ProfilePage: FC = () => {
     try {
       const saved = await usersService.updatePrivacySettings(updatedSettings)
       setPrivacy(saved)
-      setToastMessage('Privacy settings updated!')
+      setToastMessage('Đã cập nhật cài đặt quyền riêng tư!')
       setTimeout(() => setToastMessage(null), 2500)
     } catch (err) {
       setErrorMessage(normalizeError(err).message)
@@ -289,7 +369,7 @@ export const ProfilePage: FC = () => {
                 {profile?.email}
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                Member since {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '2026'}
+                Thành viên từ {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '2026'}
               </p>
             </div>
           </div>
@@ -300,15 +380,39 @@ export const ProfilePage: FC = () => {
             className="border-slate-200 gap-1.5"
           >
             <IconEdit className="h-4 w-4" />
-            <span>{isEditing ? 'Cancel Editing' : 'Edit Profile'}</span>
+            <span>{isEditing ? 'Hủy chỉnh sửa' : 'Chỉnh sửa hồ sơ (US-04)'}</span>
           </Button>
         </div>
 
         {/* Bio Section */}
         {profile?.bio && !isEditing && (
           <div className="mt-6 pt-6 border-t border-slate-100">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">About / Bio</h3>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Giới thiệu bản thân</h3>
             <p className="text-sm text-slate-700 leading-relaxed">{profile.bio}</p>
+          </div>
+        )}
+
+        {/* US-11: Google Calendar Booking Link */}
+        {profile?.googleCalendarUrl && !isEditing && (
+          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <IconCalendarEvent className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800">Lịch hẹn cố vấn Google Calendar (US-11)</p>
+                <p className="text-xs text-slate-500 truncate max-w-md">{profile.googleCalendarUrl}</p>
+              </div>
+            </div>
+            <a
+              href={profile.googleCalendarUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors self-start sm:self-auto"
+            >
+              <span>Mở lịch hẹn Google Calendar</span>
+              <IconExternalLink className="h-3.5 w-3.5" />
+            </a>
           </div>
         )}
       </div>
@@ -317,7 +421,7 @@ export const ProfilePage: FC = () => {
       <div className="flex border-b border-slate-200 gap-2">
         <button
           type="button"
-          onClick={() => setActiveTab('info')}
+          onClick={() => handleTabChange('info')}
           className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 ${
             activeTab === 'info'
               ? 'border-brand-primary text-brand-primary'
@@ -328,7 +432,7 @@ export const ProfilePage: FC = () => {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('my_posts')}
+          onClick={() => handleTabChange('my_posts')}
           className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 flex items-center gap-1.5 ${
             activeTab === 'my_posts'
               ? 'border-brand-primary text-brand-primary'
@@ -345,7 +449,7 @@ export const ProfilePage: FC = () => {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('bookmarks')}
+          onClick={() => handleTabChange('bookmarks')}
           className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 flex items-center gap-1.5 ${
             activeTab === 'bookmarks'
               ? 'border-brand-primary text-brand-primary'
@@ -365,199 +469,303 @@ export const ProfilePage: FC = () => {
       {activeTab === 'info' && (
         <>
           {/* Edit Profile Form */}
-      {isEditing ? (
-        <form onSubmit={handleSaveProfile} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Update Profile Details</h2>
+          {isEditing ? (
+            <form onSubmit={handleSaveProfile} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+              <h2 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Cập nhật thông tin hồ sơ (US-04, US-11)</h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Họ và tên</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Cơ sở (Campus)</label>
+                  <select
+                    value={campus}
+                    onChange={(e) => setCampus(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+                  >
+                    <option value="Hòa Lạc">Hòa Lạc</option>
+                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                    <option value="Cần Thơ">Cần Thơ</option>
+                    <option value="Quy Nhơn">Quy Nhơn</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Chuyên ngành (Major)</label>
+                  <input
+                    type="text"
+                    value={major}
+                    onChange={(e) => setMajor(e.target.value)}
+                    placeholder="VD: Software Engineering"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Khóa (Batch / Cohort)</label>
+                  <input
+                    type="text"
+                    value={batch}
+                    onChange={(e) => setBatch(e.target.value)}
+                    placeholder="VD: K17"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Liên kết đặt lịch Google Calendar (US-11 - Tùy chọn)
+                  </label>
+                  <input
+                    type="url"
+                    value={googleCalendarUrl}
+                    onChange={(e) => setGoogleCalendarUrl(e.target.value)}
+                    placeholder="https://calendar.google.com/calendar/appointments/schedules/..."
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Giới thiệu bản thân (Bio)</label>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    rows={3}
+                    placeholder="Chia sẻ kinh nghiệm làm việc, định hướng nghề nghiệp hoặc lĩnh vực có thể cố vấn..."
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3">
+                <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                  Hủy
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSaving}
+                  className="bg-brand-primary text-white hover:bg-brand-primary/90"
+                >
+                  {isSaving ? <IconLoader2 className="h-4 w-4 animate-spin mr-1" /> : <IconCheck className="h-4 w-4 mr-1" />}
+                  Lưu thay đổi
+                </Button>
+              </div>
+            </form>
+          ) : (
+            /* Academic Details Grid */
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-1">
+                <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase">
+                  <IconBuildingCommunity className="h-4 w-4 text-brand-secondary" />
+                  <span>Cơ sở (Campus)</span>
+                </div>
+                <p className="text-base font-bold text-slate-900">{profile?.campus || 'Chưa cập nhật'}</p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-1">
+                <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase">
+                  <IconSchool className="h-4 w-4 text-brand-primary" />
+                  <span>Chuyên ngành</span>
+                </div>
+                <p className="text-base font-bold text-slate-900">{profile?.major || 'Chưa cập nhật'}</p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-1">
+                <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase">
+                  <IconCalendar className="h-4 w-4 text-emerald-600" />
+                  <span>Khóa (Cohort)</span>
+                </div>
+                <p className="text-base font-bold text-slate-900">{profile?.batch || 'Chưa cập nhật'}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Privacy Controls Section (US-09) */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <IconLock className="h-5 w-5 text-brand-secondary" />
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Cài đặt Quyền riêng tư & Hiển thị (US-09)</h2>
+                <p className="text-xs text-slate-500">Kiểm soát những thông tin hiển thị trên hồ sơ công khai của bạn</p>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Campus</label>
-              <select
-                value={campus}
-                onChange={(e) => setCampus(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+            {privacy && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
+                  <span className="text-sm font-medium text-slate-700">Hiển thị địa chỉ Email</span>
+                  <input
+                    type="checkbox"
+                    checked={privacy.showEmail}
+                    onChange={() => handleTogglePrivacy('showEmail')}
+                    className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
+                  <span className="text-sm font-medium text-slate-700">Hiển thị Cơ sở (Campus)</span>
+                  <input
+                    type="checkbox"
+                    checked={privacy.showCampus}
+                    onChange={() => handleTogglePrivacy('showCampus')}
+                    className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
+                  <span className="text-sm font-medium text-slate-700">Hiển thị Chuyên ngành</span>
+                  <input
+                    type="checkbox"
+                    checked={privacy.showMajor}
+                    onChange={() => handleTogglePrivacy('showMajor')}
+                    className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
+                  <span className="text-sm font-medium text-slate-700">Hiển thị Khóa (Batch)</span>
+                  <input
+                    type="checkbox"
+                    checked={privacy.showBatch}
+                    onChange={() => handleTogglePrivacy('showBatch')}
+                    className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
+                  <span className="text-sm font-medium text-slate-700">Hiển thị Giới thiệu (Bio)</span>
+                  <input
+                    type="checkbox"
+                    checked={privacy.showBio}
+                    onChange={() => handleTogglePrivacy('showBio')}
+                    className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
+                  <span className="text-sm font-medium text-slate-700">Hiển thị Lịch Google Calendar</span>
+                  <input
+                    type="checkbox"
+                    checked={privacy.showGoogleCalendar}
+                    onChange={() => handleTogglePrivacy('showGoogleCalendar')}
+                    className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* US-07: Change Password Section */}
+          <form onSubmit={handleChangePassword} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <IconKey className="h-5 w-5 text-brand-primary" />
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Đổi mật khẩu bảo mật (US-07)</h2>
+                <p className="text-xs text-slate-500">Cập nhật mật khẩu định kỳ để bảo vệ tài khoản FPT Alumni của bạn</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu hiện tại</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  placeholder="Ít nhất 8 ký tự"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Xác nhận mật khẩu mới</label>
+                <input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  required
+                  placeholder="Nhập lại mật khẩu mới"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                disabled={isChangingPassword}
+                className="bg-brand-secondary hover:bg-brand-secondary/90 text-white rounded-xl text-xs"
               >
-                <option value="Hòa Lạc">Hòa Lạc</option>
-                <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                <option value="Đà Nẵng">Đà Nẵng</option>
-                <option value="Cần Thơ">Cần Thơ</option>
-                <option value="Quy Nhơn">Quy Nhơn</option>
-              </select>
+                {isChangingPassword ? <IconLoader2 className="h-4 w-4 animate-spin mr-1.5" /> : <IconKey className="h-4 w-4 mr-1.5" />}
+                Cập nhật mật khẩu
+              </Button>
+            </div>
+          </form>
+
+          {/* US-10: Blocked Users Management */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <IconShieldX className="h-5 w-5 text-rose-500" />
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Danh sách tài khoản đã chặn (US-10)</h2>
+                <p className="text-xs text-slate-500">Những người dùng bị chặn sẽ không thể nhắn tin hoặc thấy bạn trong tìm kiếm</p>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Major / Discipline</label>
-              <input
-                type="text"
-                value={major}
-                onChange={(e) => setMajor(e.target.value)}
-                placeholder="e.g. Kỹ thuật phần mềm"
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Cohort / Batch</label>
-              <input
-                type="text"
-                value={batch}
-                onChange={(e) => setBatch(e.target.value)}
-                placeholder="e.g. K17"
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Google Calendar Link (Optional)</label>
-              <input
-                type="text"
-                value={googleCalendarUrl}
-                onChange={(e) => setGoogleCalendarUrl(e.target.value)}
-                placeholder="https://calendar.google.com/..."
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Bio / Introduction</label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={3}
-                placeholder="Tell the alumni community about your interests and expertise..."
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none resize-none"
-              />
-            </div>
+            {blockedUsers.length === 0 ? (
+              <p className="text-xs text-slate-500 py-2">Bạn chưa chặn tài khoản nào.</p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {blockedUsers.map((item) => (
+                  <div key={item.blockedUserId} className="flex items-center justify-between py-2.5">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        src={item.avatarUrl || undefined}
+                        fallback={item.fullName.slice(0, 2).toUpperCase()}
+                        size="sm"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">{item.fullName}</p>
+                        <p className="text-[11px] text-slate-400">
+                          Đã chặn ngày {new Date(item.blockedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUnblockUser(item.blockedUserId)}
+                      className="text-xs border-slate-200 text-slate-700 hover:bg-slate-50"
+                    >
+                      Bỏ chặn
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-
-          <div className="flex justify-end gap-3 pt-3">
-            <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSaving}
-              className="bg-brand-primary text-white hover:bg-brand-primary/90"
-            >
-              {isSaving ? <IconLoader2 className="h-4 w-4 animate-spin mr-1" /> : <IconCheck className="h-4 w-4 mr-1" />}
-              Save Changes
-            </Button>
-          </div>
-        </form>
-      ) : (
-        /* Academic Details Grid */
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-1">
-            <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase">
-              <IconBuildingCommunity className="h-4 w-4 text-brand-secondary" />
-              <span>Campus</span>
-            </div>
-            <p className="text-base font-bold text-slate-900">{profile?.campus || 'Not specified'}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-1">
-            <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase">
-              <IconSchool className="h-4 w-4 text-brand-primary" />
-              <span>Major</span>
-            </div>
-            <p className="text-base font-bold text-slate-900">{profile?.major || 'Not specified'}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-1">
-            <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase">
-              <IconCalendar className="h-4 w-4 text-emerald-600" />
-              <span>Batch / Cohort</span>
-            </div>
-            <p className="text-base font-bold text-slate-900">{profile?.batch || 'Not specified'}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Privacy Controls Section */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-          <IconLock className="h-5 w-5 text-brand-secondary" />
-          <div>
-            <h2 className="text-base font-bold text-slate-900">Privacy & Visibility Preferences</h2>
-            <p className="text-xs text-slate-500">Control what information other university members see on your public profile</p>
-          </div>
-        </div>
-
-        {privacy && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
-              <span className="text-sm font-medium text-slate-700">Display Email Address</span>
-              <input
-                type="checkbox"
-                checked={privacy.showEmail}
-                onChange={() => handleTogglePrivacy('showEmail')}
-                className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
-              <span className="text-sm font-medium text-slate-700">Display Campus</span>
-              <input
-                type="checkbox"
-                checked={privacy.showCampus}
-                onChange={() => handleTogglePrivacy('showCampus')}
-                className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
-              <span className="text-sm font-medium text-slate-700">Display Major</span>
-              <input
-                type="checkbox"
-                checked={privacy.showMajor}
-                onChange={() => handleTogglePrivacy('showMajor')}
-                className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
-              <span className="text-sm font-medium text-slate-700">Display Cohort / Batch</span>
-              <input
-                type="checkbox"
-                checked={privacy.showBatch}
-                onChange={() => handleTogglePrivacy('showBatch')}
-                className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
-              <span className="text-sm font-medium text-slate-700">Display Bio</span>
-              <input
-                type="checkbox"
-                checked={privacy.showBio}
-                onChange={() => handleTogglePrivacy('showBio')}
-                className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
-              <span className="text-sm font-medium text-slate-700">Display Google Calendar</span>
-              <input
-                type="checkbox"
-                checked={privacy.showGoogleCalendar}
-                onChange={() => handleTogglePrivacy('showGoogleCalendar')}
-                className="h-4 w-4 rounded text-brand-secondary focus:ring-brand-secondary cursor-pointer"
-              />
-            </div>
-          </div>
-        )}
-      </div>
         </>
       )}
 

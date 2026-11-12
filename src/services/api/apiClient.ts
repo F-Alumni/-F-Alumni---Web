@@ -45,6 +45,7 @@ const attachAuthInterceptor = (instance: AxiosInstance) => {
     (response) => response,
     async (error) => {
       const originalRequest = error.config
+
       if (
         error.response?.status === 401 &&
         originalRequest &&
@@ -57,7 +58,7 @@ const attachAuthInterceptor = (instance: AxiosInstance) => {
             localStorage.getItem('refresh_token') ||
             localStorage.getItem('refreshToken')
 
-          if (!refreshToken || refreshToken.startsWith('fpt-refresh-') || refreshToken.startsWith('mock-')) {
+          if (!refreshToken) {
             throw new Error('Phiên đăng nhập đã hết hạn hoặc chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.')
           }
 
@@ -97,7 +98,7 @@ const attachAuthInterceptor = (instance: AxiosInstance) => {
 }
 
 /**
- * 1. Central API Gateway client (port 5000 in local or deployed gateway).
+ * 1. Central API Gateway client (port 5000).
  */
 export const apiClient: AxiosInstance = axios.create({
   baseURL: env.apiBaseUrl,
@@ -110,7 +111,7 @@ export const apiClient: AxiosInstance = axios.create({
 attachAuthInterceptor(apiClient)
 
 /**
- * 2. Dedicated Admin Service client (port 5005 / Render f-alumni-admin-service).
+ * 2. Dedicated Admin Service client (port 5005).
  */
 export const adminApiClient: AxiosInstance = axios.create({
   baseURL: env.adminServiceBaseUrl || env.apiBaseUrl,
@@ -123,7 +124,7 @@ export const adminApiClient: AxiosInstance = axios.create({
 attachAuthInterceptor(adminApiClient)
 
 /**
- * 3. Dedicated User Service client (port 5001 / Render f-alumni-user-service).
+ * 3. Dedicated User Service client (port 5001).
  */
 export const userApiClient: AxiosInstance = axios.create({
   baseURL: env.userServiceBaseUrl || env.apiBaseUrl,
@@ -136,7 +137,7 @@ export const userApiClient: AxiosInstance = axios.create({
 attachAuthInterceptor(userApiClient)
 
 /**
- * 4. Dedicated Forum Service client (port 5003 / Render f-alumni-forum-service).
+ * 4. Dedicated Forum Service client (port 5003).
  */
 export const forumApiClient: AxiosInstance = axios.create({
   baseURL: env.forumServiceBaseUrl || env.apiBaseUrl,
@@ -149,7 +150,7 @@ export const forumApiClient: AxiosInstance = axios.create({
 attachAuthInterceptor(forumApiClient)
 
 /**
- * 5. Dedicated Chat Service client (port 5002 / Render f-alumni-chat-service).
+ * 5. Dedicated Chat Service client (port 5002).
  */
 export const chatApiClient: AxiosInstance = axios.create({
   baseURL: env.chatServiceBaseUrl || env.apiBaseUrl,
@@ -162,7 +163,7 @@ export const chatApiClient: AxiosInstance = axios.create({
 attachAuthInterceptor(chatApiClient)
 
 /**
- * 6. Dedicated AI Service client (port 5004 / Render f-alumni-ai-service).
+ * 6. Dedicated AI Service client (port 5004).
  */
 export const aiApiClient: AxiosInstance = axios.create({
   baseURL: env.aiServiceBaseUrl || env.apiBaseUrl,

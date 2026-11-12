@@ -6,6 +6,7 @@ import { postsService } from '@/services/posts'
 interface ReportPostModalProps {
   postId: string
   postTitle?: string
+  targetType?: 'Post' | 'Comment'
   isOpen: boolean
   onClose: () => void
 }
@@ -21,6 +22,7 @@ const REPORT_REASONS = [
 export const ReportPostModal: FC<ReportPostModalProps> = ({
   postId,
   postTitle,
+  targetType = 'Post',
   isOpen,
   onClose,
 }) => {
@@ -35,6 +37,7 @@ export const ReportPostModal: FC<ReportPostModalProps> = ({
     setIsSubmitting(true)
     try {
       await postsService.reportPost(postId, {
+        targetType,
         reason: selectedReason,
         details: details.trim() || undefined,
       })

@@ -5,6 +5,7 @@ import {
   Loader2,
   MessageSquare,
   Award,
+  Flag,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,8 @@ import { Badge } from '@/components/ui/badge'
 import { postsService, type PostCommentItem } from '@/services/posts'
 import { useAuthStore } from '@/stores/authStore'
 import { cn } from '@/lib/utils'
+import { ReportPostModal } from './ReportPostModal'
+import { PublicProfileModal } from '@/features/users'
 
 interface PostCommentsSectionProps {
   postId: string
@@ -33,6 +36,8 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
   const [newCommentText, setNewCommentText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [acceptingCommentId, setAcceptingCommentId] = useState<string | null>(null)
+  const [reportingComment, setReportingComment] = useState<PostCommentItem | null>(null)
+  const [selectedAuthorComment, setSelectedAuthorComment] = useState<PostCommentItem | null>(null)
 
   const fetchComments = useCallback(async () => {
     setIsLoading(true)
@@ -123,7 +128,11 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
               >
                 {/* Header: Avatar, Name, Accepted Badge */}
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAuthorComment(comment)}
+                    className="flex items-center gap-2 text-left cursor-pointer group"
+                  >
                     <Avatar
                       src={comment.authorAvatarUrl}
                       fallback={comment.authorName.slice(0, 2).toUpperCase()}
@@ -131,7 +140,7 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
                     />
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-900">
+                        <span className="text-xs font-bold text-slate-900 group-hover:text-brand-primary">
                           {comment.authorName}
                         </span>
                         {isAccepted && (
@@ -150,26 +159,38 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
                         })}
                       </span>
                     </div>
-                  </div>
+                  </button>
 
-                  {/* Accept Answer Action (Only for Question post author - BR-03) */}
-                  {isAuthor && isQuestion && !isAccepted && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleAcceptAnswer(comment.id)}
-                      disabled={acceptingCommentId === comment.id}
-                      className="h-6 text-[10px] font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 gap-1 rounded-lg"
-                      title="Chọn bình luận này làm câu trả lời chính xác nhất"
+                  <div className="flex items-center gap-1.5">
+                    {/* Accept Answer Action (Only for Question post author - BR-03) */}
+                    {isAuthor && isQuestion && !isAccepted && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAcceptAnswer(comment.id)}
+                        disabled={acceptingCommentId === comment.id}
+                        className="h-6 text-[10px] font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 gap-1 rounded-lg"
+                        title="Chọn bình luận này làm câu trả lời chính xác nhất"
+                      >
+                        {acceptingCommentId === comment.id ? (
+                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                        ) : (
+                          <Award className="h-3 w-3 text-emerald-600" />
+                        )}
+                        <span>Chấp nhận</span>
+                      </Button>
+                    )}
+
+                    {/* FO-11: Report Comment Button */}
+                    <button
+                      type="button"
+                      onClick={() => setReportingComment(comment)}
+                      className="rounded-lg p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                      title="Báo cáo bình luận vi phạm (FO-11)"
                     >
-                      {acceptingCommentId === comment.id ? (
-                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                      ) : (
-                        <Award className="h-3 w-3 text-emerald-600" />
-                      )}
-                      <span>Chấp nhận</span>
-                    </Button>
-                  )}
+                      <Flag className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Content */}
@@ -220,6 +241,35 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* FO-11: Report Comment Modal */}
+      {reportingComment && (
+        <ReportPostModal
+          postId={reportingComment.id}
+          postTitle={reportingComment.content}
+          targetType="Comment"
+          isOpen={Boolean(reportingComment)}
+          onClose={() => setReportingComment(null)}
+        />
+      )}
+
+      {/* US-05: Comment Author Public Profile Modal */}
+      {selectedAuthorComment && (
+        <PublicProfileModal
+          isOpen={Boolean(selectedAuthorComment)}
+          onClose={() => setSelectedAuthorComment(null)}
+          userId={selectedAuthorComment.authorId}
+          initialUser={{
+            id: selectedAuthorComment.authorId,
+            fullName: selectedAuthorComment.authorName,
+            avatarUrl: selectedAuthorComment.authorAvatarUrl,
+            role: 'Alumni',
+            campus: 'Hòa Lạc',
+            major: 'Software Engineering',
+            batch: 'K15',
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -14,6 +14,10 @@ import {
   HelpCircle,
   Clock,
   Flag,
+  Pencil,
+  Trash2,
+  Check,
+  Loader2,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
@@ -23,6 +27,8 @@ import { cn } from '@/lib/utils'
 import { PostCommentsSection } from './PostCommentsSection'
 import { ReportPostModal } from './ReportPostModal'
 import { postsService } from '@/services/posts'
+import { useAuthStore } from '@/stores/authStore'
+import { PublicProfileModal } from '@/features/users'
 
 export interface PostItem {
   id: string
@@ -37,6 +43,10 @@ export interface PostItem {
   }
   timestamp: string
   community: string
+  campus?: string
+  isAnswered?: boolean
+  hasLiked?: boolean
+  isBookmarked?: boolean
   type: 'EXPERIENCE' | 'QUESTION' | 'JOB' | 'INTERNSHIP' | 'SCHOLARSHIP'
   title: string
   content: string
@@ -54,16 +64,34 @@ export interface PostItem {
 
 interface PostCardProps {
   post: PostItem
+  onPostDeleted?: (postId: string) => void
+  onPostUpdated?: (post: PostItem) => void
 }
 
-export const PostCard: FC<PostCardProps> = ({ post }) => {
-  const [isLiked, setIsLiked] = useState(false)
+export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated }) => {
+  const { currentUser } = useAuthStore()
+
+  const [isLiked, setIsLiked] = useState(Boolean(post.hasLiked))
   const [likesCount, setLikesCount] = useState(post.likes)
-  const [isSaved, setIsSaved] = useState(false)
+  const [isSaved, setIsSaved] = useState(Boolean(post.isBookmarked))
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
   const [commentsCount, setCommentsCount] = useState(post.comments)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+
+  // FO-04: Edit & Delete state
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(post.title)
+  const [editContent, setEditContent] = useState(post.content)
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [displayTitle, setDisplayTitle] = useState(post.title)
+  const [displayContent, setDisplayContent] = useState(post.content)
+  const [isAnswered, setIsAnswered] = useState(Boolean(post.isAnswered))
+
+  const isOwnerOrAdmin =
+    Boolean(currentUser?.id && post.author.id && currentUser.id === post.author.id) ||
+    String(currentUser?.role || '').toLowerCase() === 'admin'
 
   const handleToggleLike = async () => {
     const nextLiked = !isLiked
@@ -73,6 +101,8 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
       await postsService.toggleReaction(post.id)
     } catch (err) {
       console.error('Failed to toggle reaction:', err)
+      setIsLiked(!nextLiked)
+      setLikesCount(likesCount)
     }
   }
 
@@ -87,6 +117,60 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
     }
   }
 
+  const handleSaveEdit = async () => {
+    if (!editTitle.trim() || !editContent.trim()) return
+    setIsSavingEdit(true)
+    try {
+      let postType = 'Sharing'
+      if (post.type === 'QUESTION') postType = 'Question'
+      else if (post.type === 'JOB' || post.type === 'INTERNSHIP') postType = 'Recruitment'
+
+      await postsService.updatePost(post.id, {
+        title: editTitle.trim(),
+        content: editContent.trim(),
+        postType,
+        major: post.author.major || 'All',
+        campus: post.campus || 'All',
+        isAnswered,
+        imageUrls: post.images || [],
+      })
+
+      setDisplayTitle(editTitle.trim())
+      setDisplayContent(editContent.trim())
+      setIsEditing(false)
+      onPostUpdated?.({
+        ...post,
+        title: editTitle.trim(),
+        content: editContent.trim(),
+        isAnswered,
+      })
+    } catch (err) {
+      console.error('Failed to update post:', err)
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
+  const handleDeletePost = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return
+    try {
+      await postsService.deletePost(post.id)
+      onPostDeleted?.(post.id)
+    } catch (err) {
+      console.error('Failed to delete post:', err)
+    }
+  }
+
+  const handleToggleAnswered = async () => {
+    const next = !isAnswered
+    try {
+      await postsService.markAnswered(post.id, next)
+      setIsAnswered(next)
+    } catch (err) {
+      console.error('Failed to mark answered:', err)
+    }
+  }
+
   const getTypeBadge = () => {
     switch (post.type) {
       case 'EXPERIENCE':
@@ -98,10 +182,23 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
         )
       case 'QUESTION':
         return (
-          <Badge variant="brand-secondary" className="gap-1 text-[11px] font-semibold">
-            <HelpCircle className="h-3 w-3" />
-            Hỏi đáp cộng đồng
-          </Badge>
+          <div className="flex items-center gap-1.5">
+            {isAnswered ? (
+              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 gap-1 text-[11px] font-semibold">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                Đã có lời giải
+              </Badge>
+            ) : (
+              <Badge className="bg-amber-50 text-amber-700 border-amber-200 gap-1 text-[11px] font-semibold">
+                <HelpCircle className="h-3 w-3 text-amber-600" />
+                Chưa giải đáp
+              </Badge>
+            )}
+            <Badge variant="brand-secondary" className="gap-1 text-[11px] font-semibold">
+              <HelpCircle className="h-3 w-3" />
+              Hỏi đáp cộng đồng
+            </Badge>
+          </div>
         )
       case 'JOB':
       case 'INTERNSHIP':
@@ -129,19 +226,30 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
         {/* Header: Author Information & Options */}
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Avatar
-              src={post.author.avatar}
-              fallback={post.author.name.slice(0, 2)}
-              size="md"
-              isVerified={post.author.isVerified}
-              isOnline={post.author.isOnline}
-            />
+            <button
+              type="button"
+              onClick={() => setIsProfileModalOpen(true)}
+              className="cursor-pointer rounded-full focus:outline-none"
+              title="Xem hồ sơ tác giả (US-05)"
+            >
+              <Avatar
+                src={post.author.avatar}
+                fallback={post.author.name.slice(0, 2)}
+                size="md"
+                isVerified={post.author.isVerified}
+                isOnline={post.author.isOnline}
+              />
+            </button>
 
             <div>
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="cursor-pointer text-sm font-bold text-slate-900 hover:text-brand-primary">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="cursor-pointer text-sm font-bold text-slate-900 hover:text-brand-primary text-left"
+                >
                   {post.author.name}
-                </span>
+                </button>
 
                 {post.author.isVerified && (
                   <Badge variant="verified" className="gap-0.5 px-1.5 py-0 text-[10px]">
@@ -165,6 +273,11 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
                 <span className="cursor-pointer rounded bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-brand-secondary hover:underline">
                   {post.community}
                 </span>
+                {post.campus && post.campus !== 'All' && (
+                  <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                    {post.campus}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -182,7 +295,49 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
               </button>
 
               {isMenuOpen && (
-                <div className="absolute right-0 top-8 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 top-8 z-30 w-52 rounded-xl border border-slate-200 bg-white p-1 shadow-lg animate-in fade-in zoom-in-95">
+                  {isOwnerOrAdmin && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false)
+                          setIsEditing(true)
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <Pencil className="h-3.5 w-3.5 text-brand-secondary" />
+                        <span>Chỉnh sửa bài viết (FO-04)</span>
+                      </button>
+
+                      {post.type === 'QUESTION' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsMenuOpen(false)
+                            void handleToggleAnswered()
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>{isAnswered ? 'Đánh dấu chưa giải đáp' : 'Đánh dấu đã giải đáp (FO-16)'}</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false)
+                          void handleDeletePost()
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Xóa bài viết (FO-04)</span>
+                      </button>
+                    </>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => {
@@ -192,7 +347,7 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
                   >
                     <Flag className="h-3.5 w-3.5" />
-                    <span>Báo cáo bài viết</span>
+                    <span>Báo cáo bài viết (FO-11)</span>
                   </button>
                 </div>
               )}
@@ -200,18 +355,61 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
           </div>
         </div>
 
-        {/* Post Title & Content */}
-        <div className="mt-2 space-y-2">
-          {post.title && (
-            <h3 className="cursor-pointer text-base font-bold leading-snug text-slate-900 transition-colors hover:text-brand-primary">
-              {post.title}
-            </h3>
-          )}
+        {/* Post Title & Content (with FO-04 Inline Editor) */}
+        {isEditing ? (
+          <div className="mt-3 space-y-2.5 rounded-xl border border-brand-primary/30 bg-slate-50 p-3.5">
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Tiêu đề bài viết..."
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold text-slate-900 focus:border-brand-primary focus:outline-none"
+            />
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              rows={4}
+              className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-800 focus:border-brand-primary focus:outline-none"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditTitle(displayTitle)
+                  setEditContent(displayContent)
+                  setIsEditing(false)
+                }}
+                className="h-8 text-xs"
+              >
+                Hủy
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={isSavingEdit}
+                onClick={handleSaveEdit}
+                className="h-8 text-xs bg-brand-primary text-white hover:bg-brand-primary/90 gap-1"
+              >
+                {isSavingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                <span>Lưu thay đổi</span>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {displayTitle && (
+              <h3 className="cursor-pointer text-base font-bold leading-snug text-slate-900 transition-colors hover:text-brand-primary">
+                {displayTitle}
+              </h3>
+            )}
 
-          <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">
-            {post.content}
-          </p>
-        </div>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">
+              {displayContent}
+            </p>
+          </div>
+        )}
 
         {/* Attached Custom Cards (from Stitch design) */}
         {post.attachedCard && (
@@ -363,9 +561,25 @@ export const PostCard: FC<PostCardProps> = ({ post }) => {
       {/* Report Post Modal */}
       <ReportPostModal
         postId={post.id}
-        postTitle={post.title}
+        postTitle={displayTitle}
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
+      />
+
+      {/* US-05: Author Public Profile Modal */}
+      <PublicProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        userId={post.author.id || post.id}
+        initialUser={{
+          id: post.author.id || post.id,
+          fullName: post.author.name,
+          avatarUrl: post.author.avatar,
+          role: post.author.role,
+          campus: post.campus || post.community,
+          major: post.author.major,
+          batch: null,
+        }}
       />
     </Card>
   )

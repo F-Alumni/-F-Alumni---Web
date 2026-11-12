@@ -7,11 +7,13 @@ import {
   CheckCircle2,
   Plus,
   ArrowRight,
+  Loader2,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ROUTES } from '@/constants/routes'
+import { communitiesService, type ForumCategoryItem } from '@/services/communities'
 
 interface CommunityGroup {
   id: string
@@ -27,109 +29,35 @@ interface CommunityGroup {
   topContributors: string[]
 }
 
-const INITIAL_COMMUNITIES: CommunityGroup[] = [
-  {
-    id: 'comm-1',
-    name: 'FPT Software & Overseas Alumni',
-    tag: '#FPT-Software-Alumni',
-    category: 'Kỹ thuật phần mềm',
-    description: 'Cộng đồng lớn nhất kết nối hơn 3,000 kỹ sư cựu sinh viên FPT tại Việt Nam, Nhật Bản, Mỹ, Singapore và Châu Âu. Chia sẻ kinh nghiệm phỏng vấn, dự án và định cư.',
-    memberCount: 3420,
-    discussionCount: 428,
-    isJoined: true,
-    bannerGradient: 'from-blue-600 via-indigo-600 to-slate-900',
-    avatarUrl: 'https://images.unsplash.com/photo-1522071823999-b867e9b049d5?auto=format&fit=crop&q=80&w=128',
-    topContributors: [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=64',
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=64',
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=64',
-    ],
-  },
-  {
-    id: 'comm-2',
-    name: 'AI, LLM & Robotics Hub FPT',
-    tag: '#AI-Robotics-Hub',
-    category: 'Trí tuệ nhân tạo',
-    description: 'Nơi tập hợp các nhà nghiên cứu, AI Engineer và sinh viên đam mê RAG, LLM Agent, Computer Vision và Robotics. Thảo luận đồ án và chia sẻ tài nguyên tính toán GPU.',
-    memberCount: 1890,
-    discussionCount: 215,
-    isJoined: true,
-    bannerGradient: 'from-purple-600 via-brand-primary to-slate-900',
-    avatarUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=128',
-    topContributors: [
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=64',
-      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=64',
-    ],
-  },
-  {
-    id: 'comm-3',
-    name: 'FPT Startup & Founders Club',
-    tag: '#FPT-Startup-Founders',
-    category: 'Khởi nghiệp & Đầu tư',
-    description: 'Mạng lưới các nhà sáng lập, Co-founder và Angel Investors xuất thân từ ĐH FPT. Kết nối đối tác kinh doanh, chia sẻ bài học pitching và hỗ trợ tuyển dụng nhân tài.',
-    memberCount: 1210,
-    discussionCount: 184,
-    isJoined: false,
-    bannerGradient: 'from-amber-600 via-orange-600 to-slate-900',
-    avatarUrl: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&q=80&w=128',
-    topContributors: [
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=64',
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=64',
-    ],
-  },
-  {
-    id: 'comm-4',
-    name: 'Capstone Projects & Đồ án Tốt nghiệp Spring 2026',
-    tag: '#Capstones-Spring-26',
-    category: 'Học thuật & Đồ án',
-    description: 'Không gian tìm kiếm thành viên nhóm đồ án, tìm kiếm Mentor Cựu sinh viên hướng dẫn kiến trúc microservices, review code và chuẩn bị bảo vệ trước hội đồng.',
-    memberCount: 840,
-    discussionCount: 312,
-    isJoined: true,
-    bannerGradient: 'from-emerald-600 via-teal-600 to-slate-900',
-    avatarUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=128',
-    topContributors: [
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=64',
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=64',
-    ],
-  },
-  {
-    id: 'comm-5',
-    name: 'Information Assurance & CyberSecurity FPT',
-    tag: '#Information-Assurance-Security',
-    category: 'An toàn thông tin',
-    description: 'Cộng đồng Chuyên gia Bảo mật & Đội tuyển CTF FPT. Chia sẻ kinh nghiệm thi đấu quốc tế, phân tích lỗ hổng bảo mật, Bug Bounty và chứng chỉ CISSP, CEH.',
-    memberCount: 750,
-    discussionCount: 96,
-    isJoined: false,
-    bannerGradient: 'from-slate-800 via-red-900 to-slate-900',
-    avatarUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=128',
-    topContributors: [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=64',
-    ],
-  },
-  {
-    id: 'comm-6',
-    name: 'Google Developer Student Clubs - FPT Chapter',
-    tag: '#GDSC-FPTU',
-    category: 'Hoạt động & Công nghệ',
-    description: 'Cộng đồng sinh viên đam mê công nghệ Google, Cloud, Flutter và Web. Tổ chức các buổi Solution Challenge, Hackathon và workshop hàng tháng.',
-    memberCount: 920,
-    discussionCount: 140,
-    isJoined: false,
-    bannerGradient: 'from-blue-500 via-green-600 to-amber-500',
-    avatarUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=128',
-    topContributors: [
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=64',
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=64',
-    ],
-  },
+const BANNER_GRADIENTS = [
+  'from-blue-600 via-indigo-600 to-slate-900',
+  'from-purple-600 via-brand-primary to-slate-900',
+  'from-amber-600 via-orange-600 to-slate-900',
+  'from-emerald-600 via-teal-600 to-slate-900',
+  'from-slate-800 via-red-900 to-slate-900',
 ]
+
+function mapCategoryToCommunity(cat: ForumCategoryItem, idx: number): CommunityGroup {
+  return {
+    id: cat.id,
+    name: cat.name,
+    tag: `#${cat.slug || cat.name.replace(/\s+/g, '-')}`,
+    category: cat.name,
+    description: cat.description || `Cộng đồng thảo luận chuyên ngành ${cat.name} tại Đại học FPT.`,
+    memberCount: 0,
+    discussionCount: 0,
+    isJoined: false,
+    bannerGradient: BANNER_GRADIENTS[idx % BANNER_GRADIENTS.length]!,
+    avatarUrl: 'https://images.unsplash.com/photo-1522071823999-b867e9b049d5?auto=format&fit=crop&q=80&w=128',
+    topContributors: [],
+  }
+}
 
 export const CommunitiesPage: FC = () => {
   const [searchParams] = useSearchParams()
   const tagParam = searchParams.get('tag')
-  const [communities, setCommunities] = useState<CommunityGroup[]>(INITIAL_COMMUNITIES)
+  const [communities, setCommunities] = useState<CommunityGroup[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -143,6 +71,22 @@ export const CommunitiesPage: FC = () => {
       setSearchQuery(tagParam)
     }
   }, [tagParam])
+
+  useEffect(() => {
+    const loadCommunities = async () => {
+      setIsLoading(true)
+      try {
+        const categories = await communitiesService.getCategories()
+        setCommunities((categories || []).map(mapCategoryToCommunity))
+      } catch (err) {
+        console.error('Failed to load communities from ForumService:', err)
+        setCommunities([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void loadCommunities()
+  }, [])
 
   const toggleJoin = (id: string) => {
     setCommunities((prev) =>
@@ -262,6 +206,12 @@ export const CommunitiesPage: FC = () => {
       </div>
 
       {/* 3. Community Grid */}
+      {isLoading ? (
+        <Card className="p-12 text-center bg-white border-slate-200 flex items-center justify-center gap-2">
+          <Loader2 className="h-5 w-5 animate-spin text-brand-primary" />
+          <span className="text-xs font-medium text-slate-500">Đang tải danh sách chuyên mục cộng đồng...</span>
+        </Card>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map((comm) => (
           <Card
@@ -342,6 +292,7 @@ export const CommunitiesPage: FC = () => {
           </Card>
         ))}
       </div>
+      )}
 
       {/* 4. Create Community Modal */}
       {showCreateModal && (

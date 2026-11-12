@@ -75,7 +75,18 @@ const CampusDropdown = () => {
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(3)
+  const [notifications, setNotifications] = useState<
+    {
+      id: string
+      title: string
+      desc: string
+      time: string
+      type: 'best-answer' | 'event' | 'job'
+      isUnread: boolean
+      link: string
+    }[]
+  >([])
+  const [unreadCount, setUnreadCount] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
 
@@ -89,39 +100,60 @@ const NotificationDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const notifications = [
-    {
-      id: '1',
-      title: 'Câu trả lời được chấp nhận',
-      desc: 'Nguyễn Văn A đã chấp nhận câu trả lời Best Answer của bạn trong chủ đề "Phỏng vấn FPT Software K17".',
-      time: '15 phút trước',
-      type: 'best-answer',
-      isUnread: true,
-      link: ROUTES.APP.HOME,
-    },
-    {
-      id: '2',
-      title: 'Nhắc nhở sự kiện RSVP',
-      desc: 'Hội thảo "AI & Cloud Career Day 2026" sắp diễn ra lúc 09:00 ngày mai tại Hall A.',
-      time: '2 giờ trước',
-      type: 'event',
-      isUnread: true,
-      link: ROUTES.APP.JOBS,
-    },
-    {
-      id: '3',
-      title: 'Cơ hội việc làm & thực tập mới',
-      desc: 'FPT Telecom vừa đăng tuyển vị trí "DevOps Engineer Intern" phù hợp hồ sơ của bạn.',
-      time: '5 giờ trước',
-      type: 'job',
-      isUnread: true,
-      link: ROUTES.APP.INTERNSHIPS,
-    },
-  ]
+  useEffect(() => {
+    let isMounted = true
+    Promise.all([
+      import('@/services/opportunities').then(({ opportunitiesService }) =>
+        opportunitiesService.getEvents({ upcomingOnly: true, pageSize: 2 })
+      ),
+      import('@/services/posts').then(({ postsService }) =>
+        postsService.getPosts({ pageSize: 3 })
+      ),
+    ])
+      .then(([eventsRes, postsRes]) => {
+        if (!isMounted) return
+        const items: typeof notifications = []
+        for (const ev of eventsRes.items || []) {
+          items.push({
+            id: `ev-${ev.id}`,
+            title: `Sự kiện: ${ev.title}`,
+            desc: `${ev.location} (${ev.campus || 'FPTU'})`,
+            time: new Date(ev.startTime).toLocaleDateString('vi-VN'),
+            type: 'event',
+            isUnread: true,
+            link: ROUTES.APP.JOBS,
+          })
+        }
+        for (const post of postsRes.items || []) {
+          const isJob = post.postType === 'Recruitment'
+          items.push({
+            id: `post-${post.id}`,
+            title: isJob ? `Tuyển dụng: ${post.title}` : post.title,
+            desc: post.content.slice(0, 100),
+            time: new Date(post.createdAt).toLocaleDateString('vi-VN'),
+            type: isJob ? 'job' : 'best-answer',
+            isUnread: true,
+            link: isJob ? ROUTES.APP.JOBS : `/app/posts/${post.id}`,
+          })
+        }
+        setNotifications(items)
+        setUnreadCount(items.length)
+      })
+      .catch(() => {
+        if (isMounted) {
+          setNotifications([])
+          setUnreadCount(0)
+        }
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const handleMarkAllRead = (e: React.MouseEvent) => {
     e.stopPropagation()
     setUnreadCount(0)
+    setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })))
   }
 
   return (
@@ -209,6 +241,7 @@ const NotificationDropdown = () => {
 export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
   const navigate = useNavigate()
   const { currentUser, clearAuth } = useAuthStore()
+  const [navSearchQuery, setNavSearchQuery] = useState('')
 
   const handleLogout = async () => {
     try {
@@ -219,6 +252,12 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
       clearAuth()
       navigate(ROUTES.AUTH.LOGIN)
     }
+  }
+
+  const handleNavSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = navSearchQuery.trim()
+    navigate(q ? `${ROUTES.APP.HOME}?q=${encodeURIComponent(q)}` : ROUTES.APP.HOME)
   }
 
   return (
@@ -237,17 +276,18 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
           </div>
         </div>
 
-        {/* Center: Search Bar */}
+        {/* Center: Search Bar (FO-13) */}
         <div className="hidden min-w-[140px] max-w-md flex-1 md:flex items-center justify-center">
-          <div className="relative w-full max-w-[320px]">
+          <form onSubmit={handleNavSearchSubmit} className="relative w-full max-w-[320px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search..."
+              value={navSearchQuery}
+              onChange={(e) => setNavSearchQuery(e.target.value)}
+              placeholder="Tìm bài viết, chủ đề (Enter)..."
               className="h-9 w-full rounded-full border border-slate-200 bg-slate-50/70 pl-9 pr-4 text-sm transition-all placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
             />
-            
-          </div>
+          </form>
         </div>
 
         {/* Right: Actions, Notifications & Profile */}

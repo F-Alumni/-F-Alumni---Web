@@ -54,6 +54,8 @@ export interface AuthResponse {
   user: UserSummary
   expiresAt?: string
   isEmailVerified?: boolean
+  verificationOtpPreview?: string
+  message?: string
 }
 
 export interface AuthTokens {
