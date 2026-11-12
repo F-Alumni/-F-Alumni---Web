@@ -1,4 +1,4 @@
-import { useState, useEffect, type FC } from 'react'
+import { useState, useEffect, useCallback, type FC } from 'react'
 import {
   IconMail,
   IconSchool,
@@ -10,10 +10,16 @@ import {
   IconLock,
   IconLoader2,
   IconAlertCircle,
+  IconFileText,
+  IconBookmark,
+  IconTrash,
+  IconHeart,
+  IconMessage,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { usersService } from '@/services/users'
+import { postsService, type ForumPostItem } from '@/services/posts'
 import { useAuthStore } from '@/stores/authStore'
 import { normalizeError } from '@/lib/errorHandler'
 import type { BackendMyProfileResponse, BackendPrivacySetting } from '@/types/user.types'
@@ -21,6 +27,7 @@ import type { BackendMyProfileResponse, BackendPrivacySetting } from '@/types/us
 export const ProfilePage: FC = () => {
   const { currentUser, updateCurrentUser } = useAuthStore()
 
+  const [activeTab, setActiveTab] = useState<'info' | 'my_posts' | 'bookmarks'>('info')
   const [profile, setProfile] = useState<BackendMyProfileResponse | null>(null)
   const [privacy, setPrivacy] = useState<BackendPrivacySetting | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -28,6 +35,12 @@ export const ProfilePage: FC = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // FO-10 & FO-09: User posts and bookmarks
+  const [myPosts, setMyPosts] = useState<ForumPostItem[]>([])
+  const [bookmarks, setBookmarks] = useState<ForumPostItem[]>([])
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false)
+  const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
 
   // Edit form state
   const [fullName, setFullName] = useState('')
@@ -117,6 +130,52 @@ export const ProfilePage: FC = () => {
     }
   }
 
+  // FO-10: Load user's own posts
+  const loadMyPosts = useCallback(async () => {
+    setIsLoadingPosts(true)
+    try {
+      const res = await postsService.getMyPosts(1, 20)
+      setMyPosts(res.items || [])
+    } catch (err) {
+      console.error('Failed to load my posts:', err)
+    } finally {
+      setIsLoadingPosts(false)
+    }
+  }, [])
+
+  // FO-09: Load bookmarked posts
+  const loadBookmarks = useCallback(async () => {
+    setIsLoadingBookmarks(true)
+    try {
+      const res = await postsService.getMyBookmarks(1, 20)
+      setBookmarks(res.items || [])
+    } catch (err) {
+      console.error('Failed to load bookmarks:', err)
+    } finally {
+      setIsLoadingBookmarks(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'my_posts') {
+      void loadMyPosts()
+    } else if (activeTab === 'bookmarks') {
+      void loadBookmarks()
+    }
+  }, [activeTab, loadMyPosts, loadBookmarks])
+
+  const handleDeleteMyPost = async (postId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return
+    try {
+      await postsService.deletePost(postId)
+      setMyPosts((prev) => prev.filter((p) => p.id !== postId))
+      setToastMessage('Đã xóa bài viết thành công!')
+      setTimeout(() => setToastMessage(null), 3000)
+    } catch (err) {
+      setErrorMessage(normalizeError(err).message)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -193,7 +252,58 @@ export const ProfilePage: FC = () => {
         )}
       </div>
 
-      {/* Edit Profile Form */}
+      {/* Navigation Tabs (FO-10, FO-09) */}
+      <div className="flex border-b border-slate-200 gap-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab('info')}
+          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 ${
+            activeTab === 'info'
+              ? 'border-brand-primary text-brand-primary'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Thông tin cá nhân & Bảo mật
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('my_posts')}
+          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 flex items-center gap-1.5 ${
+            activeTab === 'my_posts'
+              ? 'border-brand-primary text-brand-primary'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <IconFileText className="h-4 w-4" />
+          <span>Bài viết của tôi (FO-10)</span>
+          {myPosts.length > 0 && (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-bold">
+              {myPosts.length}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('bookmarks')}
+          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 flex items-center gap-1.5 ${
+            activeTab === 'bookmarks'
+              ? 'border-brand-primary text-brand-primary'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <IconBookmark className="h-4 w-4" />
+          <span>Bài viết đã lưu (FO-09)</span>
+          {bookmarks.length > 0 && (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-bold">
+              {bookmarks.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'info' && (
+        <>
+          {/* Edit Profile Form */}
       {isEditing ? (
         <form onSubmit={handleSaveProfile} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
           <h2 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Update Profile Details</h2>
@@ -387,6 +497,130 @@ export const ProfilePage: FC = () => {
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {/* Tab: My Posts (FO-10) */}
+      {activeTab === 'my_posts' && (
+        <div className="space-y-4">
+          {isLoadingPosts ? (
+            <div className="p-12 text-center text-slate-400 flex items-center justify-center gap-2">
+              <IconLoader2 className="h-5 w-5 animate-spin" />
+              <span>Đang tải bài viết của bạn...</span>
+            </div>
+          ) : myPosts.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center space-y-3">
+              <IconFileText className="h-12 w-12 text-slate-300 mx-auto" />
+              <h3 className="font-bold text-slate-800 text-base">Bạn chưa đăng bài viết nào</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Hãy chia sẻ kinh nghiệm học tập hoặc đặt câu hỏi trên Diễn đàn để kết nối với cựu sinh viên FPT.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {myPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3 hover:border-slate-300 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-brand-primary">
+                          {post.postType}
+                        </span>
+                        <span className="text-xs text-slate-400">• {new Date(post.createdAt).toLocaleDateString()}</span>
+                        {post.campus && (
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                            {post.campus}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900">{post.title}</h3>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMyPost(post.id)}
+                      className="rounded-lg p-2 text-rose-500 hover:bg-rose-50 transition-colors"
+                      title="Xóa bài viết của tôi"
+                    >
+                      <IconTrash className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{post.content}</p>
+
+                  <div className="flex items-center gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                    <span className="flex items-center gap-1">
+                      <IconHeart className="h-3.5 w-3.5 text-red-500" />
+                      {post.likeCount} lượt thích
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <IconMessage className="h-3.5 w-3.5 text-blue-500" />
+                      {post.commentCount} bình luận
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Bookmarks (FO-09) */}
+      {activeTab === 'bookmarks' && (
+        <div className="space-y-4">
+          {isLoadingBookmarks ? (
+            <div className="p-12 text-center text-slate-400 flex items-center justify-center gap-2">
+              <IconLoader2 className="h-5 w-5 animate-spin" />
+              <span>Đang tải bài viết đã lưu...</span>
+            </div>
+          ) : bookmarks.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center space-y-3">
+              <IconBookmark className="h-12 w-12 text-slate-300 mx-auto" />
+              <h3 className="font-bold text-slate-800 text-base">Chưa có bài viết nào được lưu</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Khi lướt Bảng tin Diễn đàn, bấm biểu tượng Bookmark trên bất kỳ bài viết nào để lưu lại đọc sau.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {bookmarks.map((post) => (
+                <div
+                  key={post.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3 hover:border-slate-300 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-brand-secondary/10 px-2.5 py-0.5 text-[11px] font-bold text-brand-secondary">
+                          {post.postType}
+                        </span>
+                        <span className="text-xs text-slate-400">• Đăng bởi {post.authorName}</span>
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900">{post.title}</h3>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{post.content}</p>
+
+                  <div className="flex items-center gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                    <span className="flex items-center gap-1">
+                      <IconHeart className="h-3.5 w-3.5 text-red-500" />
+                      {post.likeCount} lượt thích
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <IconMessage className="h-3.5 w-3.5 text-blue-500" />
+                      {post.commentCount} bình luận
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

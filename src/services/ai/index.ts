@@ -27,7 +27,9 @@ export interface RagIngestPayload {
 }
 
 export interface RagIngestResult {
-  totalIndexed: number
+  totalIndexed?: number
+  documentsIndexed?: number
+  totalChunks?: number
   message?: string
 }
 

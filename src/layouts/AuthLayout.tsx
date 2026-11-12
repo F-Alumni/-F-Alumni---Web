@@ -38,7 +38,7 @@ export const AuthLayout: FC = () => {
           <div className="flex items-center space-x-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-md border border-white/20">
               <span className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" />
-              Alumni Connect Administration Portal
+              FPT Alumni & Student Connect Portal
             </span>
           </div>
 
@@ -46,13 +46,13 @@ export const AuthLayout: FC = () => {
           <div className="space-y-4 max-w-lg">
             <div className="space-y-2">
               <span className="inline-block px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-primary bg-white/10 rounded-full backdrop-blur-sm border border-white/15">
-                Centralized University Governance
+                Cộng Đồng Tri Thức & Nghề Nghiệp FPTU
               </span>
               <h2 className="text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">
-                Alumni Network & Community Management
+                Mạng Lưới Kết Nối Sinh Viên & Cựu Sinh Viên
               </h2>
               <p className="text-xs text-white/80 leading-relaxed">
-                Empowering university coordinators, faculty boards, and administrative staff to verify alumni credentials, oversee community spaces, and track career outcomes across FPT campuses.
+                Đồng hành cùng sinh viên và cựu sinh viên 5 cơ sở FPT. Chia sẻ kinh nghiệm học tập, thực tập OJT, cơ hội việc làm và kết nối cố vấn nghề nghiệp 1-1.
               </p>
             </div>
 
@@ -60,10 +60,10 @@ export const AuthLayout: FC = () => {
             <div className="rounded-xl border border-white/15 bg-white/10 p-3.5 backdrop-blur-md shadow-sm space-y-1.5">
               <div className="flex items-center gap-2 text-xs font-bold text-brand-accent">
                 <IconShieldCheck size={18} stroke={1.8} className="shrink-0" />
-                <span>Institutional Governance Standards</span>
+                <span>Xác thực danh tính học thuật chính thống</span>
               </div>
               <p className="text-[11px] text-white/85 leading-relaxed">
-                Direct integration with FPT Academic Registry for automated verification of bachelor diplomas, student cohorts, and campus chapters.
+                Tích hợp tài khoản email Đại học FPT (@fpt.edu.vn, @fe.edu.vn) đảm bảo mạng lưới thành viên xác thực, minh bạch và an toàn.
               </p>
             </div>
 

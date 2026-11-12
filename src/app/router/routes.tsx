@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
-import { LoginPage, ForgotPasswordPage } from '@/pages/auth'
+import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
 import {
   DashboardPage,
   UsersManagementPage,
@@ -11,7 +11,15 @@ import {
   AnalyticsPage,
   SettingsPage,
 } from '@/pages/admin'
-import { HomePage, AlumniPage, ChatPage, ProfilePage } from '@/pages/user'
+import {
+  HomePage,
+  AlumniPage,
+  ChatPage,
+  ProfilePage,
+  OpportunitiesPage,
+  CommunitiesPage,
+  NotificationsPage,
+} from '@/pages/user'
 import { LandingPage } from '@/pages/LandingPage'
 import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
 
@@ -50,7 +58,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'register',
-            element: <Navigate to={ROUTES.AUTH.LOGIN} replace />,
+            element: <RegisterPage />,
           },
           {
             path: 'verify-email',
@@ -167,12 +175,48 @@ export const routes: RouteObject[] = [
             element: <HomePage />,
           },
           {
+            path: 'communities',
+            element: <CommunitiesPage />,
+          },
+          {
             path: 'alumni',
             element: <AlumniPage />,
           },
           {
+            path: 'jobs',
+            element: <OpportunitiesPage defaultTab="jobs" />,
+          },
+          {
+            path: 'internships',
+            element: <OpportunitiesPage defaultTab="internships" />,
+          },
+          {
+            path: 'scholarships',
+            element: <OpportunitiesPage defaultTab="scholarships" />,
+          },
+          {
+            path: 'opportunities',
+            element: <OpportunitiesPage defaultTab="all" />,
+          },
+          {
             path: 'chat',
             element: <ChatPage />,
+          },
+          {
+            path: 'notifications',
+            element: <NotificationsPage />,
+          },
+          {
+            path: 'saved',
+            element: <Navigate to="/app/profile?tab=bookmarks" replace />,
+          },
+          {
+            path: 'ai',
+            element: <Navigate to="/app/home?ai=open" replace />,
+          },
+          {
+            path: 'settings',
+            element: <Navigate to="/app/profile?tab=settings" replace />,
           },
           {
             path: 'profile',

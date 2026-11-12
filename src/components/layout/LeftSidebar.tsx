@@ -196,7 +196,7 @@ export const LeftSidebar: FC = () => {
           ].map((c) => (
             <li key={c.name}>
               <NavLink
-                to={ROUTES.APP.COMMUNITIES}
+                to={`${ROUTES.APP.COMMUNITIES}?tag=${encodeURIComponent(c.name)}`}
                 className="flex items-center justify-between rounded-md px-2 py-1.5 text-slate-600 transition-colors hover:bg-slate-50 hover:text-brand-primary"
               >
                 <span className="truncate font-medium">{c.name}</span>

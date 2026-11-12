@@ -9,6 +9,8 @@ import {
   ChevronRight,
   Loader2,
   MessageCircle,
+  Calendar,
+  Check,
 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
@@ -17,6 +19,11 @@ import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
 import { aiService, type MentorItem } from '@/services/ai'
 import { chatService } from '@/services/chat'
+import {
+  opportunitiesService,
+  type CommunityEventItem,
+  type EventRsvpStatus,
+} from '@/services/opportunities'
 import { useAuthStore } from '@/stores/authStore'
 
 interface DisplayMentor {
@@ -38,6 +45,10 @@ export const RightSidebar: FC = () => {
   const [mentors, setMentors] = useState<DisplayMentor[]>([])
   const [isLoadingMentors, setIsLoadingMentors] = useState(true)
   const [connectingId, setConnectingId] = useState<string | null>(null)
+
+  const [events, setEvents] = useState<CommunityEventItem[]>([])
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true)
+  const [rsvpingEventId, setRsvpingEventId] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -101,6 +112,55 @@ export const RightSidebar: FC = () => {
       navigate(ROUTES.APP.CHAT)
     } finally {
       setConnectingId(null)
+    }
+  }
+
+  // Load real upcoming events from Backend
+  useEffect(() => {
+    let isMounted = true
+    const loadEvents = async () => {
+      setIsLoadingEvents(true)
+      try {
+        const res = await opportunitiesService.getEvents({ pageSize: 3, upcomingOnly: true })
+        if (isMounted && res.items && res.items.length > 0) {
+          setEvents(res.items)
+        }
+      } catch (err) {
+        console.warn('Failed to fetch events for sidebar:', err)
+      } finally {
+        if (isMounted) setIsLoadingEvents(false)
+      }
+    }
+    void loadEvents()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const handleRsvpInSidebar = async (eventId: string, status: EventRsvpStatus) => {
+    setRsvpingEventId(eventId)
+    try {
+      await opportunitiesService.rsvpEvent(eventId, status)
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === eventId
+            ? {
+                ...e,
+                myStatus: e.myStatus === status ? null : status,
+                goingCount:
+                  status === 'Going'
+                    ? e.myStatus === 'Going'
+                      ? Math.max(0, e.goingCount - 1)
+                      : e.goingCount + 1
+                    : e.goingCount,
+              }
+            : e
+        )
+      )
+    } catch (err) {
+      console.error('RSVP from sidebar failed:', err)
+    } finally {
+      setRsvpingEventId(null)
     }
   }
 
@@ -225,44 +285,106 @@ export const RightSidebar: FC = () => {
         </CardContent>
       </Card>
 
-      {/* 2. Upcoming Opportunity Deadlines */}
+      {/* 2. Upcoming Community Events & RSVP */}
       <Card className="border-slate-200/90 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-bold text-slate-900">
-            <Clock className="h-4 w-4 text-amber-500" />
-            Upcoming Deadlines
+            <Calendar className="h-4 w-4 text-brand-primary" />
+            <span>Sự Kiện Sắp Tới</span>
           </CardTitle>
-          <Link
-            to={ROUTES.APP.SCHOLARSHIPS}
-            className="text-[11px] font-semibold text-brand-primary hover:underline"
-          >
-            Calendar
-          </Link>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            RSVP
+          </span>
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
-          {upcomingDeadlines.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 transition-colors hover:bg-slate-100/70"
-            >
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <Badge variant={item.tagVariant} className="px-1.5 py-0 text-[10px]">
-                  {item.tag}
-                </Badge>
-                <span className="flex items-center gap-1 text-[10px] font-bold text-red-600">
-                  <Clock className="h-2.5 w-2.5" />
-                  {item.deadline}
-                </span>
-              </div>
-              <h4 className="line-clamp-2 text-xs font-semibold leading-snug text-slate-900">
-                {item.title}
-              </h4>
-              <p className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
-                <Award className="h-3 w-3 text-slate-400" />
-                {item.organization}
-              </p>
+          {isLoadingEvents ? (
+            <div className="flex h-20 items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin text-brand-primary" />
+              <span className="ml-2 text-xs text-slate-400">Đang tải sự kiện...</span>
             </div>
-          ))}
+          ) : events.length > 0 ? (
+            events.map((evt) => {
+              const startDate = new Date(evt.startTime)
+              const dateStr = startDate.toLocaleDateString('vi-VN', {
+                day: 'numeric',
+                month: 'numeric',
+              })
+              const isGoing = evt.myStatus === 'Going'
+
+              return (
+                <div
+                  key={evt.id}
+                  className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition-colors hover:bg-slate-100/70"
+                >
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <Badge className="bg-brand-secondary/90 text-white px-1.5 py-0 text-[10px]">
+                      {evt.campus || 'Toàn quốc'}
+                    </Badge>
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-brand-primary">
+                      <Clock className="h-2.5 w-2.5" />
+                      {dateStr}
+                    </span>
+                  </div>
+
+                  <h4 className="line-clamp-2 text-xs font-bold leading-snug text-slate-900">
+                    {evt.title}
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-slate-500">
+                    📍 {evt.location}
+                  </p>
+
+                  <div className="mt-2 flex items-center justify-between border-t border-slate-200/60 pt-2">
+                    <span className="text-[10px] font-semibold text-slate-600">
+                      👥 {evt.goingCount || 0} đã tham gia
+                    </span>
+
+                    <Button
+                      size="sm"
+                      variant={isGoing ? 'default' : 'outline'}
+                      onClick={() => handleRsvpInSidebar(evt.id, 'Going')}
+                      disabled={rsvpingEventId === evt.id}
+                      className={`h-6 rounded-lg px-2 text-[10px] font-bold gap-1 ${
+                        isGoing
+                          ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
+                          : 'border-slate-200 text-slate-700 hover:text-brand-primary'
+                      }`}
+                    >
+                      {rsvpingEventId === evt.id ? (
+                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                      ) : isGoing ? (
+                        <Check className="h-2.5 w-2.5" />
+                      ) : null}
+                      <span>{isGoing ? 'Đã RSVP' : 'Tham gia'}</span>
+                    </Button>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            upcomingDeadlines.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 transition-colors hover:bg-slate-100/70"
+              >
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <Badge variant={item.tagVariant} className="px-1.5 py-0 text-[10px]">
+                    {item.tag}
+                  </Badge>
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-red-600">
+                    <Clock className="h-2.5 w-2.5" />
+                    {item.deadline}
+                  </span>
+                </div>
+                <h4 className="line-clamp-2 text-xs font-semibold leading-snug text-slate-900">
+                  {item.title}
+                </h4>
+                <p className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
+                  <Award className="h-3 w-3 text-slate-400" />
+                  {item.organization}
+                </p>
+              </div>
+            ))
+          )}
         </CardContent>
       </Card>
 

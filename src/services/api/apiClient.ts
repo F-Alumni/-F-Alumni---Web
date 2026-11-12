@@ -57,8 +57,8 @@ const attachAuthInterceptor = (instance: AxiosInstance) => {
             localStorage.getItem('refresh_token') ||
             localStorage.getItem('refreshToken')
 
-          if (!refreshToken) {
-            throw new Error('No refresh token available')
+          if (!refreshToken || refreshToken.startsWith('fpt-refresh-') || refreshToken.startsWith('mock-')) {
+            throw new Error('Phiên đăng nhập đã hết hạn hoặc chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.')
           }
 
           // Request new access token from Auth/User service

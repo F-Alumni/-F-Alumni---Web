@@ -41,6 +41,11 @@ export const useAuthStore = create<AuthState>()(
         const computedPermissions = getPermissionsForUser(user)
         try {
           localStorage.setItem('access_token', token)
+          localStorage.setItem('accessToken', token)
+          if (!localStorage.getItem('refresh_token')) {
+            localStorage.setItem('refresh_token', `fpt-refresh-${user.id || Date.now()}`)
+            localStorage.setItem('refreshToken', `fpt-refresh-${user.id || Date.now()}`)
+          }
         } catch {
           // Ignore localStorage errors in non-browser envs
         }
@@ -94,6 +99,9 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () => {
         try {
           localStorage.removeItem('access_token')
+          localStorage.removeItem('accessToken')
+          localStorage.removeItem('refresh_token')
+          localStorage.removeItem('refreshToken')
         } catch {
           // Ignore
         }
