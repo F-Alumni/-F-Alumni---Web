@@ -92,7 +92,12 @@ export interface UpdateProfilePayload {
 export interface BackendBlockedUser {
   blockedUserId: string
   fullName: string
+  email?: string | null
   avatarUrl: string | null
+  role?: string | null
+  major?: string | null
+  campus?: string | null
+  reason?: string | null
   blockedAt: string
 }
 

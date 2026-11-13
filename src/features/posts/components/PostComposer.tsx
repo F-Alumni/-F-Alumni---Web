@@ -20,6 +20,7 @@ import { postsService } from '@/services/posts'
 import { uploadImageViaBackend, validateImageFile } from '@/services/media'
 import { useAuthStore } from '@/stores/authStore'
 import { normalizeError } from '@/lib/errorHandler'
+import { FPT_CAMPUSES } from '@/constants/campuses'
 
 interface PostComposerProps {
   onPostCreated?: (content: string) => void
@@ -144,7 +145,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
         {/* Top: Avatar & Composer Input */}
         <div className="flex items-start gap-3">
           <Avatar
-            src={currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256'}
+            src={currentUser?.avatarUrl || undefined}
             fallback={(currentUser?.name || 'ME').slice(0, 2).toUpperCase()}
             size="md"
             isVerified
@@ -158,11 +159,11 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Tiêu đề bài viết (FO-01)..."
+                  placeholder="Tiêu đề bài viết..."
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary/40"
                 />
 
-                {/* FO-02: Target Major & Campus Audience Selectors */}
+                {/* Target Major & Campus Audience Selectors */}
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700">
                     <GraduationCap className="h-3.5 w-3.5 text-brand-primary shrink-0" />
@@ -170,6 +171,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
                     <select
                       value={targetMajor}
                       onChange={(e) => setTargetMajor(e.target.value)}
+                      aria-label="Chọn chuyên ngành"
                       className="bg-transparent font-semibold text-slate-800 focus:outline-none cursor-pointer"
                     >
                       <option value="All">Tất cả sinh viên (All Majors)</option>
@@ -188,14 +190,15 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
                     <select
                       value={targetCampus}
                       onChange={(e) => setTargetCampus(e.target.value)}
+                      aria-label="Chọn cơ sở"
                       className="bg-transparent font-semibold text-slate-800 focus:outline-none cursor-pointer"
                     >
                       <option value="All">Toàn hệ thống FPTU</option>
-                      <option value="Hòa Lạc">FU Hòa Lạc</option>
-                      <option value="Hồ Chí Minh">FU Hồ Chí Minh</option>
-                      <option value="Đà Nẵng">FU Đà Nẵng</option>
-                      <option value="Cần Thơ">FU Cần Thơ</option>
-                      <option value="Quy Nhơn">FU Quy Nhơn</option>
+                      {FPT_CAMPUSES.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {c.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -252,7 +255,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
                   }}
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-all ${
                     isSelected
-                      ? 'shadow-xs bg-slate-900 text-white'
+                      ? 'shadow-sm bg-slate-900 text-white'
                       : 'bg-slate-100/70 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900'
                   }`}
                 >
@@ -262,13 +265,13 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
               )
             })}
 
-            {/* FO-03: Attach Image Button */}
+            {/* Attach Image Button */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingImage}
               className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
-              title="Đính kèm hình ảnh minh họa (FO-03)"
+              title="Đính kèm hình ảnh minh họa"
             >
               {isUploadingImage ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-600" />
@@ -292,7 +295,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
               onClick={handleSubmit}
               disabled={!content.trim() || isSubmitting || isUploadingImage}
               size="sm"
-              className="shadow-xs rounded-full bg-brand-primary px-4 text-xs font-semibold text-white hover:bg-brand-primary-hover disabled:opacity-40"
+              className="shadow-sm rounded-full bg-brand-primary px-4 text-xs font-semibold text-white hover:bg-brand-primary-hover disabled:opacity-40"
             >
               {isSubmitting ? (
                 <>

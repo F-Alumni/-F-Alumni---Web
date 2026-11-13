@@ -20,8 +20,10 @@ import {
   OpportunitiesPage,
   CommunitiesPage,
   NotificationsPage,
+  PostDetailPage,
 } from '@/pages/user'
 import { LandingPage } from '@/pages/LandingPage'
+import { InfoPage } from '@/pages/InfoPage'
 import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
 
 /**
@@ -35,10 +37,22 @@ export const routes: RouteObject[] = [
     path: ROUTES.ROOT,
     element: <RootRedirect />,
   },
-  // Dedicated Landing Page Route (Available for both Guests and Authenticated Review)
+  // Dedicated Landing & Info Routes (Available for both Guests and Authenticated Review)
   {
     path: ROUTES.LANDING,
     element: <LandingPage />,
+  },
+  {
+    path: '/about',
+    element: <InfoPage type="about" />,
+  },
+  {
+    path: '/privacy',
+    element: <InfoPage type="privacy" />,
+  },
+  {
+    path: '/guidelines',
+    element: <InfoPage type="guidelines" />,
   },
 
   // 2. Authentication Section (/auth/* & /admin/login)
@@ -182,6 +196,10 @@ export const routes: RouteObject[] = [
           {
             path: 'communities',
             element: <CommunitiesPage />,
+          },
+          {
+            path: 'posts/:postId',
+            element: <PostDetailPage />,
           },
           {
             path: 'alumni',

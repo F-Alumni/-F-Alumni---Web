@@ -12,6 +12,12 @@ import type {
  * Normalizes backend ChatMessageResponse into Frontend BackendChatMessage.
  */
 export function mapBackendChatMessage(raw: any): BackendChatMessage {
+  const attachmentUrl = raw.attachmentUrl || raw.AttachmentUrl || raw.mediaUrl || raw.MediaUrl || null
+  const attachmentType =
+    raw.attachmentType || raw.AttachmentType || raw.messageType || raw.MessageType || (attachmentUrl ? 'Image' : null)
+  const status = raw.status || raw.Status || 'Sent'
+  const readAt = raw.readAt || raw.ReadAt || null
+
   return {
     id: raw.id || raw.Id,
     roomId: raw.conversationId || raw.ConversationId || raw.roomId || raw.RoomId,
@@ -19,9 +25,13 @@ export function mapBackendChatMessage(raw: any): BackendChatMessage {
     senderName: raw.senderDisplayName || raw.SenderDisplayName || raw.senderName || 'Anonymous',
     senderAvatarUrl: raw.senderAvatarUrl || raw.SenderAvatarUrl || null,
     content: raw.content || raw.Content || '',
-    mediaUrl: raw.mediaUrl || raw.MediaUrl || null,
-    messageType: raw.messageType || raw.MessageType || (raw.mediaUrl || raw.MediaUrl ? 'Image' : 'Text'),
-    isRead: raw.isRead ?? raw.IsRead ?? false,
+    mediaUrl: attachmentUrl,
+    attachmentUrl,
+    attachmentType,
+    messageType: attachmentUrl && String(attachmentType).toLowerCase() === 'image' ? 'Image' : 'Text',
+    status,
+    readAt,
+    isRead: status === 'Read' || Boolean(readAt) || Boolean(raw.isRead ?? raw.IsRead),
     sentAt: raw.sentAt || raw.SentAt || new Date().toISOString(),
   }
 }
@@ -34,20 +44,26 @@ export const chatService = {
    * Fetch all group and direct conversations the user is participating in.
    * Matches BE contract: GET /api/v1/chats/conversations
    */
-  async getRooms(): Promise<BackendChatRoom[]> {
+  async getRooms(currentUserId?: string): Promise<BackendChatRoom[]> {
     const res = await chatApiClient.get<any>('/chats/conversations')
     const paged = res.data?.items ? res.data : { items: Array.isArray(res.data) ? res.data : [] }
 
-    return (paged.items || []).map((c: any) => ({
-      id: c.id,
-      name: c.title || (c.isGroup ? 'Nhóm thảo luận' : 'Hội thoại trực tiếp'),
-      roomType: c.isGroup ? 'Group' : 'Direct',
-      major: null,
-      createdAt: c.createdAt || new Date().toISOString(),
-      lastMessage: c.lastMessage ? mapBackendChatMessage(c.lastMessage) : null,
-      isMuted: c.isMuted ?? false,
-      unreadCount: c.unreadCount ?? 0,
-    }))
+    return (paged.items || []).map((c: any) => {
+      const participants: any[] = c.participants || []
+      const selfParticipant = currentUserId
+        ? participants.find((p) => (p.userId || p.UserId) === currentUserId)
+        : undefined
+      return {
+        id: c.id,
+        name: c.title || (c.isGroup ? 'Nhóm thảo luận' : 'Hội thoại trực tiếp'),
+        roomType: c.isGroup ? 'Group' : 'Direct',
+        major: null,
+        createdAt: c.createdAt || new Date().toISOString(),
+        lastMessage: c.lastMessage ? mapBackendChatMessage(c.lastMessage) : null,
+        isMuted: selfParticipant?.isMuted ?? c.isMuted ?? false,
+        unreadCount: c.unreadCount ?? 0,
+      }
+    })
   },
 
   /**
@@ -72,9 +88,7 @@ export const chatService = {
    * Matches BE contract: POST /api/v1/chats/conversations
    */
   async createGroupRoom(payload: CreateGroupRoomPayload): Promise<{ roomId: string; name: string }> {
-    const participants = (payload.participantUserIds && payload.participantUserIds.length > 0)
-      ? payload.participantUserIds
-      : ['11111111-1111-1111-1111-111111111111']
+    const participants = payload.participantUserIds || []
 
     const res = await chatApiClient.post<any>('/chats/conversations', {
       title: payload.name.trim(),
@@ -118,10 +132,11 @@ export const chatService = {
    * Matches BE contract: POST /api/v1/chats/conversations/{conversationId}/messages
    */
   async sendMessage(roomId: string, payload: SendMessagePayload): Promise<BackendChatMessage> {
+    const attachmentUrl = payload.mediaUrl || null
     const res = await chatApiClient.post<any>(`/chats/conversations/${roomId}/messages`, {
       content: payload.content.trim(),
-      mediaUrl: payload.mediaUrl || null,
-      messageType: payload.messageType || (payload.mediaUrl ? 'Image' : 'Text'),
+      attachmentUrl,
+      attachmentType: attachmentUrl ? (payload.messageType || 'Image') : null,
     })
     return mapBackendChatMessage(res.data)
   },
@@ -135,7 +150,7 @@ export const chatService = {
       const res = await chatApiClient.post<any>(`/chats/conversations/${roomId}/read`)
       return {
         success: true,
-        readCount: res.data?.readCount || 0,
+        readCount: res.data?.markedCount ?? res.data?.readCount ?? 0,
       }
     } catch {
       return { success: false, readCount: 0 }

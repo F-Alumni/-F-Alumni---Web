@@ -11,10 +11,13 @@ import {
   IconShieldLock,
   IconCircleCheck,
   IconRefresh,
+  IconAlertCircle,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/dialog'
 import { PageHeader, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
+import { formatCampusLabel } from '@/constants/campuses'
 import { postsService, type ForumPostItem } from '@/services/posts'
 
 export interface PostRecord {
@@ -26,7 +29,7 @@ export interface PostRecord {
   contentSnippet: string
   likesCount: number
   commentsCount: number
-  status: 'active' | 'hidden' | 'rejected'
+  status: 'active' | 'hidden'
   createdAt: string
   hiddenReason?: string
 }
@@ -34,88 +37,73 @@ export interface PostRecord {
 function adaptForumPost(p: ForumPostItem): PostRecord {
   return {
     id: p.id,
-    authorName: p.authorName || 'Alumni / Student Member',
-    authorRole: p.major ? `Major: ${p.major}` : 'Community Member',
-    community: p.campus ? `${p.campus} Campus` : 'General Community',
+    authorName: p.authorName || 'Thành viên FPTU',
+    authorRole: p.major ? `Khoa ${p.major}` : 'Cộng đồng FPT',
+    community: p.campus && p.campus !== 'All' ? formatCampusLabel(p.campus) : 'Toàn hệ thống',
     title: p.title,
     contentSnippet: p.content,
     likesCount: p.likeCount || 0,
     commentsCount: p.commentCount || 0,
-    status: 'active',
-    createdAt: p.createdAt ? p.createdAt.slice(0, 16).replace('T', ' ') : '2026-10-10 10:15',
+    status: p.isHidden ? 'hidden' : 'active',
+    createdAt: p.createdAt ? p.createdAt.slice(0, 16).replace('T', ' ') : '—',
+    hiddenReason: p.isHidden ? 'Bài viết đang bị ẩn khỏi bảng tin công khai' : undefined,
   }
 }
 
 export const PostsManagementPage: FC = () => {
   const queryClient = useQueryClient()
   const [selectedPost, setSelectedPost] = useState<PostRecord | null>(null)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // Local overrides for optimistic status & deletion
-  const [localOverrides, setLocalOverrides] = useState<Record<string, { status?: PostRecord['status']; hiddenReason?: string }>>({})
-  const [deletedPostIds, setDeletedPostIds] = useState<Set<string>>(new Set())
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message })
+    setTimeout(() => setToast(null), 4000)
+  }
 
-  // Query posts from Forum Service
-  const { data: postsData, isLoading, refetch } = useQuery({
+  const { data: postsData, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin', 'forum', 'posts'],
-    queryFn: () => postsService.getPosts({ pageSize: 50 }),
+    queryFn: () => postsService.getPosts({ pageSize: 50, includeHidden: true }),
     staleTime: 30 * 1000,
   })
 
-  // Delete post mutation
-  const deletePostMutation = useMutation({
-    mutationFn: (id: string) => postsService.deletePost(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'forum', 'posts'] })
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: ({ id, isHidden }: { id: string; isHidden: boolean }) =>
+      postsService.setPostVisibility(id, isHidden),
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'forum', 'posts'] })
+      showToast(
+        'success',
+        variables.isHidden
+          ? 'Đã ẩn bài viết khỏi bảng tin công khai.'
+          : 'Đã khôi phục bài viết lên bảng tin công khai.'
+      )
+    },
+    onError: () => {
+      showToast('error', 'Không thể cập nhật trạng thái hiển thị bài viết.')
     },
   })
 
-  // Derive final posts list
+  const deletePostMutation = useMutation({
+    mutationFn: (id: string) => postsService.deletePost(id),
+    onSuccess: () => {
+      setDeleteTargetId(null)
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'forum', 'posts'] })
+      showToast('success', 'Đã xóa bài viết khỏi hệ thống.')
+    },
+    onError: () => {
+      setDeleteTargetId(null)
+      showToast('error', 'Không thể xóa bài viết. Vui lòng thử lại.')
+    },
+  })
+
   const posts = useMemo(() => {
-    let baseList: PostRecord[] = []
-    if (postsData && postsData.items && postsData.items.length > 0) {
-      baseList = postsData.items.map(adaptForumPost)
-    }
+    return (postsData?.items || []).map(adaptForumPost)
+  }, [postsData])
 
-    return baseList
-      .filter((p) => !deletedPostIds.has(p.id))
-      .map((p) => {
-        const override = localOverrides[p.id]
-        return override ? { ...p, ...override } : p
-      })
-  }, [postsData, deletedPostIds, localOverrides])
-
-  // Toggle Hide / Suppression Action for Moderator
   const handleToggleHide = (post: PostRecord) => {
-    const isCurrentlyHidden = post.status === 'hidden'
-    const nextStatus: PostRecord['status'] = isCurrentlyHidden ? 'active' : 'hidden'
-
-    setLocalOverrides((prev) => ({
-      ...prev,
-      [post.id]: {
-        status: nextStatus,
-        hiddenReason: isCurrentlyHidden
-          ? undefined
-          : 'Suppressed by Community Safety Moderator',
-      },
-    }))
-
-    const msg = isCurrentlyHidden
-      ? `Post "${post.title}" restored to active public community feeds.`
-      : `Post "${post.title}" has been hidden and suppressed from feeds.`
-    setToastMessage(msg)
-    setTimeout(() => setToastMessage(null), 3500)
-  }
-
-  const handleDelete = async (id: string) => {
-    setDeletedPostIds((prev) => new Set(prev).add(id))
-    try {
-      await deletePostMutation.mutateAsync(id)
-    } catch {
-      // optimistic state preserved
-    }
-    setToastMessage(`Post ${id} removed permanently from discussion database.`)
-    setTimeout(() => setToastMessage(null), 3500)
+    const nextHidden = post.status !== 'hidden'
+    void toggleVisibilityMutation.mutateAsync({ id: post.id, isHidden: nextHidden })
   }
 
   const columns: Column<PostRecord>[] = [
@@ -128,7 +116,7 @@ export const PostsManagementPage: FC = () => {
           <span className="text-[11px] text-slate-500 line-clamp-1">{p.contentSnippet}</span>
           {p.hiddenReason && (
             <span className="text-[10px] text-amber-700 font-medium mt-0.5">
-              ⚠️ {p.hiddenReason}
+              {p.hiddenReason}
             </span>
           )}
         </div>
@@ -146,7 +134,7 @@ export const PostsManagementPage: FC = () => {
     },
     {
       key: 'community',
-      header: 'Community Circle',
+      header: 'Campus Scope',
       render: (p) => (
         <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
           {p.community}
@@ -181,13 +169,6 @@ export const PostsManagementPage: FC = () => {
             </span>
           )
         }
-        if (p.status === 'rejected') {
-          return (
-            <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200">
-              Removed
-            </span>
-          )
-        }
         return (
           <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
             Published
@@ -217,10 +198,10 @@ export const PostsManagementPage: FC = () => {
             View
           </Button>
 
-          {/* Moderator Suppression / Hide Action */}
           <Button
             size="sm"
             variant="outline"
+            disabled={toggleVisibilityMutation.isPending}
             onClick={() => handleToggleHide(p)}
             className={`h-7 text-xs border transition-colors ${
               p.status === 'hidden'
@@ -245,7 +226,7 @@ export const PostsManagementPage: FC = () => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleDelete(p.id)}
+            onClick={() => setDeleteTargetId(p.id)}
             className="h-7 text-xs border-slate-200 text-rose-600 hover:bg-rose-50"
             title="Remove post permanently"
             aria-label="Remove post"
@@ -259,14 +240,23 @@ export const PostsManagementPage: FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-800 shadow-sm animate-in fade-in">
+      {toast && (
+        <div
+          className={`flex items-center justify-between rounded-xl border px-4 py-2.5 text-xs font-semibold shadow-sm animate-in fade-in ${
+            toast.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
+          }`}
+        >
           <div className="flex items-center gap-2">
-            <IconCircleCheck size={16} stroke={2} className="text-brand-accent shrink-0" />
-            <span>{toastMessage}</span>
+            {toast.type === 'success' ? (
+              <IconCircleCheck size={16} stroke={2} className="text-brand-accent shrink-0" />
+            ) : (
+              <IconAlertCircle size={16} stroke={2} className="text-rose-600 shrink-0" />
+            )}
+            <span>{toast.message}</span>
           </div>
-          <button onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-slate-600 font-bold ml-4">
+          <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-600 font-bold ml-4">
             ×
           </button>
         </div>
@@ -274,7 +264,7 @@ export const PostsManagementPage: FC = () => {
 
       <PageHeader
         title="Post Management"
-        description="Monitor user-generated discussions, community articles, and hide or suppress policy violations."
+        description="Monitor community discussions, articles, and hide or suppress policy violations."
         breadcrumbs={[
           { label: 'Admin', to: ROUTES.ADMIN.DASHBOARD },
           { label: 'Post Management' },
@@ -283,7 +273,7 @@ export const PostsManagementPage: FC = () => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => refetch()}
+            onClick={() => void refetch()}
             disabled={isLoading}
             className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
           >
@@ -292,6 +282,15 @@ export const PostsManagementPage: FC = () => {
           </Button>
         }
       />
+
+      {isError && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-medium text-rose-700 flex items-center justify-between">
+          <span>Không thể tải danh sách bài viết từ ForumService.</span>
+          <Button size="sm" variant="outline" onClick={() => void refetch()} className="h-7 text-xs">
+            Thử lại
+          </Button>
+        </div>
+      )}
 
       <DataTable
         data={posts}
@@ -308,24 +307,24 @@ export const PostsManagementPage: FC = () => {
 
       {/* Post Detail Inspection Modal */}
       {selectedPost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-brand-primary">{selectedPost.id}</span>
+                <span className="font-mono text-xs font-bold text-brand-primary">{selectedPost.id.slice(0, 8)}</span>
                 <span className="text-xs text-slate-400">•</span>
                 <span className="text-xs font-semibold text-slate-700">{selectedPost.community}</span>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedPost(null)}
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                aria-label="Close modal"
               >
                 <IconX size={18} />
               </button>
             </div>
 
-            {/* Content */}
             <div className="p-6 space-y-4 text-xs">
               <div>
                 <h3 className="text-base font-bold text-slate-900 leading-snug">{selectedPost.title}</h3>
@@ -337,7 +336,7 @@ export const PostsManagementPage: FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-800 leading-relaxed font-sans">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-800 leading-relaxed font-sans max-h-60 overflow-y-auto whitespace-pre-line">
                 {selectedPost.contentSnippet}
               </div>
 
@@ -363,7 +362,6 @@ export const PostsManagementPage: FC = () => {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4 bg-slate-50">
               <Button
                 variant="outline"
@@ -374,36 +372,47 @@ export const PostsManagementPage: FC = () => {
                 Close
               </Button>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    handleToggleHide(selectedPost)
-                    setSelectedPost(null)
-                  }}
-                  className={`h-9 font-semibold ${
-                    selectedPost.status === 'hidden'
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-amber-600 hover:bg-amber-700 text-white'
-                  }`}
-                >
-                  {selectedPost.status === 'hidden' ? (
-                    <>
-                      <IconEyeCheck size={16} className="mr-1.5" />
-                      Restore to Feed
-                    </>
-                  ) : (
-                    <>
-                      <IconEyeOff size={16} className="mr-1.5" />
-                      Hide / Suppress
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                onClick={() => {
+                  handleToggleHide(selectedPost)
+                  setSelectedPost(null)
+                }}
+                className={`h-9 font-semibold ${
+                  selectedPost.status === 'hidden'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'bg-amber-600 hover:bg-amber-700 text-white'
+                }`}
+              >
+                {selectedPost.status === 'hidden' ? (
+                  <>
+                    <IconEyeCheck size={16} className="mr-1.5" />
+                    Restore to Feed
+                  </>
+                ) : (
+                  <>
+                    <IconEyeOff size={16} className="mr-1.5" />
+                    Hide / Suppress
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteTargetId)}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={() => {
+          if (deleteTargetId) void deletePostMutation.mutateAsync(deleteTargetId)
+        }}
+        title="Xác nhận xóa bài viết"
+        message="Bài viết này sẽ bị xóa vĩnh viễn khỏi cơ sở dữ liệu diễn đàn. Bạn có chắc chắn muốn tiếp tục?"
+        confirmText="Xóa bài viết"
+        variant="danger"
+        isLoading={deletePostMutation.isPending}
+      />
     </div>
   )
 }

@@ -176,7 +176,7 @@ export const OpportunitiesManagementPage: FC = () => {
           <div className="flex items-center gap-1.5">
             <span className="font-bold text-slate-900 line-clamp-1">{o.title}</span>
             {o.isAcademicVerified && (
-              <span className="rounded-md bg-emerald-100 px-1.5 py-0.2 text-[9px] font-bold text-emerald-800 shrink-0">
+              <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800 shrink-0">
                 Verified Academic
               </span>
             )}
@@ -334,7 +334,7 @@ export const OpportunitiesManagementPage: FC = () => {
             </Button>
             <Button
               onClick={() => setIsModalOpen(true)}
-              className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5"
+              className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-primary-hover flex items-center gap-1.5"
             >
               <IconPlus size={16} stroke={2} />
               <span>{isFaculty ? 'Publish Academic Opportunity' : 'Post Opportunity'}</span>
@@ -358,7 +358,7 @@ export const OpportunitiesManagementPage: FC = () => {
 
       {/* MODAL 1: Publish Academic Opportunity Modal (Faculty & Admin) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-orange-50/60">
@@ -557,7 +557,7 @@ export const OpportunitiesManagementPage: FC = () => {
 
       {/* MODAL 2: Detail Inspection */}
       {selectedOpportunity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
               <div className="flex items-center gap-2">

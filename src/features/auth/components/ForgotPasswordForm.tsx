@@ -116,7 +116,7 @@ export const ForgotPasswordForm: FC = () => {
           <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/25">
             <IconShieldCheck size={30} stroke={2} />
           </div>
-          <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-xs ring-2 ring-white">
+          <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-sm ring-2 ring-white">
             <IconSparkles size={11} stroke={2.5} />
           </div>
         </div>
@@ -138,7 +138,7 @@ export const ForgotPasswordForm: FC = () => {
           <Button
             type="button"
             onClick={() => navigate(ROUTES.AUTH.LOGIN)}
-            className="w-full h-10.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all"
+            className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all"
           >
             <span>Sign in to Account</span>
             <IconArrowRight size={16} stroke={2} />
@@ -234,7 +234,7 @@ export const ForgotPasswordForm: FC = () => {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-xs focus:outline-none transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-sm focus:outline-none transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -382,7 +382,7 @@ export const ForgotPasswordForm: FC = () => {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-2/3 h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-2/3 h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>

@@ -15,10 +15,13 @@ import {
 } from '@tabler/icons-react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/dialog'
 import { ROUTES } from '@/constants/routes'
+import { formatCampusLabel } from '@/constants/campuses'
 import { usersService } from '@/services/users'
 import { chatService } from '@/services/chat'
 import { useAuthStore } from '@/stores/authStore'
+import { normalizeError } from '@/lib/errorHandler'
 import type { BackendPublicProfileResponse } from '@/types/user.types'
 
 export interface PublicProfileFallback {
@@ -67,7 +70,9 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [isStartingChat, setIsStartingChat] = useState(false)
   const [isBlocking, setIsBlocking] = useState(false)
+  const [confirmBlockOpen, setConfirmBlockOpen] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -117,25 +122,28 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
 
   const handleStartChat = async () => {
     setIsStartingChat(true)
+    setErrorMsg(null)
     try {
-      await chatService.createDirectRoom({
+      const room = await chatService.createDirectRoom({
         targetUserId: profile.id,
         targetUserName: profile.fullName,
       })
       onClose()
-      navigate(ROUTES.APP.CHAT)
+      navigate(`${ROUTES.APP.CHAT}?roomId=${encodeURIComponent(room.roomId)}`)
     } catch (err) {
       console.error('Failed to create direct room:', err)
+      setErrorMsg(normalizeError(err).message || 'Không thể mở cuộc trò chuyện.')
     } finally {
       setIsStartingChat(false)
     }
   }
 
-  const handleBlockUser = async () => {
-    if (!window.confirm(`Bạn có chắc chắn muốn chặn tài khoản ${profile.fullName}?`)) return
+  const handleConfirmBlockUser = async () => {
     setIsBlocking(true)
+    setErrorMsg(null)
     try {
       await usersService.blockUser(profile.id)
+      setConfirmBlockOpen(false)
       setNotice(`Đã chặn tài khoản ${profile.fullName}.`)
       effectiveOnBlocked?.(profile.id)
       setTimeout(() => {
@@ -143,13 +151,15 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
       }, 1000)
     } catch (err) {
       console.error('Failed to block user:', err)
+      setConfirmBlockOpen(false)
+      setErrorMsg(normalizeError(err).message || 'Không thể chặn tài khoản này.')
     } finally {
       setIsBlocking(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in">
       <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
         {/* Top Banner */}
         <div className="relative h-24 bg-gradient-to-r from-brand-secondary via-[#004e8a] to-brand-primary">
@@ -186,6 +196,12 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
             </div>
           ) : null}
 
+          {errorMsg && (
+            <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+              {errorMsg}
+            </div>
+          )}
+
           {notice && (
             <div className="mb-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
               <IconCheck className="h-4 w-4 text-emerald-600" />
@@ -211,7 +227,7 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
                 Chuyên ngành
               </span>
               <p className="font-semibold text-slate-800 truncate">
-                {profile.major || 'Software Engineering'}
+                {profile.major || 'Chưa cập nhật'}
               </p>
             </div>
             <div className="space-y-0.5">
@@ -220,7 +236,7 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
                 Cơ sở (Campus)
               </span>
               <p className="font-semibold text-slate-800 truncate">
-                {profile.campus || 'Hòa Lạc'}
+                {profile.campus ? formatCampusLabel(profile.campus) : 'Chưa cập nhật'}
               </p>
             </div>
             <div className="space-y-0.5">
@@ -228,7 +244,7 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
                 <IconCalendar className="h-3 w-3 text-emerald-600" />
                 Khóa / Năm
               </span>
-              <p className="font-semibold text-slate-800 truncate">{profile.batch || 'K15'}</p>
+              <p className="font-semibold text-slate-800 truncate">{profile.batch || 'Chưa cập nhật'}</p>
             </div>
           </div>
 
@@ -243,13 +259,13 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
             </p>
           </div>
 
-          {/* US-11: Google Calendar Booking Link */}
+          {/* Google Calendar Booking Link */}
           {profile.googleCalendarUrl && (
             <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 flex items-center justify-between gap-3">
               <div className="space-y-0.5 min-w-0">
                 <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
                   <IconCalendar className="h-4 w-4 text-emerald-600 shrink-0" />
-                  Lịch hẹn tư vấn / Google Calendar (US-11)
+                  Lịch hẹn tư vấn / Google Calendar
                 </span>
                 <p className="text-[11px] text-emerald-700 truncate">
                   {profile.googleCalendarUrl}
@@ -263,7 +279,7 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-colors"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
               >
                 <span>Đặt lịch hẹn</span>
                 <IconExternalLink className="h-3.5 w-3.5" />
@@ -285,16 +301,16 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
                 ) : (
                   <IconMessageCircle className="h-4 w-4" />
                 )}
-                <span>Nhắn tin trực tiếp (CH-01)</span>
+                <span>Nhắn tin trực tiếp</span>
               </Button>
 
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleBlockUser}
+                onClick={() => setConfirmBlockOpen(true)}
                 disabled={isBlocking}
                 className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold gap-1.5 h-10 px-3.5"
-                title="Chặn tài khoản này (US-10)"
+                title="Chặn tài khoản này"
               >
                 <IconShieldX className="h-4 w-4" />
                 <span>Chặn</span>
@@ -303,6 +319,16 @@ export const PublicProfileModal: FC<PublicProfileModalProps> = ({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmBlockOpen}
+        onClose={() => !isBlocking && setConfirmBlockOpen(false)}
+        onConfirm={handleConfirmBlockUser}
+        title="Chặn người dùng"
+        message={`Bạn có chắc chắn muốn chặn tài khoản ${profile.fullName}?`}
+        confirmText="Chặn tài khoản"
+        isLoading={isBlocking}
+      />
     </div>
   )
 }

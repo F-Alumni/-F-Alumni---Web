@@ -31,10 +31,16 @@ export const normalizeError = (error: unknown): AppError => {
 
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as
-      | { message?: string; code?: string; title?: string; errors?: Record<string, string[]> }
+      | {
+          message?: string
+          detail?: string
+          code?: string
+          title?: string
+          errors?: Record<string, string[]>
+        }
       | undefined
 
-    let resolvedMessage = data?.message
+    let resolvedMessage = data?.message || data?.detail
 
     // If ProblemDetails contains validation error dictionary, concatenate messages
     if (!resolvedMessage && data?.errors && typeof data.errors === 'object') {

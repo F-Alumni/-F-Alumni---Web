@@ -100,24 +100,22 @@ export const DashboardPage: FC = () => {
 
   // Quick resolve action on the dashboard
   const handleQuickResolve = async (item: PendingReviewItem) => {
-    setResolvedIds((prev) => [...prev, item.id])
+    if (!item.rawReportId) return
 
-    if (item.rawReportId) {
-      try {
-        await resolveReportMutation.mutateAsync({
-          id: item.rawReportId,
-          payload: {
-            actionTaken: 'WarningIssued',
-            resolutionNotes: 'Resolved directly from Admin Dashboard review queue.',
-            deleteTargetContent: false,
-          },
-        })
-      } catch (err) {
-        console.warn('Backend resolve report mutation notice:', err)
-      }
+    try {
+      await resolveReportMutation.mutateAsync({
+        id: item.rawReportId,
+        payload: {
+          actionTaken: 'WarningIssued',
+          resolutionNotes: 'Resolved directly from Admin Dashboard review queue.',
+          deleteTargetContent: false,
+        },
+      })
+      setResolvedIds((prev) => [...prev, item.id])
+      setToastMessage(`Item "${item.item}" processed and archived from pending review queue.`)
+    } catch {
+      setToastMessage(`Không thể xử lý mục "${item.item}". Vui lòng thử lại sau.`)
     }
-
-    setToastMessage(`Item "${item.item}" processed and archived from pending review queue.`)
     setTimeout(() => setToastMessage(null), 3500)
   }
 
@@ -304,7 +302,7 @@ export const DashboardPage: FC = () => {
             </Button>
 
             <Link to={ROUTES.ADMIN.ALUMNI_VERIFICATION}>
-              <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover">
+              <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-primary-hover">
                 <IconUserCheck size={16} stroke={1.8} className="mr-1.5" />
                 <span>Verify Alumni</span>
               </Button>
@@ -430,7 +428,7 @@ export const DashboardPage: FC = () => {
 
       {/* 5. Quick Governance Portals & Management Shortcuts */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-2">
-        <Card className="p-4.5 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
+        <Card className="p-4 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-50 text-brand-secondary">
               <IconSchool size={20} stroke={1.8} />
@@ -451,7 +449,7 @@ export const DashboardPage: FC = () => {
           </div>
         </Card>
 
-        <Card className="p-4.5 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
+        <Card className="p-4 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-brand-accent">
               <IconBuildingCommunity size={20} stroke={1.8} />
@@ -472,7 +470,7 @@ export const DashboardPage: FC = () => {
           </div>
         </Card>
 
-        <Card className="p-4.5 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
+        <Card className="p-4 rounded-xl border-slate-200 bg-white hover:border-brand-primary/50 transition-colors">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
               <IconAlertTriangle size={20} stroke={1.8} />

@@ -1,5 +1,6 @@
 import * as signalR from '@microsoft/signalr'
 import { env } from '@/app/config/env'
+import { mapBackendChatMessage } from './index'
 import type { BackendChatMessage } from '@/types/chat.types'
 
 export interface UserTypingEvent {
@@ -16,6 +17,7 @@ export interface UserPresenceEvent {
 
 class ChatHubClient {
   private connection: signalR.HubConnection | null = null
+  private startPromise: Promise<signalR.HubConnection | null> | null = null
   private joinedRooms = new Set<string>()
 
   public getConnection(): signalR.HubConnection | null {
@@ -30,55 +32,65 @@ class ChatHubClient {
       return this.connection
     }
 
-    if (this.connection) {
+    if (this.startPromise) {
+      return this.startPromise
+    }
+
+    this.startPromise = (async () => {
       try {
-        await this.connection.stop()
-      } catch {
-        // Ignore
-      }
-    }
-
-    const hubUrl = env.chatHubUrl || 'http://localhost:5000/hubs/chat'
-
-    this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl, {
-        accessTokenFactory: () => {
-          return localStorage.getItem('access_token') || localStorage.getItem('accessToken') || ''
-        },
-      })
-      .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.Warning)
-      .build()
-
-    this.connection.onreconnected(async () => {
-      // Re-join previously joined conversations
-      for (const roomId of this.joinedRooms) {
-        try {
-          await this.connection?.invoke('JoinConversation', roomId)
-        } catch {
-          // Ignore re-join errors
+        if (this.connection) {
+          try {
+            await this.connection.stop()
+          } catch {
+            // Ignore
+          }
         }
-      }
-    })
 
-    try {
-      await this.connection.start()
-      return this.connection
-    } catch (err) {
-      console.warn('Could not establish SignalR chat hub connection:', err)
-      return null
-    }
+        const hubUrl = env.chatHubUrl || 'http://localhost:5000/hubs/chat'
+
+        const conn = new signalR.HubConnectionBuilder()
+          .withUrl(hubUrl, {
+            accessTokenFactory: () =>
+              localStorage.getItem('access_token') || localStorage.getItem('accessToken') || '',
+          })
+          .withAutomaticReconnect()
+          .configureLogging(signalR.LogLevel.Error)
+          .build()
+
+        conn.onreconnected(async () => {
+          for (const roomId of this.joinedRooms) {
+            try {
+              await conn.invoke('JoinConversation', roomId)
+            } catch {
+              // Ignore re-join errors
+            }
+          }
+        })
+
+        this.connection = conn
+        await conn.start()
+        return conn
+      } catch {
+        return null
+      } finally {
+        this.startPromise = null
+      }
+    })()
+
+    return this.startPromise
   }
 
   public async stopConnection(): Promise<void> {
+    this.startPromise = null
     if (this.connection) {
-      try {
-        await this.connection.stop()
-      } catch {
-        // Ignore
-      }
+      const conn = this.connection
       this.connection = null
       this.joinedRooms.clear()
+      try {
+        await conn.stop()
+      } catch {
+        // Ignore teardown abort
+      }
     }
   }
 
@@ -104,9 +116,18 @@ class ChatHubClient {
     }
   }
 
-  public async sendMessage(roomId: string, content: string): Promise<void> {
+  public async sendMessage(
+    roomId: string,
+    content: string,
+    attachmentUrl?: string | null,
+    attachmentType?: string | null
+  ): Promise<void> {
     if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke('SendMessage', roomId, { content })
+      await this.connection.invoke('SendMessage', roomId, {
+        content,
+        attachmentUrl: attachmentUrl || null,
+        attachmentType: attachmentUrl ? attachmentType || 'Image' : null,
+      })
     }
   }
 
@@ -125,16 +146,7 @@ class ChatHubClient {
   public onReceiveMessage(callback: (message: BackendChatMessage) => void): () => void {
     if (!this.connection) return () => {}
     const handler = (raw: any) => {
-      const msg: BackendChatMessage = {
-        id: raw.id || raw.Id,
-        roomId: raw.conversationId || raw.ConversationId || raw.roomId || raw.RoomId,
-        senderId: raw.senderUserId || raw.SenderUserId || raw.senderId || raw.SenderId,
-        senderName: raw.senderDisplayName || raw.SenderDisplayName || raw.senderName || 'Anonymous',
-        senderAvatarUrl: raw.senderAvatarUrl || raw.SenderAvatarUrl || null,
-        content: raw.content || raw.Content || '',
-        sentAt: raw.sentAt || raw.SentAt || new Date().toISOString(),
-      }
-      callback(msg)
+      callback(mapBackendChatMessage(raw))
     }
     this.connection.on('ReceiveMessage', handler)
     return () => {

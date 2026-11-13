@@ -241,7 +241,7 @@ export const LoginForm: FC = () => {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary-hover active:bg-[#d95d18] text-xs sm:text-sm font-bold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>
@@ -259,7 +259,7 @@ export const LoginForm: FC = () => {
           {/* Divider */}
           <div className="relative my-2.5 flex items-center justify-center">
             <div className="w-full border-t border-slate-200" />
-            <span className="absolute bg-[#F8FAFC] px-2 text-[10px] uppercase font-bold text-slate-400">
+            <span className="absolute bg-white px-2 text-[10px] uppercase font-bold text-slate-400">
               Hoặc
             </span>
           </div>
@@ -269,7 +269,7 @@ export const LoginForm: FC = () => {
             type="button"
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-xs sm:text-sm font-semibold text-slate-700 shadow-xs transition-all flex items-center justify-center gap-2.5 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition-all flex items-center justify-center gap-2.5 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
               <path

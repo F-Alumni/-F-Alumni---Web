@@ -18,10 +18,12 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { ROUTES } from '@/constants/routes'
+import { FPT_CAMPUSES, formatCampusLabel } from '@/constants/campuses'
 import { usersService } from '@/services/users'
 import { chatService } from '@/services/chat'
 import { useAuthStore } from '@/stores/authStore'
 import { PublicProfileModal } from '@/features/users'
+import { normalizeError } from '@/lib/errorHandler'
 import type { BackendUserSummary } from '@/types/user.types'
 
 export const AlumniPage: FC = () => {
@@ -30,6 +32,7 @@ export const AlumniPage: FC = () => {
 
   const [alumniList, setAlumniList] = useState<BackendUserSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [keyword, setKeyword] = useState('')
   const [campus, setCampus] = useState('ALL')
   const [major, setMajor] = useState('ALL')
@@ -40,6 +43,7 @@ export const AlumniPage: FC = () => {
 
   const fetchAlumni = useCallback(async () => {
     setIsLoading(true)
+    setErrorMessage(null)
     try {
       const res = await usersService.searchUsers({
         role: roleFilter === 'ALL' ? undefined : roleFilter,
@@ -54,6 +58,8 @@ export const AlumniPage: FC = () => {
       setAlumniList(items)
     } catch (err) {
       console.error('Failed to query alumni list:', err)
+      setErrorMessage(normalizeError(err).message || 'Không thể tải danh bạ thành viên.')
+      setAlumniList([])
     } finally {
       setIsLoading(false)
     }
@@ -68,14 +74,16 @@ export const AlumniPage: FC = () => {
 
   const handleStartChat = async (targetUser: BackendUserSummary) => {
     setActionLoadingId(targetUser.id)
+    setErrorMessage(null)
     try {
-      await chatService.createDirectRoom({
+      const room = await chatService.createDirectRoom({
         targetUserId: targetUser.id,
         targetUserName: targetUser.fullName,
       })
-      navigate(ROUTES.APP.CHAT)
+      navigate(`${ROUTES.APP.CHAT}?roomId=${encodeURIComponent(room.roomId)}`)
     } catch (err) {
       console.error('Failed to create direct chat:', err)
+      setErrorMessage(normalizeError(err).message || 'Không thể mở cuộc trò chuyện 1-1.')
     } finally {
       setActionLoadingId(null)
     }
@@ -89,6 +97,7 @@ export const AlumniPage: FC = () => {
       setTimeout(() => setToastMessage(null), 3000)
     } catch (err) {
       console.error('Failed to block user:', err)
+      setErrorMessage(normalizeError(err).message || 'Không thể chặn người dùng này.')
     }
   }
 
@@ -105,9 +114,9 @@ export const AlumniPage: FC = () => {
       {/* Header Banner */}
       <div className="rounded-2xl bg-gradient-to-r from-brand-secondary to-[#004e8a] p-6 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white mb-2 backdrop-blur-xs">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white mb-2 backdrop-blur-sm">
             <IconUserCheck className="h-3.5 w-3.5" />
-            Danh bạ Cựu sinh viên & Sinh viên FPT University (US-06)
+            Danh bạ Cựu sinh viên & Sinh viên FPT University
           </div>
           <h1 className="text-2xl font-bold">Kết nối Cựu sinh viên & Cố vấn chuyên môn</h1>
           <p className="text-sm text-blue-100 max-w-xl mt-1">
@@ -125,9 +134,19 @@ export const AlumniPage: FC = () => {
         </Button>
       </div>
 
-      {/* Filter Bar (US-06) */}
+      {/* Error Banner */}
+      {errorMessage && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-800">
+          <span>{errorMessage}</span>
+          <Button size="sm" variant="outline" onClick={() => void fetchAlumni()} className="h-7 border-rose-200 text-rose-700">
+            Thử lại
+          </Button>
+        </div>
+      )}
+
+      {/* Filter Bar */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative flex-1 min-w-0">
           <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
@@ -177,11 +196,11 @@ export const AlumniPage: FC = () => {
               className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 focus:border-brand-primary focus:outline-none"
             >
               <option value="ALL">Tất cả cơ sở</option>
-              <option value="Hòa Lạc">Hòa Lạc</option>
-              <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-              <option value="Đà Nẵng">Đà Nẵng</option>
-              <option value="Cần Thơ">Cần Thơ</option>
-              <option value="Quy Nhơn">Quy Nhơn</option>
+              {FPT_CAMPUSES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.shortLabel}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -235,7 +254,7 @@ export const AlumniPage: FC = () => {
 
                   <button
                     onClick={() => handleBlock(alumni)}
-                    title="Chặn người dùng này (US-10)"
+                    title="Chặn người dùng này"
                     className="text-slate-300 hover:text-rose-500 p-1 cursor-pointer"
                   >
                     <IconShieldX className="h-4 w-4" />
@@ -251,15 +270,15 @@ export const AlumniPage: FC = () => {
                 <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <div className="flex items-center gap-1.5">
                     <IconSchool className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span className="font-medium text-slate-800">{alumni.major || 'Software Engineering'}</span>
+                    <span className="font-medium text-slate-800">{alumni.major || 'Chưa cập nhật chuyên ngành'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <IconBuildingCommunity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>Campus {alumni.campus || 'Hòa Lạc'}</span>
+                    <span>{alumni.campus ? formatCampusLabel(alumni.campus) : 'Chưa cập nhật cơ sở'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <IconCalendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>Khóa {alumni.batch || 'K14'}</span>
+                    <span>{alumni.batch ? `Khóa ${alumni.batch}` : 'Chưa cập nhật khóa'}</span>
                   </div>
                 </div>
 

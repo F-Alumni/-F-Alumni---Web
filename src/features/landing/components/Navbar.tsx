@@ -9,11 +9,12 @@ import {
 } from '@tabler/icons-react'
 import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
+import { ROLES } from '@/constants/roles'
 import fAlumniLogo from '@/assets/f-alumni-logo.png'
 
 export const Navbar: FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { isAuthenticated, currentUser } = useAuthStore()
+  const { isAuthenticated, currentUser, role } = useAuthStore()
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault()
@@ -24,7 +25,12 @@ export const Navbar: FC = () => {
     }
   }
 
-  const destinationPath = isAuthenticated ? ROUTES.ADMIN.DASHBOARD : ROUTES.AUTH.LOGIN
+  const isAdminOrMod = role === ROLES.ADMIN || role === ROLES.MODERATOR
+  const destinationPath = !isAuthenticated
+    ? ROUTES.AUTH.LOGIN
+    : isAdminOrMod
+      ? ROUTES.ADMIN.DASHBOARD
+      : ROUTES.APP.HOME
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all">
@@ -39,7 +45,7 @@ export const Navbar: FC = () => {
           <div className="hidden sm:block h-7 w-[1px] bg-slate-200" />
           <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-[#F27024] tracking-wider uppercase bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200/80">
             <IconShieldCheck size={13} stroke={2.2} />
-            Admin Portal
+            FPT Alumni Network
           </span>
         </Link>
 
@@ -79,18 +85,22 @@ export const Navbar: FC = () => {
         <div className="hidden sm:flex items-center gap-3">
           {isAuthenticated ? (
             <Link
-              to={ROUTES.ADMIN.DASHBOARD}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs lg:text-sm font-bold text-white bg-[#1B365D] hover:bg-[#132644] rounded-xl shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98]"
+              to={destinationPath}
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs lg:text-sm font-bold text-white bg-[#1B365D] hover:bg-[#132644] rounded-xl shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <IconLayoutDashboard size={16} stroke={2} />
-              <span>Bảng Quản Trị ({currentUser?.name?.split(' ').pop() || 'Admin'})</span>
+              <span>
+                {isAdminOrMod
+                  ? `Bảng Quản Trị (${currentUser?.name?.split(' ').pop() || 'Admin'})`
+                  : `Vào Cộng đồng (${currentUser?.name?.split(' ').pop() || 'Member'})`}
+              </span>
             </Link>
           ) : (
             <Link
               to={ROUTES.AUTH.LOGIN}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs lg:text-sm font-bold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-xs shadow-orange-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs lg:text-sm font-bold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-sm shadow-orange-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
-              <span>Đăng nhập Quản trị</span>
+              <span>Đăng nhập / Tham gia</span>
               <IconArrowRight size={15} stroke={2.2} />
             </Link>
           )}
@@ -142,9 +152,15 @@ export const Navbar: FC = () => {
           <div className="pt-2 border-t border-slate-100">
             <Link
               to={destinationPath}
-              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-bold text-white bg-[#F27024] rounded-xl shadow-xs"
+              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-bold text-white bg-[#F27024] rounded-xl shadow-sm"
             >
-              <span>{isAuthenticated ? 'Vào Bảng Quản Trị' : 'Đăng nhập Quản trị viên'}</span>
+              <span>
+                {!isAuthenticated
+                  ? 'Đăng nhập / Tham gia'
+                  : isAdminOrMod
+                    ? 'Vào Bảng Quản Trị'
+                    : 'Vào Cộng đồng FPT'}
+              </span>
               <IconArrowRight size={16} stroke={2} />
             </Link>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type FC } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   IconMessageCircle,
   IconSend,
@@ -15,44 +16,46 @@ import {
   IconDotsVertical,
   IconBellOff,
   IconBell,
+  IconArrowLeft,
+  IconAlertCircle,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
+import { Modal } from '@/components/ui/dialog'
 import { chatService } from '@/services/chat'
 import { chatHubClient } from '@/services/chat/signalr'
 import { usersService } from '@/services/users'
 import { useAuthStore } from '@/stores/authStore'
+import { formatCampusLabel } from '@/constants/campuses'
 import type { BackendChatRoom, BackendChatMessage } from '@/types/chat.types'
 import type { BackendUserSummary } from '@/types/user.types'
 
 export const ChatPage: FC = () => {
   const { currentUser } = useAuthStore()
+  const [searchParams] = useSearchParams()
+  const roomIdParam = searchParams.get('roomId')
 
-  // State
   const [rooms, setRooms] = useState<BackendChatRoom[]>([])
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(null)
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(roomIdParam)
   const [messages, setMessages] = useState<BackendChatMessage[]>([])
   const [inputText, setInputText] = useState('')
   const [isLoadingRooms, setIsLoadingRooms] = useState(true)
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [typingUser, setTypingUser] = useState<string | null>(null)
+  const [chatError, setChatError] = useState<string | null>(null)
 
-  // CH-07: Image upload state
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // CH-08: In-room search state
   const [isSearchingHistory, setIsSearchingHistory] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredMessages, setFilteredMessages] = useState<BackendChatMessage[] | null>(null)
 
-  // CH-09: Room settings menu
   const [isRoomMenuOpen, setIsRoomMenuOpen] = useState(false)
 
-  // Modals
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupMajor, setNewGroupMajor] = useState('')
@@ -65,21 +68,23 @@ export const ChatPage: FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Fetch Rooms
   const fetchRooms = useCallback(async () => {
     setIsLoadingRooms(true)
     try {
-      const data = await chatService.getRooms()
+      const data = await chatService.getRooms(currentUser?.id)
       setRooms(data)
-      if (data.length > 0 && !activeRoomId && data[0]) {
+      if (roomIdParam && data.some((r) => r.id === roomIdParam)) {
+        setActiveRoomId(roomIdParam)
+      } else if (data.length > 0 && !activeRoomId && data[0] && window.innerWidth >= 768) {
         setActiveRoomId(data[0].id)
       }
     } catch (err) {
       console.error('Failed to load chat rooms:', err)
+      setChatError('Không thể tải danh sách hội thoại.')
     } finally {
       setIsLoadingRooms(false)
     }
-  }, [activeRoomId])
+  }, [activeRoomId, currentUser?.id, roomIdParam])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -88,7 +93,6 @@ export const ChatPage: FC = () => {
     return () => clearTimeout(timer)
   }, [fetchRooms])
 
-  // Setup SignalR Hub
   useEffect(() => {
     let unsubscribeMessage: (() => void) | undefined
     let unsubscribeTyping: (() => void) | undefined
@@ -98,12 +102,10 @@ export const ChatPage: FC = () => {
 
       unsubscribeMessage = chatHubClient.onReceiveMessage((newMessage) => {
         setMessages((prev) => {
-          // De-duplicate by ID
           if (prev.some((m) => m.id === newMessage.id)) return prev
           return [...prev, newMessage]
         })
 
-        // Also update lastMessage in rooms list
         setRooms((prevRooms) =>
           prevRooms.map((r) =>
             r.id === newMessage.roomId ? { ...r, lastMessage: newMessage } : r
@@ -124,7 +126,7 @@ export const ChatPage: FC = () => {
       })
     }
 
-    initSignalR()
+    void initSignalR()
 
     return () => {
       unsubscribeMessage?.()
@@ -132,7 +134,6 @@ export const ChatPage: FC = () => {
     }
   }, [activeRoomId, currentUser?.name])
 
-  // Join Room when activeRoomId changes
   useEffect(() => {
     if (!activeRoomId) return
 
@@ -140,6 +141,7 @@ export const ChatPage: FC = () => {
     setFilteredMessages(null)
     setSearchQuery('')
     setIsSearchingHistory(false)
+    setChatError(null)
 
     const loadRoomMessages = async () => {
       setIsLoadingMessages(true)
@@ -148,30 +150,28 @@ export const ChatPage: FC = () => {
         const res = await chatService.getMessages(activeRoomId, 1, 50)
         if (isMounted) {
           setMessages(res.items || [])
-          // CH-05: Mark messages as Read in Backend
           chatService.markRead(activeRoomId).catch(() => {})
         }
       } catch (err) {
         console.error('Failed to load room messages:', err)
+        if (isMounted) setChatError('Không thể tải tin nhắn của phòng này.')
       } finally {
         if (isMounted) setIsLoadingMessages(false)
       }
     }
 
-    loadRoomMessages()
+    void loadRoomMessages()
 
     return () => {
       isMounted = false
-      chatHubClient.leaveRoom(activeRoomId)
+      void chatHubClient.leaveRoom(activeRoomId)
     }
   }, [activeRoomId])
 
-  // Scroll to bottom on message change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, filteredMessages])
 
-  // Image Selection Handler (CH-07)
   const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -187,7 +187,6 @@ export const ChatPage: FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  // Search in conversation history (CH-08)
   const handleSearchHistory = async (q: string) => {
     setSearchQuery(q)
     if (!activeRoomId) return
@@ -204,7 +203,6 @@ export const ChatPage: FC = () => {
     }
   }
 
-  // Toggle Mute (CH-09)
   const handleToggleMute = async () => {
     if (!activeRoomId) return
     const activeRoom = rooms.find((r) => r.id === activeRoomId)
@@ -219,34 +217,36 @@ export const ChatPage: FC = () => {
       await chatService.updateSettings(activeRoomId, { isMuted: nextMuted })
     } catch (err) {
       console.error('Failed to update mute settings:', err)
+      setChatError('Không thể cập nhật trạng thái thông báo.')
     }
   }
 
-  // Hide conversation (CH-09)
   const handleHideConversation = async () => {
     if (!activeRoomId) return
     setIsRoomMenuOpen(false)
     const targetRoomId = activeRoomId
 
-    setRooms((prev) => prev.filter((r) => r.id !== targetRoomId))
     const remaining = rooms.filter((r) => r.id !== targetRoomId)
-    setActiveRoomId(remaining.length > 0 && remaining[0] ? remaining[0].id : null)
+    setRooms(remaining)
+    setActiveRoomId(window.innerWidth >= 768 && remaining[0] ? remaining[0].id : null)
 
     try {
       await chatService.updateSettings(targetRoomId, { isHidden: true })
     } catch (err) {
       console.error('Failed to hide conversation:', err)
+      setChatError('Không thể ẩn cuộc trò chuyện.')
     }
   }
 
-  // Send Message (CH-02, CH-07)
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if ((!inputText.trim() && !selectedImage) || !activeRoomId || isSending) return
 
-    const content = inputText.trim() || (selectedImage ? 'Đã gửi một hình ảnh' : '')
+    const draftText = inputText.trim()
+    const content = draftText || (selectedImage ? 'Đã gửi một hình ảnh' : '')
     setInputText('')
     setIsSending(true)
+    setChatError(null)
 
     let uploadedMediaUrl: string | null = null
     if (selectedImage) {
@@ -254,7 +254,12 @@ export const ChatPage: FC = () => {
       try {
         uploadedMediaUrl = await chatService.uploadChatMedia(selectedImage)
       } catch (uploadErr) {
-        console.error('Failed to upload image to Cloudinary:', uploadErr)
+        console.error('Failed to upload image:', uploadErr)
+        setChatError('Không thể tải hình ảnh lên máy chủ.')
+        setIsUploadingImage(false)
+        setIsSending(false)
+        setInputText(draftText)
+        return
       } finally {
         setIsUploadingImage(false)
         handleRemoveImage()
@@ -262,7 +267,6 @@ export const ChatPage: FC = () => {
     }
 
     try {
-      // Send via REST endpoint (broadcast via SignalR Hub in BE)
       const newMsg = await chatService.sendMessage(activeRoomId, {
         content,
         mediaUrl: uploadedMediaUrl,
@@ -274,26 +278,25 @@ export const ChatPage: FC = () => {
         return [...prev, newMsg]
       })
 
-      // Update room lastMessage
       setRooms((prev) =>
         prev.map((r) => (r.id === activeRoomId ? { ...r, lastMessage: newMsg } : r))
       )
     } catch (err) {
       console.error('Failed to send message:', err)
+      setChatError('Gửi tin nhắn thất bại. Vui lòng thử lại.')
+      setInputText(draftText)
     } finally {
       setIsSending(false)
     }
   }
 
-  // Handle typing debounce
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value)
     if (activeRoomId) {
-      chatHubClient.sendTyping(activeRoomId, true)
+      void chatHubClient.sendTyping(activeRoomId, true)
     }
   }
 
-  // Create Group Room
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newGroupName.trim()) return
@@ -311,10 +314,10 @@ export const ChatPage: FC = () => {
       setActiveRoomId(created.roomId)
     } catch (err) {
       console.error('Failed to create group room:', err)
+      setChatError('Không thể tạo phòng chat mới.')
     }
   }
 
-  // Search users for direct chat
   const handleSearchUsers = async (q: string) => {
     setUserSearchQuery(q)
     if (!q.trim()) {
@@ -348,32 +351,41 @@ export const ChatPage: FC = () => {
       setActiveRoomId(room.roomId)
     } catch (err) {
       console.error('Failed to start direct room:', err)
+      setChatError('Không thể mở hội thoại trực tiếp với thành viên này.')
     }
   }
 
   const activeRoom = rooms.find((r) => r.id === activeRoomId)
 
   return (
-    <div className="h-[calc(100vh-140px)] rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col md:flex-row">
+    <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-140px)] rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col md:flex-row">
       {/* Sidebar: Rooms List */}
-      <div className="w-full md:w-80 border-r border-slate-200 flex flex-col h-full bg-slate-50/50">
+      <div
+        className={`${
+          activeRoomId ? 'hidden md:flex' : 'flex'
+        } w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-200 flex-col h-full bg-slate-50/50`}
+      >
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <IconMessageCircle className="h-5 w-5 text-brand-secondary" />
-            <h2 className="font-bold text-slate-900 text-sm">Discussions & Chat</h2>
+            <h2 className="font-bold text-slate-900 text-sm">Tin nhắn & Thảo luận</h2>
           </div>
 
           <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={() => setIsDirectChatOpen(true)}
-              title="New 1-1 Chat"
+              title="Nhắn tin 1-1 mới"
+              aria-label="Nhắn tin 1-1 mới"
               className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
             >
               <IconUser className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => setIsCreateGroupOpen(true)}
-              title="Create Group Room"
+              title="Tạo nhóm thảo luận"
+              aria-label="Tạo nhóm thảo luận"
               className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
             >
               <IconPlus className="h-4 w-4" />
@@ -381,16 +393,15 @@ export const ChatPage: FC = () => {
           </div>
         </div>
 
-        {/* Rooms Listing */}
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
           {isLoadingRooms ? (
             <div className="p-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
               <IconLoader2 className="h-4 w-4 animate-spin" />
-              <span>Loading rooms...</span>
+              <span>Đang tải hội thoại...</span>
             </div>
           ) : rooms.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-400">
-              No chat rooms found.
+              Chưa có cuộc trò chuyện nào. Hãy bắt đầu nhắn tin với Alumni hoặc tạo nhóm mới!
             </div>
           ) : (
             rooms.map((room) => {
@@ -400,6 +411,7 @@ export const ChatPage: FC = () => {
               return (
                 <button
                   key={room.id}
+                  type="button"
                   onClick={() => setActiveRoomId(room.id)}
                   className={`w-full text-left p-3.5 transition-colors flex items-start gap-3 ${
                     isSelected
@@ -421,7 +433,7 @@ export const ChatPage: FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-xs truncate">{room.name}</span>
                       {room.lastMessage && (
-                        <span className="text-[10px] text-slate-400 ml-1">
+                        <span className="text-[10px] text-slate-400 ml-1 shrink-0">
                           {new Date(room.lastMessage.sentAt).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -446,25 +458,46 @@ export const ChatPage: FC = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full bg-white">
+      <div className={`${activeRoomId ? 'flex' : 'hidden md:flex'} flex-1 flex-col h-full bg-white min-w-0`}>
+        {chatError && (
+          <div className="bg-rose-50 border-b border-rose-200 px-4 py-2 text-xs text-rose-700 flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <IconAlertCircle className="h-4 w-4 shrink-0" />
+              {chatError}
+            </span>
+            <button type="button" onClick={() => setChatError(null)} className="text-rose-500 hover:text-rose-700">
+              <IconX className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {activeRoom ? (
           <>
-            {/* Room Header (CH-08, CH-09) */}
-            <div className="px-6 py-3 border-b border-slate-200 flex items-center justify-between bg-white relative">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-brand-secondary/10 text-brand-secondary flex items-center justify-center font-bold">
+            {/* Room Header */}
+            <div className="px-4 sm:px-6 py-3 border-b border-slate-200 flex items-center justify-between bg-white relative gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveRoomId(null)}
+                  className="md:hidden rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 shrink-0"
+                  aria-label="Quay lại danh sách phòng chat"
+                >
+                  <IconArrowLeft className="h-4 w-4" />
+                </button>
+
+                <div className="h-9 w-9 rounded-xl bg-brand-secondary/10 text-brand-secondary flex items-center justify-center font-bold shrink-0">
                   {activeRoom.roomType === 'Group' ? <IconUsers className="h-4 w-4" /> : <IconUser className="h-4 w-4" />}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900 text-sm">{activeRoom.name}</h3>
+                    <h3 className="font-bold text-slate-900 text-sm truncate">{activeRoom.name}</h3>
                     {activeRoom.isMuted && (
                       <span title="Đã tắt thông báo">
-                        <IconBellOff className="h-3.5 w-3.5 text-amber-500" />
+                        <IconBellOff className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 truncate">
                     {activeRoom.roomType === 'Group'
                       ? `Phòng thảo luận cộng đồng ${activeRoom.major ? `• ${activeRoom.major}` : ''}`
                       : 'Cuộc trò chuyện trực tiếp 1-1'}
@@ -472,15 +505,13 @@ export const ChatPage: FC = () => {
                 </div>
               </div>
 
-              {/* Header Right Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {typingUser && (
-                  <span className="text-xs text-brand-secondary font-medium italic animate-pulse mr-2">
-                    {typingUser} is typing...
+                  <span className="hidden sm:inline text-xs text-brand-secondary font-medium italic animate-pulse mr-1">
+                    {typingUser} đang nhập...
                   </span>
                 )}
 
-                {/* Search Toggle (CH-08) */}
                 <button
                   type="button"
                   onClick={() => {
@@ -490,7 +521,8 @@ export const ChatPage: FC = () => {
                       setSearchQuery('')
                     }
                   }}
-                  title="Tìm kiếm tin nhắn (CH-08)"
+                  title="Tìm kiếm tin nhắn"
+                  aria-label="Tìm kiếm tin nhắn"
                   className={`rounded-lg p-1.5 transition-colors ${
                     isSearchingHistory
                       ? 'bg-brand-secondary/10 text-brand-secondary'
@@ -500,12 +532,12 @@ export const ChatPage: FC = () => {
                   <IconSearch className="h-4 w-4" />
                 </button>
 
-                {/* Room Settings Menu (CH-09) */}
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setIsRoomMenuOpen(!isRoomMenuOpen)}
-                    title="Tùy chọn hội thoại (CH-09)"
+                    title="Tùy chọn hội thoại"
+                    aria-label="Tùy chọn hội thoại"
                     className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                   >
                     <IconDotsVertical className="h-4 w-4" />
@@ -544,9 +576,8 @@ export const ChatPage: FC = () => {
               </div>
             </div>
 
-            {/* CH-08: In-room Search Bar */}
             {isSearchingHistory && (
-              <div className="px-6 py-2.5 bg-slate-100/80 border-b border-slate-200 flex items-center gap-2">
+              <div className="px-4 sm:px-6 py-2.5 bg-slate-100/80 border-b border-slate-200 flex items-center gap-2">
                 <IconSearch className="h-4 w-4 text-slate-400 shrink-0" />
                 <input
                   type="text"
@@ -564,6 +595,7 @@ export const ChatPage: FC = () => {
                       setFilteredMessages(null)
                     }}
                     className="text-slate-400 hover:text-slate-600 p-0.5"
+                    aria-label="Xóa tìm kiếm"
                   >
                     <IconX className="h-3.5 w-3.5" />
                   </button>
@@ -576,27 +608,27 @@ export const ChatPage: FC = () => {
               </div>
             )}
 
-            {/* Messages Scroll Area */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/30">
+            <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/30">
               {isLoadingMessages ? (
                 <div className="flex h-full items-center justify-center text-xs text-slate-400 gap-2">
                   <IconLoader2 className="h-5 w-5 animate-spin" />
-                  <span>Loading messages...</span>
+                  <span>Đang tải tin nhắn...</span>
                 </div>
               ) : (filteredMessages || messages).length === 0 ? (
                 <div className="flex flex-col h-full items-center justify-center text-slate-400 space-y-2">
                   <IconMessageCircle className="h-10 w-10 text-slate-200" />
                   <p className="text-sm font-medium text-slate-600">
-                    {filteredMessages ? 'Không tìm thấy tin nhắn phù hợp' : 'No messages yet'}
+                    {filteredMessages ? 'Không tìm thấy tin nhắn phù hợp' : 'Chưa có tin nhắn nào'}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {filteredMessages ? 'Thử tìm kiếm với từ khóa khác' : 'Say hello and start the community conversation!'}
+                    {filteredMessages ? 'Thử tìm kiếm với từ khóa khác' : 'Hãy gửi lời chào để bắt đầu cuộc trò chuyện!'}
                   </p>
                 </div>
               ) : (
                 (filteredMessages || messages).map((msg) => {
                   const isMine =
                     msg.senderId === currentUser?.id || msg.senderName === currentUser?.name
+                  const mediaSrc = msg.attachmentUrl || msg.mediaUrl
 
                   return (
                     <div
@@ -605,7 +637,7 @@ export const ChatPage: FC = () => {
                     >
                       <div className="flex items-center gap-1.5 mb-1 text-[11px] text-slate-400">
                         <span className="font-semibold text-slate-600">
-                          {isMine ? 'You' : msg.senderName}
+                          {isMine ? 'Bạn' : msg.senderName}
                         </span>
                         <span>•</span>
                         <span>
@@ -614,7 +646,6 @@ export const ChatPage: FC = () => {
                             minute: '2-digit',
                           })}
                         </span>
-                        {/* CH-05: Double check seen receipt icon */}
                         {isMine && (
                           <span title={msg.isRead ? 'Đã xem' : 'Đã gửi'}>
                             {msg.isRead ? (
@@ -627,20 +658,19 @@ export const ChatPage: FC = () => {
                       </div>
 
                       <div
-                        className={`rounded-2xl px-4 py-2.5 max-w-md text-sm leading-relaxed shadow-xs ${
+                        className={`rounded-2xl px-4 py-2.5 max-w-[85%] sm:max-w-md text-sm leading-relaxed shadow-sm break-words ${
                           isMine
-                            ? 'bg-brand-secondary text-white rounded-br-xs'
-                            : 'bg-white border border-slate-200 text-slate-800 rounded-bl-xs'
+                            ? 'bg-brand-secondary text-white rounded-br-sm'
+                            : 'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'
                         }`}
                       >
-                        {/* CH-07: Display Image Attachment */}
-                        {msg.mediaUrl && (
+                        {mediaSrc && (
                           <div className="mb-2 overflow-hidden rounded-xl bg-black/5">
                             <img
-                              src={msg.mediaUrl}
+                              src={mediaSrc}
                               alt="Đính kèm"
                               className="max-h-60 w-auto rounded-xl object-contain cursor-pointer hover:opacity-95 transition-opacity"
-                              onClick={() => window.open(msg.mediaUrl!, '_blank')}
+                              onClick={() => window.open(mediaSrc, '_blank')}
                             />
                           </div>
                         )}
@@ -653,7 +683,6 @@ export const ChatPage: FC = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* CH-07: Image Selection Preview Bar */}
             {imagePreviewUrl && (
               <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -675,13 +704,13 @@ export const ChatPage: FC = () => {
                   type="button"
                   onClick={handleRemoveImage}
                   className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                  aria-label="Hủy ảnh"
                 >
                   <IconX className="h-4 w-4" />
                 </button>
               </div>
             )}
 
-            {/* Input Form with Photo Upload (CH-07) */}
             <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
               <input
                 type="file"
@@ -693,7 +722,8 @@ export const ChatPage: FC = () => {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                title="Đính kèm hình ảnh (CH-07)"
+                title="Đính kèm hình ảnh"
+                aria-label="Đính kèm hình ảnh"
                 className="rounded-xl p-2.5 text-slate-500 hover:bg-slate-100 hover:text-brand-primary transition-colors shrink-0"
               >
                 <IconPhoto className="h-5 w-5" />
@@ -703,13 +733,14 @@ export const ChatPage: FC = () => {
                 type="text"
                 value={inputText}
                 onChange={handleInputChange}
-                placeholder={`Nhắn tin trong #${activeRoom.name}...`}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-brand-primary focus:outline-none"
+                placeholder={`Nhắn tin trong ${activeRoom.name}...`}
+                className="flex-1 min-w-0 rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-brand-primary focus:outline-none"
               />
               <Button
                 type="submit"
                 disabled={(!inputText.trim() && !selectedImage) || isSending || isUploadingImage}
                 className="bg-brand-secondary hover:bg-brand-secondary/90 text-white rounded-xl px-4 py-2.5 shrink-0"
+                aria-label="Gửi tin nhắn"
               >
                 {isSending || isUploadingImage ? (
                   <IconLoader2 className="h-4 w-4 animate-spin" />
@@ -722,127 +753,109 @@ export const ChatPage: FC = () => {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
             <IconMessageCircle className="h-12 w-12 text-slate-200 mb-2" />
-            <p className="text-sm font-medium">Select a room to begin chatting</p>
+            <p className="text-sm font-medium">Chọn một hội thoại để bắt đầu trò chuyện</p>
           </div>
         )}
       </div>
 
       {/* Modal: Create Group Room */}
-      {isCreateGroupOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Create Group Discussion</h3>
-              <button
-                onClick={() => setIsCreateGroupOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <IconX className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateGroup} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Room Name</label>
-                <input
-                  type="text"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  placeholder="e.g. FPT Capstone Project Mentorship"
-                  required
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Major Focus (Optional)</label>
-                <input
-                  type="text"
-                  value={newGroupMajor}
-                  onChange={(e) => setNewGroupMajor(e.target.value)}
-                  placeholder="e.g. Kỹ thuật phần mềm"
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setIsCreateGroupOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-brand-secondary text-white hover:bg-brand-secondary/90">
-                  Create Room
-                </Button>
-              </div>
-            </form>
+      <Modal
+        isOpen={isCreateGroupOpen}
+        onClose={() => setIsCreateGroupOpen(false)}
+        title="Tạo nhóm thảo luận mới"
+      >
+        <form onSubmit={handleCreateGroup} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Tên phòng chat</label>
+            <input
+              type="text"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Ví dụ: Đồ án tốt nghiệp K18 SE"
+              required
+              className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Chuyên ngành (Tùy chọn)</label>
+            <input
+              type="text"
+              value={newGroupMajor}
+              onChange={(e) => setNewGroupMajor(e.target.value)}
+              placeholder="Ví dụ: Kỹ thuật phần mềm"
+              className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setIsCreateGroupOpen(false)}>
+              Hủy
+            </Button>
+            <Button type="submit" className="bg-brand-secondary text-white hover:bg-brand-secondary/90">
+              Tạo phòng
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Modal: Start Direct 1-1 Chat */}
-      {isDirectChatOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Start Direct Message</h3>
-              <button
-                onClick={() => setIsDirectChatOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <IconX className="h-5 w-5" />
-              </button>
-            </div>
+      <Modal
+        isOpen={isDirectChatOpen}
+        onClose={() => setIsDirectChatOpen(false)}
+        title="Bắt đầu trò chuyện 1-1"
+      >
+        <div className="space-y-4">
+          <div className="relative">
+            <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              value={userSearchQuery}
+              onChange={(e) => void handleSearchUsers(e.target.value)}
+              placeholder="Tìm theo tên sinh viên hoặc cựu sinh viên..."
+              className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2 text-sm focus:border-brand-primary focus:outline-none"
+            />
+          </div>
 
-            <div className="relative">
-              <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                value={userSearchQuery}
-                onChange={(e) => handleSearchUsers(e.target.value)}
-                placeholder="Search by student or alumni name..."
-                className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2 text-sm focus:border-brand-primary focus:outline-none"
-              />
-            </div>
-
-            <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
-              {isSearchingUsers ? (
-                <div className="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                  <IconLoader2 className="h-4 w-4 animate-spin" />
-                  <span>Searching directory...</span>
-                </div>
-              ) : searchResults.length === 0 ? (
-                <div className="p-4 text-center text-xs text-slate-400">
-                  {userSearchQuery ? 'No members found' : 'Type a name to search members'}
-                </div>
-              ) : (
-                searchResults.map((user) => (
-                  <div
-                    key={user.id}
-                    className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Avatar fallback={user.fullName.slice(0, 2).toUpperCase()} size="sm" />
-                      <div>
-                        <p className="font-bold text-xs text-slate-900">{user.fullName}</p>
-                        <p className="text-[10px] text-slate-500">
-                          {user.role} • {user.campus || 'Hòa Lạc'}
-                        </p>
-                      </div>
+          <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
+            {isSearchingUsers ? (
+              <div className="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                <IconLoader2 className="h-4 w-4 animate-spin" />
+                <span>Đang tìm kiếm thành viên...</span>
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="p-4 text-center text-xs text-slate-400">
+                {userSearchQuery ? 'Không tìm thấy thành viên phù hợp' : 'Nhập tên để tìm kiếm thành viên'}
+              </div>
+            ) : (
+              searchResults.map((user) => (
+                <div
+                  key={user.id}
+                  className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Avatar fallback={user.fullName.slice(0, 2).toUpperCase()} size="sm" />
+                    <div>
+                      <p className="font-bold text-xs text-slate-900">{user.fullName}</p>
+                      <p className="text-[10px] text-slate-500">
+                        {user.role} • {formatCampusLabel(user.campus) || 'FPTU'}
+                      </p>
                     </div>
-
-                    <Button
-                      size="sm"
-                      onClick={() => handleStartDirectChat(user)}
-                      className="bg-brand-secondary text-white text-xs h-7 px-2.5"
-                    >
-                      Chat
-                    </Button>
                   </div>
-                ))
-              )}
-            </div>
+
+                  <Button
+                    size="sm"
+                    onClick={() => void handleStartDirectChat(user)}
+                    className="bg-brand-secondary text-white text-xs h-7 px-2.5"
+                  >
+                    Nhắn tin
+                  </Button>
+                </div>
+              ))
+            )}
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

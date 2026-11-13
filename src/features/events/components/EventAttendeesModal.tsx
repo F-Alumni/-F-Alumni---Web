@@ -50,7 +50,7 @@ export const EventAttendeesModal: FC<EventAttendeesModalProps> = ({
   const interestedAttendees = attendees.filter((a) => a.status === 'Interested')
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5 bg-slate-50">
@@ -99,14 +99,14 @@ export const EventAttendeesModal: FC<EventAttendeesModalProps> = ({
                       >
                         <div className="flex items-center gap-2.5">
                           <Avatar
-                            src={att.avatarUrl}
-                            fallback={att.fullName.slice(0, 2).toUpperCase()}
+                            src={att.userAvatarUrl}
+                            fallback={(att.userName || 'FP').slice(0, 2).toUpperCase()}
                             className="h-8 w-8"
                           />
                           <div>
-                            <p className="text-xs font-bold text-slate-900">{att.fullName}</p>
+                            <p className="text-xs font-bold text-slate-900">{att.userName || 'Thành viên FPT'}</p>
                             <p className="text-[10px] text-slate-400">
-                              {new Date(att.createdAt).toLocaleDateString('vi-VN')}
+                              {att.registeredAt ? new Date(att.registeredAt).toLocaleDateString('vi-VN') : ''}
                             </p>
                           </div>
                         </div>
@@ -134,14 +134,14 @@ export const EventAttendeesModal: FC<EventAttendeesModalProps> = ({
                       >
                         <div className="flex items-center gap-2.5">
                           <Avatar
-                            src={att.avatarUrl}
-                            fallback={att.fullName.slice(0, 2).toUpperCase()}
+                            src={att.userAvatarUrl}
+                            fallback={(att.userName || 'FP').slice(0, 2).toUpperCase()}
                             className="h-8 w-8"
                           />
                           <div>
-                            <p className="text-xs font-bold text-slate-900">{att.fullName}</p>
+                            <p className="text-xs font-bold text-slate-900">{att.userName || 'Thành viên FPT'}</p>
                             <p className="text-[10px] text-slate-400">
-                              {new Date(att.createdAt).toLocaleDateString('vi-VN')}
+                              {att.registeredAt ? new Date(att.registeredAt).toLocaleDateString('vi-VN') : ''}
                             </p>
                           </div>
                         </div>

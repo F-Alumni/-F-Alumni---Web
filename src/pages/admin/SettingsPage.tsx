@@ -1,25 +1,19 @@
-import { useState, useMemo, useRef, type FC, type FormEvent, type ChangeEvent } from 'react'
+import { useState, useRef, type FC, type FormEvent, type ChangeEvent } from 'react'
 import {
-  IconDeviceFloppy,
-  IconShieldCheck,
-  IconLock,
   IconSpeakerphone,
   IconPlus,
   IconTrash,
   IconCircleCheck,
   IconRefresh,
-  IconSparkles,
-  IconCloudUpload,
-  IconLoader2,
   IconBrain,
   IconUpload,
-  IconFileTypePdf,
-  IconFileCode,
   IconFileText,
   IconDatabase,
+  IconAlertCircle,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { ConfirmDialog } from '@/components/ui/dialog'
 import { PageHeader } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
 import { aiService } from '@/services/ai'
@@ -28,77 +22,46 @@ import {
   useCreateAnnouncementMutation,
   useDeleteAnnouncementMutation,
 } from '@/features/admin'
-import type { SystemAnnouncementItem } from '@/types/admin.types'
 
-export interface RagDocumentItem {
-  id: string
-  title: string
+export interface UploadedRagRecord {
   fileName: string
-  fileType: 'pdf' | 'md' | 'docx' | 'txt'
-  size: string
+  totalFilesProcessed: number
+  totalChunksCreated: number
   uploadedAt: string
-  chunkCount: number
-  status: 'indexed' | 'indexing'
 }
 
 export const SettingsPage: FC = () => {
-  const [autoVerifyFptEmail, setAutoVerifyFptEmail] = useState(true)
-  const [allowPublicJobPosting, setAllowPublicJobPosting] = useState(false)
-  const [requireModeratorApproval, setRequireModeratorApproval] = useState(true)
-  const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true)
-  const [isSaved, setIsSaved] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // AD-09: AI RAG Knowledge Base Management
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message })
+    setTimeout(() => setToast(null), 4500)
+  }
+
+  // Unified AI RAG Knowledge Base State
+  const ragInputRef = useRef<HTMLInputElement>(null)
   const [isIngestingRag, setIsIngestingRag] = useState(false)
-  const [ragStatus, setRagStatus] = useState({
-    documentsCount: 13,
-    totalChunks: 494,
-    lastIndexed: 'Vừa hoàn tất (100% đồng bộ)',
+  const [ragSummary, setRagSummary] = useState<{
+    totalFilesProcessed: number
+    totalChunksCreated: number
+    ingestedFiles: string[]
+    lastIndexed: string | null
+  }>({
+    totalFilesProcessed: 0,
+    totalChunksCreated: 0,
+    ingestedFiles: [],
+    lastIndexed: null,
   })
-  const [ragFile, setRagFile] = useState<File | null>(null)
+  const [uploadedHistory, setUploadedHistory] = useState<UploadedRagRecord[]>([])
 
-  const handleReindexRag = async () => {
-    setIsIngestingRag(true)
-    try {
-      const res = await aiService.ingestRag({ forceReindex: true })
-      setRagStatus({
-        documentsCount: res.documentsIndexed || 13,
-        totalChunks: res.totalChunks || 494,
-        lastIndexed: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      })
-      setToastMessage(res.message || 'Đã nạp lại tri thức RAG AI thành công (494 chunks)!')
-    } catch {
-      setToastMessage('Đã gửi lệnh nạp lại tri thức RAG tới Backend AI Service.')
-    } finally {
-      setIsIngestingRag(false)
-    }
-  }
-
-  const handleUploadKnowledgeDoc = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!ragFile) return
-    setIsIngestingRag(true)
-    try {
-      await aiService.ingestRag({ directoryPath: 'data/rag', forceReindex: true })
-      setToastMessage(`Đã nạp tài liệu "${ragFile.name}" vào kho tri thức RAG!`)
-      setRagFile(null)
-    } catch {
-      setToastMessage(`Đã ghi nhận tài liệu "${ragFile.name}" và kích hoạt nạp tri thức!`)
-      setRagFile(null)
-    } finally {
-      setIsIngestingRag(false)
-    }
-  }
-
-  // System Announcement Form States
+  // Announcements State
   const [annTitle, setAnnTitle] = useState('')
   const [annContent, setAnnContent] = useState('')
   const [annType, setAnnType] = useState('General')
   const [annPriority, setAnnPriority] = useState('Normal')
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false)
+  const [deleteAnnId, setDeleteAnnId] = useState<string | null>(null)
 
-  // React Query Hooks for Announcements
   const {
     data: announcementsData,
     isLoading: isAnnouncementsLoading,
@@ -107,47 +70,67 @@ export const SettingsPage: FC = () => {
 
   const createAnnMutation = useCreateAnnouncementMutation()
   const deleteAnnMutation = useDeleteAnnouncementMutation()
+  const announcements = announcementsData?.items || []
 
-  // Local additions & deletions
-  const [localAddedAnn, setLocalAddedAnn] = useState<SystemAnnouncementItem[]>([])
-  const [deletedAnnIds, setDeletedAnnIds] = useState<Set<string>>(new Set())
-
-  const announcements = useMemo(() => {
-    let baseList: SystemAnnouncementItem[] = []
-    if (announcementsData && announcementsData.items && announcementsData.items.length > 0) {
-      baseList = announcementsData.items
+  const handleReindexRag = async () => {
+    setIsIngestingRag(true)
+    try {
+      const res = await aiService.ingestRag({ forceReindex: true })
+      setRagSummary({
+        totalFilesProcessed: res.totalFilesProcessed,
+        totalChunksCreated: res.totalChunksCreated,
+        ingestedFiles: res.ingestedFiles || [],
+        lastIndexed: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      })
+      showToast(
+        'success',
+        res.message ||
+          `Đã tái lập chỉ mục ${res.totalFilesProcessed} tài liệu (${res.totalChunksCreated} chunks) thành công.`
+      )
+    } catch {
+      showToast('error', 'Không thể tái lập chỉ mục RAG trên AI Service. Vui lòng thử lại.')
+    } finally {
+      setIsIngestingRag(false)
     }
-    return [...localAddedAnn, ...baseList].filter((a) => !deletedAnnIds.has(a.id))
-  }, [announcementsData, localAddedAnn, deletedAnnIds])
+  }
 
-  const handleSave = () => {
-    setIsSaved(true)
-    setToastMessage('Cấu hình bảo mật hệ thống đã được lưu thành công!')
-    setTimeout(() => {
-      setIsSaved(false)
-      setToastMessage(null)
-    }, 3500)
+  const handleUploadKnowledgeFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsIngestingRag(true)
+    try {
+      const res = await aiService.uploadRagDocument(file)
+      setRagSummary({
+        totalFilesProcessed: res.totalFilesProcessed,
+        totalChunksCreated: res.totalChunksCreated,
+        ingestedFiles: res.ingestedFiles || [],
+        lastIndexed: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      })
+      setUploadedHistory((prev) => [
+        {
+          fileName: file.name,
+          totalFilesProcessed: res.totalFilesProcessed,
+          totalChunksCreated: res.totalChunksCreated,
+          uploadedAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+        },
+        ...prev,
+      ])
+      showToast(
+        'success',
+        res.message || `Đã tải lên & vector hóa tài liệu "${file.name}" (${res.totalChunksCreated} chunks).`
+      )
+    } catch {
+      showToast('error', `Tải lên tài liệu "${file.name}" thất bại. Chỉ hỗ trợ .docx, .md, .txt (<= 15MB).`)
+    } finally {
+      setIsIngestingRag(false)
+      if (ragInputRef.current) ragInputRef.current.value = ''
+    }
   }
 
   const handlePublishAnnouncement = async (e: FormEvent) => {
     e.preventDefault()
     if (!annTitle.trim() || !annContent.trim()) return
-
-    const newAnn: SystemAnnouncementItem = {
-      id: `ANN-${Date.now().toString().slice(-4)}`,
-      title: annTitle.trim(),
-      content: annContent.trim(),
-      type: annType,
-      priority: annPriority,
-      isPublished: true,
-      publishedAtUtc: new Date().toISOString(),
-      createdByAdminId: 'SUPER-ADMIN',
-      createdByAdminEmail: 'admin@fpt.edu.vn',
-      createdAtUtc: new Date().toISOString(),
-    }
-
-    setLocalAddedAnn((prev) => [newAnn, ...prev])
-    setIsPublishModalOpen(false)
 
     try {
       await createAnnMutation.mutateAsync({
@@ -157,328 +140,177 @@ export const SettingsPage: FC = () => {
         priority: annPriority,
         isPublished: true,
       })
-      setToastMessage(`Đã phát thông báo hệ thống: "${newAnn.title}"!`)
+      setIsPublishModalOpen(false)
+      setAnnTitle('')
+      setAnnContent('')
+      void refetchAnnouncements()
+      showToast('success', `Đã phát hành thông báo hệ thống "${annTitle.trim()}".`)
     } catch {
-      setToastMessage(`Đã phát thông báo (cục bộ): "${newAnn.title}"!`)
+      showToast('error', 'Không thể tạo thông báo hệ thống trên máy chủ.')
     }
-
-    setAnnTitle('')
-    setAnnContent('')
-    setTimeout(() => setToastMessage(null), 3500)
   }
 
-  const handleDeleteAnnouncement = async (id: string) => {
-    setDeletedAnnIds((prev) => new Set(prev).add(id))
+  const handleConfirmDeleteAnnouncement = async () => {
+    if (!deleteAnnId) return
     try {
-      await deleteAnnMutation.mutateAsync(id)
+      await deleteAnnMutation.mutateAsync(deleteAnnId)
+      void refetchAnnouncements()
+      showToast('success', 'Đã xóa thông báo hệ thống.')
     } catch {
-      // Optimistic delete preserved
-    }
-    setToastMessage(`Đã xóa thông báo hệ thống ${id}`)
-    setTimeout(() => setToastMessage(null), 3000)
-  }
-
-  // RAG Knowledge Base State (AD-09)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isIndexing, setIsIndexing] = useState(false)
-  const [ragDocs, setRagDocs] = useState<RagDocumentItem[]>([])
-
-  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-
-    const newDocs: RagDocumentItem[] = Array.from(files).map((f, idx) => {
-      const ext = f.name.split('.').pop()?.toLowerCase() || 'txt'
-      const fileType: RagDocumentItem['fileType'] =
-        ext === 'pdf' ? 'pdf' : ext === 'md' ? 'md' : ext === 'docx' ? 'docx' : 'txt'
-      const sizeStr =
-        f.size > 1024 * 1024
-          ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
-          : `${Math.round(f.size / 1024)} KB`
-
-      return {
-        id: `RAG-${Date.now()}-${idx}`,
-        title: f.name.replace(/\.[^/.]+$/, ''),
-        fileName: f.name,
-        fileType,
-        size: sizeStr,
-        uploadedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-        chunkCount: Math.floor(Math.random() * 8) + 4,
-        status: 'indexed',
-      }
-    })
-
-    setRagDocs((prev) => [...newDocs, ...prev])
-    setIsIndexing(true)
-
-    try {
-      await aiService.ingestRag({ forceReindex: false })
-      setToastMessage(
-        `Đã tải lên và vector hóa thành công ${newDocs.length} tài liệu vào cơ sở tri thức AI RAG!`
-      )
-    } catch {
-      setToastMessage(
-        `Đã nạp ${newDocs.length} tài liệu vào cơ sở tri thức AI RAG!`
-      )
+      showToast('error', 'Không thể xóa thông báo hệ thống.')
     } finally {
-      setIsIndexing(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      setTimeout(() => setToastMessage(null), 4000)
+      setDeleteAnnId(null)
     }
-  }
-
-  const handleReindexAll = async () => {
-    setIsIndexing(true)
-    try {
-      const res = await aiService.ingestRag({ forceReindex: true })
-      setToastMessage(
-        `Đã tái lập chỉ mục (Re-index) toàn bộ ${res?.totalIndexed || ragDocs.length} tài liệu RAG thành công!`
-      )
-    } catch {
-      setToastMessage('Đã đồng bộ và tái lập chỉ mục toàn bộ tài liệu RAG!')
-    } finally {
-      setIsIndexing(false)
-      setTimeout(() => setToastMessage(null), 4000)
-    }
-  }
-
-  const handleDeleteDoc = (id: string) => {
-    setRagDocs((prev) => prev.filter((d) => d.id !== id))
-    setToastMessage('Đã gỡ tài liệu khỏi cơ sở tri thức AI RAG.')
-    setTimeout(() => setToastMessage(null), 3000)
   }
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Toast Feedback */}
-      {toastMessage && (
-        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-800 shadow-sm animate-in fade-in">
+      {toast && (
+        <div
+          className={`flex items-center justify-between rounded-xl border px-4 py-2.5 text-xs font-semibold shadow-sm animate-in fade-in ${
+            toast.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
+          }`}
+        >
           <div className="flex items-center gap-2">
-            <IconCircleCheck size={16} stroke={2} className="text-brand-accent shrink-0" />
-            <span>{toastMessage}</span>
+            {toast.type === 'success' ? (
+              <IconCircleCheck size={16} stroke={2} className="text-brand-accent shrink-0" />
+            ) : (
+              <IconAlertCircle size={16} stroke={2} className="text-rose-600 shrink-0" />
+            )}
+            <span>{toast.message}</span>
           </div>
-          <button onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-slate-600 font-bold ml-4">
+          <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-600 font-bold ml-4">
             ×
           </button>
         </div>
       )}
 
       <PageHeader
-        title="System Settings & Broadcasts"
-        description="Configure automated verification policies, moderation rules, and broadcast campus announcements."
+        title="System Broadcasts & AI Knowledge"
+        description="Manage AI RAG knowledge base ingestion and publish platform-wide system announcements."
         breadcrumbs={[
           { label: 'Admin', to: ROUTES.ADMIN.DASHBOARD },
           { label: 'Settings' },
         ]}
-        actions={
-          <Button
-            onClick={handleSave}
-            className="h-9 rounded-lg bg-brand-primary px-4 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5"
-          >
-            <IconDeviceFloppy size={16} stroke={1.8} />
-            <span>{isSaved ? 'Saved Successfully!' : 'Save Configuration'}</span>
-          </Button>
-        }
       />
 
       <div className="space-y-5">
-        {/* Verification Settings */}
+        {/* Unified AI Knowledge Base & RAG Ingestion */}
         <Card className="p-5 rounded-xl border-slate-200 bg-white space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-            <IconShieldCheck size={20} stroke={1.8} className="text-brand-accent shrink-0" />
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Alumni Verification Automation</h2>
-              <p className="text-xs text-slate-500">Rules governing automated and manual degree checks.</p>
-            </div>
-          </div>
-
-          <div className="space-y-4 text-xs">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={autoVerifyFptEmail}
-                onChange={(e) => setAutoVerifyFptEmail(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
-              />
-              <div className="flex flex-col">
-                <span className="font-semibold text-slate-800">
-                  Auto-Verify with Official @fpt.edu.vn / @fe.edu.vn Email
-                </span>
-                <span className="text-slate-500">
-                  Applicants submitting an active institutional university email are fast-tracked into the verified alumni directory.
-                </span>
-              </div>
-            </label>
-
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={requireModeratorApproval}
-                onChange={(e) => setRequireModeratorApproval(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
-              />
-              <div className="flex flex-col">
-                <span className="font-semibold text-slate-800">
-                  Require Manual Degree Scan for Personal Emails (Gmail, Yahoo)
-                </span>
-                <span className="text-slate-500">
-                  Requires alumni using non-university emails to submit degree diploma scans into the Verification Queue.
-                </span>
-              </div>
-            </label>
-          </div>
-        </Card>
-
-        {/* Opportunity & Content Rules */}
-        <Card className="p-5 rounded-xl border-slate-200 bg-white space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-            <IconLock size={20} stroke={1.8} className="text-brand-secondary shrink-0" />
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Posting & Moderation Policies</h2>
-              <p className="text-xs text-slate-500">Access controls for career listings and open discussions.</p>
-            </div>
-          </div>
-
-          <div className="space-y-4 text-xs">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={allowPublicJobPosting}
-                onChange={(e) => setAllowPublicJobPosting(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
-              />
-              <div className="flex flex-col">
-                <span className="font-semibold text-slate-800">
-                  Allow Unverified Users to Post Job & Internship Listings
-                </span>
-                <span className="text-slate-500">
-                  When disabled, only verified alumni and staff accounts can publish career opportunities to prevent spam.
-                </span>
-              </div>
-            </label>
-
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={emailAlertsEnabled}
-                onChange={(e) => setEmailAlertsEnabled(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
-              />
-              <div className="flex flex-col">
-                <span className="font-semibold text-slate-800">
-                  Instant Email Notifications for High-Priority Reports
-                </span>
-                <span className="text-slate-500">
-                  Send urgent moderation alerts directly to admin@fpt.edu.vn when content receives multiple flags.
-                </span>
-              </div>
-            </label>
-          </div>
-        </Card>
-
-        {/* AD-09: AI RAG Knowledge Base Management */}
-        <Card className="p-5 rounded-xl border-slate-200 bg-white space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
-              <IconSparkles size={20} stroke={1.8} className="text-brand-secondary shrink-0" />
+              <div className="h-9 w-9 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
+                <IconBrain size={20} stroke={1.8} />
+              </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900">Quản lý Tri thức AI (RAG Knowledge Base - AD-09)</h2>
+                <h2 className="text-base font-bold text-slate-900">AI Knowledge Base & Document RAG</h2>
                 <p className="text-xs text-slate-500">
-                  Điều phối kho tri thức quy chế đào tạo FPTU, Capstone SEP490, OJT, và dữ liệu cựu sinh viên 5 ngành.
+                  Upload quy chế học vụ, tài liệu OJT (.docx, .md, .txt) để nạp trực tiếp vào AI Service.
                 </p>
               </div>
             </div>
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleReindexRag}
-              disabled={isIngestingRag}
-              className="border-slate-200 text-xs gap-1.5 shrink-0"
-            >
-              {isIngestingRag ? (
-                <>
-                  <IconLoader2 size={14} className="animate-spin text-brand-secondary" />
-                  <span>Đang nạp lại tri thức...</span>
-                </>
-              ) : (
-                <>
-                  <IconRefresh size={14} stroke={1.8} />
-                  <span>Nạp lại dữ liệu RAG (Re-index)</span>
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void handleReindexRag()}
+                disabled={isIngestingRag}
+                className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
+              >
+                <IconRefresh size={14} className={isIngestingRag ? 'animate-spin text-brand-primary' : ''} />
+                <span>{isIngestingRag ? 'Đang xử lý...' : 'Re-index All'}</span>
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => ragInputRef.current?.click()}
+                disabled={isIngestingRag}
+                className="h-8 rounded-lg bg-brand-secondary px-3 text-xs font-semibold text-white shadow-sm hover:bg-brand-secondary/90 flex items-center gap-1.5"
+              >
+                <IconUpload size={14} stroke={2} />
+                <span>Upload Tài liệu</span>
+              </Button>
+              <input
+                ref={ragInputRef}
+                type="file"
+                accept=".docx,.md,.txt"
+                className="hidden"
+                onChange={(e) => void handleUploadKnowledgeFile(e)}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Tài liệu RAG</span>
-              <p className="text-lg font-bold text-slate-900">{ragStatus.documentsCount} Documents</p>
-              <p className="text-[10px] text-slate-500">Markdown, quy chế OJT, học phí, Capstone</p>
-            </div>
-
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Vector Chunks</span>
-              <p className="text-lg font-bold text-brand-secondary">{ragStatus.totalChunks} Chunks</p>
-              <p className="text-[10px] text-slate-500">Mô hình: gemini-3.5-flash-lite</p>
-            </div>
-
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Trạng thái đồng bộ</span>
-              <p className="text-sm font-bold text-emerald-600 mt-1 flex items-center gap-1">
-                <IconCircleCheck size={16} />
-                <span>Hoạt động bình thường</span>
+            <div className="p-3 rounded-xl border border-slate-100 bg-slate-50">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Processed Files
+              </span>
+              <p className="text-lg font-bold text-slate-900 mt-0.5">
+                {ragSummary.totalFilesProcessed > 0 ? ragSummary.totalFilesProcessed : 'Chưa chạy re-index'}
               </p>
-              <p className="text-[10px] text-slate-500">{ragStatus.lastIndexed}</p>
+            </div>
+            <div className="p-3 rounded-xl border border-slate-100 bg-slate-50">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Vector Chunks
+              </span>
+              <p className="text-lg font-bold text-brand-secondary mt-0.5">
+                {ragSummary.totalChunksCreated > 0 ? ragSummary.totalChunksCreated : '—'}
+              </p>
+            </div>
+            <div className="p-3 rounded-xl border border-slate-100 bg-slate-50">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Last Synced
+              </span>
+              <p className="text-sm font-semibold text-slate-700 mt-1">
+                {ragSummary.lastIndexed || 'Nhấn Re-index All để kiểm tra'}
+              </p>
             </div>
           </div>
 
-          {/* Upload new knowledge document */}
-          <form onSubmit={handleUploadKnowledgeDoc} className="p-3.5 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="h-10 w-10 rounded-xl bg-blue-100/60 text-brand-secondary flex items-center justify-center shrink-0">
-                <IconCloudUpload size={20} />
+          {(ragSummary.ingestedFiles.length > 0 || uploadedHistory.length > 0) && (
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                <IconDatabase size={15} className="text-brand-secondary" />
+                <span>Tài liệu vừa nạp trong phiên ({ragSummary.ingestedFiles.length || uploadedHistory.length})</span>
               </div>
-              <div>
-                <span className="text-xs font-semibold text-slate-800 block">Tải thêm tài liệu kiến thức mới (.md, .pdf, .txt)</span>
-                <span className="text-[10px] text-slate-500">Cập nhật cẩm nang học vụ và quy chuẩn đồ án mới nhất cho Trợ lý AI</span>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <input
-                type="file"
-                accept=".md,.pdf,.txt"
-                onChange={(e) => setRagFile(e.target.files?.[0] || null)}
-                className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!ragFile || isIngestingRag}
-                className="bg-brand-secondary hover:bg-brand-secondary/90 text-white rounded-lg text-xs"
-              >
-                Tải lên & Nạp
-              </Button>
+              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+                {ragSummary.ingestedFiles.map((fileName) => (
+                  <div key={fileName} className="flex items-center justify-between px-3 py-2 text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <IconFileText size={16} className="text-brand-primary shrink-0" />
+                      <span className="font-semibold text-slate-800 truncate">{fileName}</span>
+                    </div>
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                      Indexed
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </form>
+          )}
         </Card>
 
-        {/* System Announcements Management (AD-08) */}
+        {/* System Announcements Management */}
         <Card className="p-5 rounded-xl border-slate-200 bg-white space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
               <IconSpeakerphone size={20} stroke={1.8} className="text-brand-primary shrink-0" />
               <div>
                 <h2 className="text-base font-bold text-slate-900">System Broadcasts & Announcements</h2>
-                <p className="text-xs text-slate-500">Publish global announcements across web portal and mobile alumni apps.</p>
+                <p className="text-xs text-slate-500">Publish global announcements across web portal and mobile apps.</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => refetchAnnouncements()}
+                onClick={() => void refetchAnnouncements()}
                 disabled={isAnnouncementsLoading}
                 className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1"
               >
@@ -488,7 +320,7 @@ export const SettingsPage: FC = () => {
               <Button
                 size="sm"
                 onClick={() => setIsPublishModalOpen(true)}
-                className="h-8 rounded-lg bg-brand-primary px-3 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5"
+                className="h-8 rounded-lg bg-brand-primary px-3 text-xs font-semibold text-white shadow-sm hover:bg-brand-primary-hover flex items-center gap-1.5"
               >
                 <IconPlus size={15} stroke={2} />
                 <span>New Announcement</span>
@@ -496,211 +328,59 @@ export const SettingsPage: FC = () => {
             </div>
           </div>
 
-          {/* Announcements List */}
           <div className="space-y-3">
-            {announcements.map((ann) => (
-              <div
-                key={ann.id}
-                className="flex items-start justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors"
-              >
-                <div className="space-y-1 max-w-xl">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 text-xs">{ann.title}</span>
-                    <span
-                      className={`rounded px-1.5 py-0.2 text-[9px] font-bold ${
-                        ann.priority === 'High' || ann.priority === 'Urgent'
-                          ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                          : 'bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      {ann.priority}
-                    </span>
-                    <span className="rounded bg-sky-100 text-brand-secondary px-1.5 py-0.2 text-[9px] font-bold">
-                      {ann.type}
+            {announcements.length === 0 ? (
+              <p className="py-6 text-center text-xs text-slate-400">
+                Chưa có thông báo hệ thống nào. Nhấn "New Announcement" để phát hành.
+              </p>
+            ) : (
+              announcements.map((ann) => (
+                <div
+                  key={ann.id}
+                  className="flex items-start justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="space-y-1 max-w-xl">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-slate-900 text-xs">{ann.title}</span>
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                          ann.priority === 'High' || ann.priority === 'Urgent'
+                            ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                            : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {ann.priority}
+                      </span>
+                      <span className="rounded bg-sky-100 text-brand-secondary px-1.5 py-0.5 text-[9px] font-bold">
+                        {ann.type}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 text-xs leading-relaxed">{ann.content}</p>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Published on {ann.publishedAtUtc ? ann.publishedAtUtc.slice(0, 10) : 'Recent'}
                     </span>
                   </div>
-                  <p className="text-slate-600 text-xs leading-relaxed">{ann.content}</p>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    Published on {ann.publishedAtUtc ? ann.publishedAtUtc.slice(0, 10) : 'Recent'}
-                  </span>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setDeleteAnnId(ann.id)}
+                    className="h-7 text-xs border-slate-200 text-rose-600 hover:bg-rose-50 shrink-0 ml-3"
+                    title="Remove announcement"
+                    aria-label="Remove announcement"
+                  >
+                    <IconTrash size={14} stroke={1.8} />
+                  </Button>
                 </div>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDeleteAnnouncement(ann.id)}
-                  className="h-7 text-xs border-slate-200 text-rose-600 hover:bg-rose-50 shrink-0 ml-3"
-                  title="Remove announcement"
-                >
-                  <IconTrash size={14} stroke={1.8} />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* AI Knowledge Base & RAG Ingestion (AD-09) */}
-        <Card className="p-5 rounded-xl border-slate-200 bg-white space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
-            <div className="flex items-center gap-2.5">
-              <IconBrain size={20} stroke={1.8} className="text-brand-primary shrink-0" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-slate-900">AI Knowledge Base & Document RAG</h2>
-                  <span className="rounded-full bg-brand-primary/10 px-2 py-0.5 text-[10px] font-bold text-brand-primary uppercase">
-                    AD-09
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500">
-                  Upload academic curriculums, syllabi, and student handbooks (.md, .pdf) for AI vector ingestion and retrieval-augmented generation.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleReindexAll}
-                disabled={isIndexing}
-                className="h-8 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5"
-                title="Re-index all RAG documents across vector storage"
-              >
-                <IconRefresh size={14} className={isIndexing ? 'animate-spin' : ''} />
-                <span>Re-index Vector DB</span>
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isIndexing}
-                className="h-8 rounded-lg bg-brand-primary px-3 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5"
-              >
-                <IconUpload size={14} stroke={2} />
-                <span>Upload Document (.md, .pdf)</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Hidden File Input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".md,.pdf,.docx,.txt"
-            multiple
-            className="hidden"
-            onChange={handleFileUpload}
-          />
-
-          {/* Drag & Drop Visual Box */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-5 text-center transition-colors hover:border-brand-primary/50 hover:bg-brand-primary/5 cursor-pointer"
-          >
-            <div className="rounded-full bg-brand-primary/10 p-2.5 text-brand-primary mb-2">
-              <IconSparkles size={22} stroke={1.8} />
-            </div>
-            <p className="text-xs font-bold text-slate-800">
-              Click to browse or drag & drop documents here
-            </p>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Supports <span className="font-semibold text-slate-700">.md, .pdf, .docx, .txt</span> files up to 25MB each.
-            </p>
-          </div>
-
-          {/* Document Table / List */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 px-1">
-              <span>Indexed Documents ({ragDocs.length})</span>
-              <span>Status & Chunks</span>
-            </div>
-
-            <div className="space-y-2">
-              {ragDocs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-                  <IconFileCode size={32} stroke={1.5} className="text-slate-300 mb-2" />
-                  <p className="text-xs font-semibold text-slate-600">Chưa có tài liệu nào được tải lên</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Chọn hoặc kéo thả file <span className="font-semibold text-slate-600">.md, .pdf, .docx, .txt</span> vào khung bên trên để AI tiến hành vector hóa RAG.
-                  </p>
-                </div>
-              ) : (
-                ragDocs.map((doc) => {
-                  const isPdf = doc.fileType === 'pdf'
-                  const isMd = doc.fileType === 'md'
-                  return (
-                    <div
-                      key={doc.id}
-                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50/80 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`rounded-lg p-2 shrink-0 ${
-                            isPdf
-                              ? 'bg-rose-100 text-rose-600'
-                              : isMd
-                              ? 'bg-sky-100 text-sky-600'
-                              : 'bg-emerald-100 text-emerald-600'
-                          }`}
-                        >
-                          {isPdf ? (
-                            <IconFileTypePdf size={18} />
-                          ) : isMd ? (
-                            <IconFileCode size={18} />
-                          ) : (
-                            <IconFileText size={18} />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-slate-900 text-xs truncate">
-                              {doc.title}
-                            </span>
-                            <span className="rounded bg-slate-100 px-1.5 py-0.2 text-[9px] font-mono text-slate-600">
-                              .{doc.fileType}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                            <span>{doc.fileName}</span>
-                            <span>•</span>
-                            <span>{doc.size}</span>
-                            <span>•</span>
-                            <span>Uploaded {doc.uploadedAt}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
-                            <IconDatabase size={11} />
-                            {doc.chunkCount} Chunks
-                          </span>
-                          <span className="rounded-full bg-brand-primary/10 text-brand-primary px-2 py-0.5 text-[10px] font-bold">
-                            Indexed
-                          </span>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteDoc(doc.id)}
-                          className="h-7 w-7 p-0 border-slate-200 text-rose-600 hover:bg-rose-50"
-                          title="Remove document from RAG index"
-                        >
-                          <IconTrash size={13} stroke={1.8} />
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
+              ))
+            )}
           </div>
         </Card>
       </div>
 
       {/* Modal: Publish Announcement */}
       {isPublishModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
               <div className="flex items-center gap-2">
@@ -711,6 +391,7 @@ export const SettingsPage: FC = () => {
                 type="button"
                 onClick={() => setIsPublishModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 font-bold"
+                aria-label="Close modal"
               >
                 ×
               </button>
@@ -724,7 +405,7 @@ export const SettingsPage: FC = () => {
                   required
                   value={annTitle}
                   onChange={(e) => setAnnTitle(e.target.value)}
-                  placeholder="e.g. Lịch bảo trì cổng thông tin hoặc sự kiện toàn trường..."
+                  placeholder="Ví dụ: Lịch bảo trì hệ thống hoặc sự kiện toàn trường..."
                   className="w-full rounded-lg border border-slate-200 p-2 text-xs focus:border-brand-primary focus:outline-none"
                 />
               </div>
@@ -765,7 +446,7 @@ export const SettingsPage: FC = () => {
                   rows={4}
                   value={annContent}
                   onChange={(e) => setAnnContent(e.target.value)}
-                  placeholder="Enter detailed message to broadcast to all alumni and students..."
+                  placeholder="Nhập nội dung thông báo phát hành..."
                   className="w-full rounded-lg border border-slate-200 p-2 text-xs focus:border-brand-primary focus:outline-none"
                 />
               </div>
@@ -783,15 +464,27 @@ export const SettingsPage: FC = () => {
                 <Button
                   type="submit"
                   size="sm"
-                  className="h-8 rounded-lg bg-brand-primary px-4 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover"
+                  disabled={createAnnMutation.isPending}
+                  className="h-8 rounded-lg bg-brand-primary px-4 text-xs font-semibold text-white shadow-sm hover:bg-brand-primary-hover"
                 >
-                  Publish Now
+                  {createAnnMutation.isPending ? 'Publishing...' : 'Publish Now'}
                 </Button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteAnnId)}
+        onClose={() => setDeleteAnnId(null)}
+        onConfirm={() => void handleConfirmDeleteAnnouncement()}
+        title="Xác nhận xóa thông báo"
+        message="Bạn có chắc chắn muốn xóa thông báo hệ thống này không?"
+        confirmText="Xóa thông báo"
+        variant="danger"
+        isLoading={deleteAnnMutation.isPending}
+      />
     </div>
   )
 }

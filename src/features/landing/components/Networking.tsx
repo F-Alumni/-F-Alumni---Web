@@ -89,11 +89,11 @@ export const Networking: FC = () => {
             return (
               <div
                 key={pillar.id}
-                className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-xs hover:shadow-xl hover:border-orange-200 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between"
+                className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-orange-200 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100/90 flex items-center justify-center text-[#F27024] group-hover:bg-[#F27024] group-hover:text-white transition-colors shadow-2xs">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100/90 flex items-center justify-center text-[#F27024] group-hover:bg-[#F27024] group-hover:text-white transition-colors shadow-sm">
                       <Icon size={24} stroke={2} />
                     </div>
                     <span className="font-mono text-sm font-black text-slate-300 group-hover:text-[#F27024] transition-colors">
@@ -143,7 +143,7 @@ export const Networking: FC = () => {
         </div>
 
         {/* Supporting Real Event Proof Banner */}
-        <div className="mt-12 rounded-2xl bg-white border border-slate-200/90 p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="mt-12 rounded-2xl bg-white border border-slate-200/90 p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-20 h-14 rounded-xl overflow-hidden shrink-0 border border-slate-200">
               <img

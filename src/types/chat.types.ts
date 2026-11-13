@@ -11,7 +11,11 @@ export interface BackendChatMessage {
   senderAvatarUrl: string | null
   content: string
   mediaUrl?: string | null
+  attachmentUrl?: string | null
+  attachmentType?: 'Text' | 'Image' | 'File' | string | null
   messageType?: 'Text' | 'Image'
+  status?: string
+  readAt?: string | null
   isRead?: boolean
   sentAt: string
 }

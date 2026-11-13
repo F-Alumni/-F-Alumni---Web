@@ -37,7 +37,7 @@ export const StatCard: FC<StatCardProps> = ({
     return (
       <Card
         className={cn(
-          'rounded-xl border border-slate-200 bg-white p-5 shadow-xs animate-pulse',
+          'rounded-xl border border-slate-200 bg-white p-5 shadow-sm animate-pulse',
           className
         )}
       >
@@ -57,7 +57,7 @@ export const StatCard: FC<StatCardProps> = ({
   return (
     <Card
       className={cn(
-        'rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm',
+        'rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md',
         className
       )}
     >

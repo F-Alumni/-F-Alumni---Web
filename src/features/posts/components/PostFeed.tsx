@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback, type FC } from 'react'
 import { PostCard, type PostItem } from './PostCard'
 import type { PostCategoryFilter, PostSortOption, QuestionStatusFilter } from './PostFeedFilters'
 import { postsService, type ForumPostItem } from '@/services/posts'
-import { Loader2 } from 'lucide-react'
+import { forumHubClient } from '@/services/posts/signalr'
+import { normalizeCampusCode } from '@/constants/campuses'
+import { Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface PostFeedProps {
   category: PostCategoryFilter
@@ -17,10 +20,11 @@ interface PostFeedProps {
 function mapBackendPostToPostItem(p: ForumPostItem): PostItem {
   let type: 'EXPERIENCE' | 'QUESTION' | 'JOB' | 'INTERNSHIP' | 'SCHOLARSHIP' = 'EXPERIENCE'
   const pt = (p.postType || '').toLowerCase()
+  const textLower = `${p.title} ${p.content}`.toLowerCase()
   if (pt.includes('question')) type = 'QUESTION'
+  else if (pt.includes('scholar') || textLower.includes('học bổng') || textLower.includes('scholarship')) type = 'SCHOLARSHIP'
+  else if (pt.includes('intern') || textLower.includes('thực tập') || textLower.includes('ojt')) type = 'INTERNSHIP'
   else if (pt.includes('recruit') || pt.includes('job')) type = 'JOB'
-  else if (pt.includes('intern')) type = 'INTERNSHIP'
-  else if (pt.includes('scholar')) type = 'SCHOLARSHIP'
   else type = 'EXPERIENCE'
 
   let timestamp = 'Vừa xong'
@@ -42,13 +46,11 @@ function mapBackendPostToPostItem(p: ForumPostItem): PostItem {
     author: {
       id: p.authorId,
       name: p.authorName || 'FPT Alumni',
-      avatar:
-        p.authorAvatarUrl ||
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
-      role: p.major ? `Khoa ${p.major}` : 'Thành viên cựu SV',
+      avatar: p.authorAvatarUrl || '',
+      role: p.major ? `Khoa ${p.major}` : 'Thành viên FPTU',
       major: p.major || 'FPT University',
       isVerified: true,
-      isOnline: true,
+      isOnline: false,
     },
     timestamp,
     community: p.major ? `#${p.major}` : '#General',
@@ -76,13 +78,15 @@ export const PostFeed: FC<PostFeedProps> = ({
 }) => {
   const [posts, setPosts] = useState<PostItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const fetchPosts = useCallback(async () => {
     setIsLoading(true)
+    setErrorMessage(null)
     try {
       let postType: string | undefined
       if (category === 'QUESTIONS' || questionStatus !== 'ALL') postType = 'Question'
-      else if (category === 'JOBS' || category === 'INTERNSHIPS') postType = 'Recruitment'
+      else if (category === 'JOBS' || category === 'INTERNSHIPS' || category === 'SCHOLARSHIPS') postType = 'Recruitment'
       else if (category === 'EXPERIENCES') postType = 'Sharing'
 
       let major: string | undefined
@@ -116,10 +120,26 @@ export const PostFeed: FC<PostFeedProps> = ({
 
       let rawItems = res?.items || []
 
-      // Client-side filter/sort reinforcement so UI filters always respond accurately
+      if (category === 'SCHOLARSHIPS') {
+        rawItems = rawItems.filter((item) => {
+          const text = `${item.title} ${item.content} ${item.postType}`.toLowerCase()
+          return text.includes('học bổng') || text.includes('scholarship') || text.includes('grant')
+        })
+      } else if (category === 'INTERNSHIPS') {
+        rawItems = rawItems.filter((item) => {
+          const text = `${item.title} ${item.content}`.toLowerCase()
+          return text.includes('thực tập') || text.includes('ojt') || text.includes('intern')
+        })
+      }
+
       if (campus && campus !== 'ALL') {
+        const targetCampus = normalizeCampusCode(campus)
         rawItems = rawItems.filter(
-          (item) => !item.campus || item.campus === 'All' || item.campus.toLowerCase().includes(campus.toLowerCase())
+          (item) =>
+            !item.campus ||
+            item.campus === 'All' ||
+            normalizeCampusCode(item.campus) === targetCampus ||
+            item.campus.toLowerCase().includes(campus.toLowerCase())
         )
       }
       if (searchKeyword.trim()) {
@@ -144,7 +164,8 @@ export const PostFeed: FC<PostFeedProps> = ({
 
       setPosts(rawItems.map(mapBackendPostToPostItem))
     } catch (err) {
-      console.warn('Could not load forum posts from backend:', err)
+      console.error('Could not load forum posts from backend:', err)
+      setErrorMessage('Không thể kết nối máy chủ diễn đàn. Vui lòng thử lại.')
       setPosts([])
     } finally {
       setIsLoading(false)
@@ -158,11 +179,37 @@ export const PostFeed: FC<PostFeedProps> = ({
     return () => clearTimeout(timer)
   }, [fetchPosts, refreshTrigger])
 
+  useEffect(() => {
+    void forumHubClient.startConnection()
+    const unsubPost = forumHubClient.onPostCreated(() => {
+      void fetchPosts()
+    })
+    const unsubReact = forumHubClient.onReactionUpdated(({ postId, likeCount }) => {
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, likes: likeCount } : p)))
+    })
+    return () => {
+      unsubPost()
+      unsubReact()
+    }
+  }, [fetchPosts])
+
   if (isLoading) {
     return (
       <div className="flex h-40 items-center justify-center rounded-xl border border-slate-200 bg-white">
         <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
         <span className="ml-2 text-xs font-semibold text-slate-500">Đang tải bảng tin diễn đàn...</span>
+      </div>
+    )
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="rounded-xl border border-rose-200 bg-white px-4 py-10 text-center space-y-3">
+        <AlertCircle className="mx-auto h-7 w-7 text-rose-500" />
+        <p className="text-sm font-semibold text-rose-700">{errorMessage}</p>
+        <Button type="button" variant="outline" size="sm" onClick={() => void fetchPosts()} className="gap-1.5 text-xs">
+          <RefreshCw className="h-3.5 w-3.5" /> Tải lại
+        </Button>
       </div>
     )
   }

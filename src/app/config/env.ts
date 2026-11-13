@@ -36,9 +36,16 @@ export const env = {
     import.meta.env.VITE_ADMIN_SERVICE_BASE_URL ||
     'http://localhost:5005/api/v1',
 
+  notificationServiceBaseUrl:
+    import.meta.env.VITE_NOTIFICATION_SERVICE_URL ||
+    import.meta.env.VITE_NOTIFICATION_SERVICE_BASE_URL ||
+    'http://localhost:5006/api/v1',
+
   // Real-time WebSockets SignalR Hubs
   chatHubUrl: import.meta.env.VITE_CHAT_HUB_URL || 'http://localhost:5002/hubs/chat',
   forumHubUrl: import.meta.env.VITE_FORUM_HUB_URL || 'http://localhost:5003/hubs/forum',
+  notificationHubUrl:
+    import.meta.env.VITE_NOTIFICATION_HUB_URL || 'http://localhost:5006/hubs/notifications',
 
   // Cloudinary configuration
   cloudinary: {

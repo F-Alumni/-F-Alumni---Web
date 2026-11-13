@@ -302,7 +302,7 @@ export const CommunitiesManagementPage: FC = () => {
               <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
               <span>Refresh</span>
             </Button>
-            <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover flex items-center gap-1.5">
+            <Button className="h-9 rounded-lg bg-brand-primary px-3.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-primary-hover flex items-center gap-1.5">
               <IconPlus size={16} stroke={2} />
               <span>Create Community</span>
             </Button>
@@ -322,7 +322,7 @@ export const CommunitiesManagementPage: FC = () => {
 
       {/* MODAL: Pin Department Announcement (Faculty & Admin) */}
       {pinTargetCommunity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-orange-50/70">

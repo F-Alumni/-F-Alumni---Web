@@ -11,6 +11,8 @@ import {
 } from '@/features/posts'
 import { EventsSection } from '@/features/events'
 
+import { FPT_CAMPUSES, normalizeCampusCode } from '@/constants/campuses'
+
 export type HomeTab = 'FEED' | 'EVENTS'
 
 /**
@@ -22,7 +24,10 @@ export const HomePage: FC = () => {
   const [activeTab, setActiveTab] = useState<HomeTab>('FEED')
   const [activeCategory, setActiveCategory] = useState<PostCategoryFilter>('ALL')
   const [selectedCommunity, setSelectedCommunity] = useState<string>('Tất cả cộng đồng')
-  const [selectedCampus, setSelectedCampus] = useState<string>('ALL')
+  const initialCampusParam = searchParams.get('campus')
+  const [selectedCampus, setSelectedCampus] = useState<string>(
+    initialCampusParam ? normalizeCampusCode(initialCampusParam) : 'ALL'
+  )
   const [searchKeyword, setSearchKeyword] = useState<string>(searchParams.get('q') || '')
   const [sortBy, setSortBy] = useState<PostSortOption>('latest')
   const [questionStatus, setQuestionStatus] = useState<QuestionStatusFilter>('ALL')
@@ -32,6 +37,21 @@ export const HomePage: FC = () => {
     const qParam = searchParams.get('q')
     if (qParam !== null) {
       setSearchKeyword(qParam)
+      setActiveTab('FEED')
+    }
+    const campusParam = searchParams.get('campus')
+    if (campusParam) {
+      const normalized = normalizeCampusCode(campusParam)
+      if (FPT_CAMPUSES.some((c) => c.value === normalized)) {
+        setSelectedCampus(normalized)
+        setActiveTab('FEED')
+      }
+    } else if (searchParams.has('campus') === false && !qParam && !searchParams.get('compose')) {
+      setSelectedCampus('ALL')
+    }
+    const tagParam = searchParams.get('tag')
+    if (tagParam) {
+      setSearchKeyword(tagParam)
       setActiveTab('FEED')
     }
     if (searchParams.get('compose') === 'true') {
@@ -54,13 +74,13 @@ export const HomePage: FC = () => {
   return (
     <div className="space-y-4">
       {/* 1. Main Feed vs Events Switcher */}
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-1.5 shadow-xs">
+      <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-1.5 shadow-sm">
         <button
           type="button"
           onClick={() => setActiveTab('FEED')}
           className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all ${
             activeTab === 'FEED'
-              ? 'bg-gradient-to-r from-brand-primary to-[#ff782e] text-white shadow-xs'
+              ? 'bg-gradient-to-r from-brand-primary to-[#ff782e] text-white shadow-sm'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}
         >
@@ -73,7 +93,7 @@ export const HomePage: FC = () => {
           onClick={() => setActiveTab('EVENTS')}
           className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all ${
             activeTab === 'EVENTS'
-              ? 'bg-gradient-to-r from-brand-secondary to-[#004e8a] text-white shadow-xs'
+              ? 'bg-gradient-to-r from-brand-secondary to-[#004e8a] text-white shadow-sm'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}
         >

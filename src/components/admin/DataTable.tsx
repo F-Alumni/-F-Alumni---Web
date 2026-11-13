@@ -55,7 +55,7 @@ export function DataTable<T>({
   const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
-    <div className={cn('rounded-xl border border-slate-200 bg-white shadow-xs', className)}>
+    <div className={cn('rounded-xl border border-slate-200 bg-white shadow-sm', className)}>
       {/* Top Filter Bar */}
       {(searchable || filterSlot || actionSlot) && (
         <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">

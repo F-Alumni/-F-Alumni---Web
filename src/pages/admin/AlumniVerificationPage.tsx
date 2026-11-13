@@ -137,7 +137,7 @@ export const AlumniVerificationPage: FC = () => {
               <Button
                 size="sm"
                 onClick={() => handleApprove(r.id)}
-                className="h-7 w-[84px] rounded-md bg-brand-accent px-2 text-xs font-semibold text-white hover:bg-emerald-600 shadow-xs justify-center shrink-0"
+                className="h-7 w-[84px] rounded-md bg-brand-accent px-2 text-xs font-semibold text-white hover:bg-emerald-600 shadow-sm justify-center shrink-0"
                 title="Verify and grant Alumni badge"
               >
                 <IconCheck size={14} stroke={1.8} className="mr-1" />
@@ -191,14 +191,14 @@ export const AlumniVerificationPage: FC = () => {
       />
 
       {isError && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-xs text-amber-900 shadow-xs">
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-xs text-amber-900 shadow-sm">
           <IconAlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
           <div className="flex-1 space-y-1">
             <p className="font-semibold text-amber-950">
-              Không có yêu cầu xác thực cựu sinh viên nào đang chờ xử lý.
+              Không thể tải danh sách yêu cầu xác thực cựu sinh viên.
             </p>
             <p className="text-amber-800">
-              Không thể kết nối trực tiếp tới Backend Admin Service (<code className="font-mono text-[11px] bg-amber-100/80 px-1 py-0.5 rounded">f-alumni-admin-service</code>) do dịch vụ đang khởi động hoặc chưa cấp quyền CORS cho tên miền Vercel. Bạn vẫn có thể thao tác duyệt hồ sơ ngoại tuyến bình thường.
+              Vui lòng kiểm tra kết nối tới Admin Service và thử tải lại.
             </p>
           </div>
         </div>

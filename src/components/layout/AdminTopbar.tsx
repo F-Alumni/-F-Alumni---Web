@@ -29,6 +29,7 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
   const navigate = useNavigate()
   const { currentUser, role, userType, clearAuth } = useAuthStore()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [adminSearch, setAdminSearch] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -100,28 +101,37 @@ export const AdminTopbar: FC<AdminTopbarProps> = ({ onToggleSidebar }) => {
         </div>
 
         {/* Global Admin Search */}
-        <div className="relative hidden w-full sm:block max-w-sm">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            const q = adminSearch.trim()
+            navigate(q ? `${ROUTES.ADMIN.USERS}?q=${encodeURIComponent(q)}` : ROUTES.ADMIN.USERS)
+          }}
+          className="relative hidden w-full sm:block max-w-sm"
+        >
           <IconSearch size={18} stroke={1.8} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search alumni, posts, verification requests..."
+            value={adminSearch}
+            onChange={(e) => setAdminSearch(e.target.value)}
+            placeholder="Search alumni, students (Enter)..."
             className="h-9 w-full rounded-lg border border-slate-200 bg-[#F1F5F9] pl-9 pr-4 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
           />
-        </div>
+        </form>
       </div>
 
       {/* Right: Actions & Admin Profile */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Notifications entry point */}
+        {/* Reports / Alerts shortcut */}
         <div className="relative">
           <button
             type="button"
+            onClick={() => navigate(ROUTES.ADMIN.REPORTS)}
             className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-            title="Notifications"
-            aria-label="Notifications"
+            title="Moderation Reports"
+            aria-label="Moderation Reports"
           >
             <IconBell size={20} stroke={1.8} />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-primary animate-pulse" />
           </button>
         </div>
 

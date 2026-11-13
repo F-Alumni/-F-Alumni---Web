@@ -54,7 +54,7 @@ export const ReportPostModal: FC<ReportPostModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-rose-100 bg-rose-50 px-5 py-3.5">
@@ -135,7 +135,7 @@ export const ReportPostModal: FC<ReportPostModalProps> = ({
                   onChange={(e) => setDetails(e.target.value)}
                   placeholder="Mô tả cụ thể hành vi vi phạm để hỗ trợ Admin xử lý..."
                   rows={3}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-rose-400 focus:bg-white focus:outline-hidden"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-rose-400 focus:bg-white focus:outline-none"
                 />
               </div>
 

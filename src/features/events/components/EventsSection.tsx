@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback, type FC } from 'react'
-import { Calendar, Loader2, RefreshCw } from 'lucide-react'
+import { Calendar, Loader2, RefreshCw, AlertCircle } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { FPT_CAMPUSES } from '@/constants/campuses'
 import { opportunitiesService, type CommunityEventItem } from '@/services/opportunities'
 import { EventCard } from './EventCard'
 
 export const EventsSection: FC = () => {
   const [events, setEvents] = useState<CommunityEventItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [selectedCampus, setSelectedCampus] = useState<string>('ALL')
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true)
+    setHasError(false)
     try {
       const res = await opportunitiesService.getEvents({
         pageSize: 10,
@@ -20,6 +23,8 @@ export const EventsSection: FC = () => {
       setEvents(res.items || [])
     } catch (err) {
       console.error('Failed to load events:', err)
+      setHasError(true)
+      setEvents([])
     } finally {
       setIsLoading(false)
     }
@@ -31,11 +36,7 @@ export const EventsSection: FC = () => {
 
   const campuses = [
     { id: 'ALL', label: 'Tất cả cơ sở' },
-    { id: 'FU-HCM', label: 'TP. Hồ Chí Minh' },
-    { id: 'FU-HL', label: 'Hòa Lạc' },
-    { id: 'FU-DN', label: 'Đà Nẵng' },
-    { id: 'FU-CT', label: 'Cần Thơ' },
-    { id: 'FU-QN', label: 'Quy Nhơn' },
+    ...FPT_CAMPUSES.map((c) => ({ id: c.value, label: c.shortLabel })),
   ]
 
   return (
@@ -74,7 +75,7 @@ export const EventsSection: FC = () => {
               onClick={() => setSelectedCampus(c.id)}
               className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
                 selectedCampus === c.id
-                  ? 'bg-brand-primary text-white shadow-2xs'
+                  ? 'bg-brand-primary text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -90,8 +91,17 @@ export const EventsSection: FC = () => {
           <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
           <p className="mt-2 text-xs text-slate-500">Đang tải danh sách sự kiện...</p>
         </div>
+      ) : hasError ? (
+        <Card className="border-rose-200 bg-rose-50/70 p-8 text-center shadow-sm space-y-2">
+          <AlertCircle className="mx-auto h-9 w-9 text-rose-500" />
+          <h3 className="text-sm font-bold text-rose-900">Không thể tải danh sách sự kiện</h3>
+          <p className="text-xs text-rose-700">Vui lòng kiểm tra kết nối tới Forum Service và thử lại.</p>
+          <Button size="sm" variant="outline" onClick={() => void fetchEvents()} className="mt-2">
+            Thử lại
+          </Button>
+        </Card>
       ) : events.length === 0 ? (
-        <Card className="border-dashed border-slate-200 bg-white/70 p-8 text-center shadow-xs">
+        <Card className="border-dashed border-slate-200 bg-white/70 p-8 text-center shadow-sm">
           <Calendar className="mx-auto h-10 w-10 text-slate-300" />
           <h3 className="mt-2 text-sm font-bold text-slate-700">Chưa có sự kiện nào sắp tới</h3>
           <p className="mt-1 text-xs text-slate-500">

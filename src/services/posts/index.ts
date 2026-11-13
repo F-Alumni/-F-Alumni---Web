@@ -12,6 +12,7 @@ export interface ForumPostItem {
   major: string
   campus: string
   isAnswered: boolean
+  isHidden?: boolean
   viewCount: number
   likeCount: number
   commentCount: number
@@ -30,6 +31,7 @@ export interface GetPostsParams {
   postType?: string
   search?: string
   isAnswered?: boolean
+  includeHidden?: boolean
   sort?: string
   page?: number
   pageSize?: number
@@ -138,6 +140,36 @@ export const postsService = {
    */
   async acceptAnswer(commentId: string): Promise<PostCommentItem> {
     const res = await forumApiClient.post<PostCommentItem>(`/comments/${commentId}/accept`)
+    return res.data
+  },
+
+  /**
+   * FO-07: Update an existing comment (Author or Admin).
+   * PUT /api/v1/comments/{id}
+   */
+  async updateComment(commentId: string, content: string): Promise<PostCommentItem> {
+    const res = await forumApiClient.put<PostCommentItem>(`/comments/${commentId}`, {
+      content: content.trim(),
+    })
+    return res.data
+  },
+
+  /**
+   * FO-07: Delete an existing comment (Author or Admin).
+   * DELETE /api/v1/comments/{id}
+   */
+  async deleteComment(commentId: string): Promise<void> {
+    await forumApiClient.delete(`/comments/${commentId}`)
+  },
+
+  /**
+   * Admin moderation: hide or restore a forum post.
+   * PATCH /api/v1/posts/{id}/visibility
+   */
+  async setPostVisibility(id: string, isHidden: boolean): Promise<ForumPostItem> {
+    const res = await forumApiClient.patch<ForumPostItem>(`/posts/${id}/visibility`, {
+      isHidden,
+    })
     return res.data
   },
 

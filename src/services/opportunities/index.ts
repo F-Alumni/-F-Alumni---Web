@@ -42,10 +42,10 @@ export interface EventAttendeeItem {
   id: string
   eventId: string
   userId: string
-  fullName: string
-  avatarUrl: string
+  userName: string
+  userAvatarUrl: string
   status: string // 'Going' | 'Interested' | 'NotGoing'
-  createdAt: string
+  registeredAt: string
 }
 
 export type EventRsvpStatus = 'Going' | 'Interested' | 'NotGoing'

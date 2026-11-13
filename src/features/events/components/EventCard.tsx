@@ -98,7 +98,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
               onClick={() => {
                 void navigator.clipboard.writeText(window.location.href)
               }}
-              className="rounded-full bg-slate-900/60 p-2 text-white shadow-sm backdrop-blur-xs transition-colors hover:bg-slate-900/80"
+              className="rounded-full bg-slate-900/60 p-2 text-white shadow-sm backdrop-blur-sm transition-colors hover:bg-slate-900/80"
               title="Sao chép liên kết sự kiện"
             >
               <Share2 className="h-3.5 w-3.5" />
@@ -107,7 +107,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
         </div>
 
         {/* Event Info Body */}
-        <div className="p-4.5 space-y-3">
+        <div className="p-4 space-y-3">
           {/* Date & Time */}
           <div className="flex items-center gap-2 text-xs font-bold text-brand-primary">
             <Calendar className="h-4 w-4 shrink-0" />
@@ -154,9 +154,9 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
                 onClick={() => handleRsvp('Going')}
                 disabled={isRsvping}
                 className={cn(
-                  'h-8.5 flex-1 gap-1.5 text-xs font-bold rounded-xl transition-all',
+                  'h-9 flex-1 gap-1.5 text-xs font-bold rounded-xl transition-all',
                   currentStatus === 'Going'
-                    ? 'bg-brand-primary text-white hover:bg-brand-primary-hover shadow-xs ring-2 ring-brand-primary/20'
+                    ? 'bg-brand-primary text-white hover:bg-brand-primary-hover shadow-sm ring-2 ring-brand-primary/20'
                     : 'border-slate-200 text-slate-700 hover:border-brand-primary hover:text-brand-primary'
                 )}
               >
@@ -175,9 +175,9 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
                 onClick={() => handleRsvp('Interested')}
                 disabled={isRsvping}
                 className={cn(
-                  'h-8.5 flex-1 gap-1.5 text-xs font-bold rounded-xl transition-all',
+                  'h-9 flex-1 gap-1.5 text-xs font-bold rounded-xl transition-all',
                   currentStatus === 'Interested'
-                    ? 'bg-blue-100 text-brand-secondary border-blue-200 shadow-xs ring-2 ring-blue-200'
+                    ? 'bg-blue-100 text-brand-secondary border-blue-200 shadow-sm ring-2 ring-blue-200'
                     : 'border-slate-200 text-slate-700 hover:border-brand-secondary hover:text-brand-secondary'
                 )}
               >

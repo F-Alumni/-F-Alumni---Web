@@ -33,11 +33,11 @@ export const Mentoring: FC = () => {
           <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300 flex flex-col justify-between">
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-2xl bg-orange-100 text-[#F27024] flex items-center justify-center shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-orange-100 text-[#F27024] flex items-center justify-center shadow-sm">
                   <IconUsersGroup size={22} stroke={2} />
                 </div>
                 <span className="text-[11px] font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200">
-                  Phân hệ Users (AD-02)
+                  Phân hệ Users
                 </span>
               </div>
               <h3 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -77,11 +77,11 @@ export const Mentoring: FC = () => {
           <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col justify-between">
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-2xl bg-blue-50 text-[#1B365D] border border-blue-100 flex items-center justify-center shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-blue-50 text-[#1B365D] border border-blue-100 flex items-center justify-center shadow-sm">
                   <IconCertificate size={22} stroke={2} />
                 </div>
                 <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
-                  Phân hệ Verification (AD-04)
+                  Phân hệ Verification
                 </span>
               </div>
               <h3 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -121,11 +121,11 @@ export const Mentoring: FC = () => {
           <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 flex flex-col justify-between">
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shadow-sm">
                   <IconShieldCheck size={22} stroke={2} />
                 </div>
                 <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                  Phân hệ Moderation (AD-05)
+                  Phân hệ Moderation
                 </span>
               </div>
               <h3 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -165,11 +165,11 @@ export const Mentoring: FC = () => {
           <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-purple-200 transition-all duration-300 flex flex-col justify-between">
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center shadow-sm">
                   <IconChartBar size={22} stroke={2} />
                 </div>
                 <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
-                  Phân hệ Analytics (AD-07)
+                  Phân hệ Analytics
                 </span>
               </div>
               <h3 className="text-xl font-bold text-slate-900 tracking-tight">

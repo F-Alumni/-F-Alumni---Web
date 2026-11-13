@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect, type FC } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
+import { useNotificationStore } from '@/stores/notificationStore'
 import { authService } from '@/services/auth'
+import { notificationsService, type NotificationItemDto } from '@/services/notifications'
+import { notificationHubClient } from '@/services/notifications/signalr'
+import { FPT_CAMPUSES, normalizeCampusCode } from '@/constants/campuses'
 import {
   Search,
   PlusCircle,
@@ -26,8 +30,14 @@ interface NavbarProps {
 
 const CampusDropdown = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [selectedCampus, setSelectedCampus] = useState('Hoa Lac Campus')
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const urlCampus = searchParams.get('campus')
+  const normalizedUrlCampus = urlCampus ? normalizeCampusCode(urlCampus) : 'ALL'
+  const selectedCampusOption =
+    FPT_CAMPUSES.find((c) => c.value === normalizedUrlCampus) || null
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -39,33 +49,60 @@ const CampusDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const campuses = ['Hoa Lac Campus', 'Da Nang Campus', 'Ho Chi Minh Campus', 'Can Tho Campus', 'Quy Nhon Campus']
-
   return (
     <div className="relative hidden lg:block" ref={dropdownRef}>
-      <div 
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700 transition-colors hover:bg-slate-100 shrink-0"
       >
         <span className="inline-block h-2 w-2 rounded-full bg-brand-accent" />
-        <span className="font-medium whitespace-nowrap">{selectedCampus}</span>
+        <span className="font-medium whitespace-nowrap">
+          {selectedCampusOption ? selectedCampusOption.label : 'Tất cả Campus'}
+        </span>
         <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
-      
+      </button>
+
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg z-50">
-          {campuses.map((campus) => (
-            <div
-              key={campus}
+        <div className="absolute left-0 top-full mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg z-50">
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false)
+              navigate(ROUTES.APP.HOME)
+            }}
+            className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+          >
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${!selectedCampusOption ? 'bg-brand-accent' : 'bg-slate-300'}`} />
+            <span className={!selectedCampusOption ? 'font-semibold text-brand-primary' : 'font-medium'}>
+              Tất cả Campus FPTU
+            </span>
+          </button>
+          {FPT_CAMPUSES.map((campus) => (
+            <button
+              key={campus.value}
+              type="button"
               onClick={() => {
-                setSelectedCampus(campus)
                 setIsOpen(false)
+                navigate(`${ROUTES.APP.HOME}?campus=${encodeURIComponent(campus.value)}`)
               }}
-              className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+              className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900"
             >
-              <span className={`inline-block h-1.5 w-1.5 rounded-full ${campus === selectedCampus ? 'bg-brand-accent' : 'bg-slate-300'}`} />
-              <span className={campus === selectedCampus ? 'font-semibold text-brand-primary' : 'font-medium'}>{campus}</span>
-            </div>
+              <span
+                className={`inline-block h-1.5 w-1.5 rounded-full ${
+                  selectedCampusOption?.value === campus.value ? 'bg-brand-accent' : 'bg-slate-300'
+                }`}
+              />
+              <span
+                className={
+                  selectedCampusOption?.value === campus.value
+                    ? 'font-semibold text-brand-primary'
+                    : 'font-medium'
+                }
+              >
+                {campus.label}
+              </span>
+            </button>
           ))}
         </div>
       )}
@@ -75,18 +112,8 @@ const CampusDropdown = () => {
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [notifications, setNotifications] = useState<
-    {
-      id: string
-      title: string
-      desc: string
-      time: string
-      type: 'best-answer' | 'event' | 'job'
-      isUnread: boolean
-      link: string
-    }[]
-  >([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [notifications, setNotifications] = useState<NotificationItemDto[]>([])
+  const { unreadCount, setUnreadCount, incrementUnreadCount } = useNotificationStore()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
 
@@ -102,58 +129,57 @@ const NotificationDropdown = () => {
 
   useEffect(() => {
     let isMounted = true
-    Promise.all([
-      import('@/services/opportunities').then(({ opportunitiesService }) =>
-        opportunitiesService.getEvents({ upcomingOnly: true, pageSize: 2 })
-      ),
-      import('@/services/posts').then(({ postsService }) =>
-        postsService.getPosts({ pageSize: 3 })
-      ),
-    ])
-      .then(([eventsRes, postsRes]) => {
+
+    const loadInitial = async () => {
+      try {
+        const res = await notificationsService.getNotifications({ page: 1, pageSize: 10 })
         if (!isMounted) return
-        const items: typeof notifications = []
-        for (const ev of eventsRes.items || []) {
-          items.push({
-            id: `ev-${ev.id}`,
-            title: `Sự kiện: ${ev.title}`,
-            desc: `${ev.location} (${ev.campus || 'FPTU'})`,
-            time: new Date(ev.startTime).toLocaleDateString('vi-VN'),
-            type: 'event',
-            isUnread: true,
-            link: ROUTES.APP.JOBS,
-          })
-        }
-        for (const post of postsRes.items || []) {
-          const isJob = post.postType === 'Recruitment'
-          items.push({
-            id: `post-${post.id}`,
-            title: isJob ? `Tuyển dụng: ${post.title}` : post.title,
-            desc: post.content.slice(0, 100),
-            time: new Date(post.createdAt).toLocaleDateString('vi-VN'),
-            type: isJob ? 'job' : 'best-answer',
-            isUnread: true,
-            link: isJob ? ROUTES.APP.JOBS : `/app/posts/${post.id}`,
-          })
-        }
-        setNotifications(items)
-        setUnreadCount(items.length)
-      })
-      .catch(() => {
-        if (isMounted) {
-          setNotifications([])
-          setUnreadCount(0)
-        }
-      })
+        setNotifications(res.items || [])
+        setUnreadCount(res.unreadCount ?? (res.items || []).filter((n) => !n.isRead).length)
+      } catch (err) {
+        console.error('Failed to load notifications:', err)
+      }
+    }
+
+    void loadInitial()
+    void notificationHubClient.startConnection()
+
+    const unsubscribe = notificationHubClient.onReceiveNotification((incoming) => {
+      setNotifications((prev) => [incoming, ...prev.filter((n) => n.id !== incoming.id)].slice(0, 15))
+      incrementUnreadCount()
+    })
+
     return () => {
       isMounted = false
+      unsubscribe()
     }
-  }, [])
+  }, [setUnreadCount, incrementUnreadCount])
 
-  const handleMarkAllRead = (e: React.MouseEvent) => {
+  const handleMarkAllRead = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    setUnreadCount(0)
-    setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })))
+    try {
+      await notificationsService.markAllAsRead()
+      setUnreadCount(0)
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    } catch (err) {
+      console.error('Failed to mark all notifications read:', err)
+    }
+  }
+
+  const handleNotificationClick = async (item: NotificationItemDto) => {
+    setIsOpen(false)
+    if (!item.isRead) {
+      try {
+        await notificationsService.markAsRead(item.id)
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
+        )
+        setUnreadCount(Math.max(0, unreadCount - 1))
+      } catch {
+        // Ignore non-fatal mark-read failure while navigating
+      }
+    }
+    navigate(item.link || ROUTES.APP.NOTIFICATIONS)
   }
 
   return (
@@ -163,11 +189,12 @@ const NotificationDropdown = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="relative rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 shrink-0"
         title="Thông báo"
+        aria-label="Thông báo"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-primary px-1 text-[10px] font-bold text-white shadow-xs">
-            {unreadCount}
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-primary px-1 text-[10px] font-bold text-white shadow-sm">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
@@ -195,32 +222,46 @@ const NotificationDropdown = () => {
           </div>
 
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 py-1">
-            {notifications.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => {
-                  setIsOpen(false)
-                  navigate(item.link)
-                }}
-                className={`flex items-start gap-3 p-3 transition-colors hover:bg-slate-50 cursor-pointer rounded-xl ${
-                  item.isUnread && unreadCount > 0 ? 'bg-orange-50/40' : ''
-                }`}
-              >
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100">
-                  {item.type === 'best-answer' && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                  {item.type === 'event' && <Calendar className="h-4 w-4 text-brand-primary" />}
-                  {item.type === 'job' && <Briefcase className="h-4 w-4 text-brand-secondary" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-900 leading-snug">{item.title}</p>
-                  <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">{item.desc}</p>
-                  <span className="text-[10px] text-slate-400 mt-1 block">{item.time}</span>
-                </div>
-                {item.isUnread && unreadCount > 0 && (
-                  <span className="h-2 w-2 rounded-full bg-brand-primary shrink-0 mt-1.5" />
-                )}
+            {notifications.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-400">
+                Bạn chưa có thông báo nào.
               </div>
-            ))}
+            ) : (
+              notifications.map((item) => {
+                const lowerType = (item.type || '').toLowerCase()
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => void handleNotificationClick(item)}
+                    className={`flex items-start gap-3 p-3 transition-colors hover:bg-slate-50 cursor-pointer rounded-xl ${
+                      !item.isRead ? 'bg-orange-50/40' : ''
+                    }`}
+                  >
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                      {lowerType.includes('event') ? (
+                        <Calendar className="h-4 w-4 text-brand-primary" />
+                      ) : lowerType.includes('job') || lowerType.includes('recruit') ? (
+                        <Briefcase className="h-4 w-4 text-brand-secondary" />
+                      ) : lowerType.includes('chat') || lowerType.includes('message') ? (
+                        <MessageSquare className="h-4 w-4 text-blue-600" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-900 leading-snug">{item.title}</p>
+                      <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">{item.message}</p>
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        {new Date(item.createdAt).toLocaleString('vi-VN')}
+                      </span>
+                    </div>
+                    {!item.isRead && (
+                      <span className="h-2 w-2 rounded-full bg-brand-primary shrink-0 mt-1.5" />
+                    )}
+                  </div>
+                )
+              })
+            )}
           </div>
 
           <div className="border-t border-slate-100 pt-2 text-center">
@@ -325,10 +366,10 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
           <Link
             to={ROUTES.APP.CHAT}
             className="relative rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 shrink-0"
-            title="Messages"
+            title="Tin nhắn"
+            aria-label="Tin nhắn"
           >
             <MessageSquare className="h-5 w-5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-secondary" />
           </Link>
 
           {/* Notifications Dropdown */}

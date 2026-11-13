@@ -76,9 +76,9 @@ function adaptModerationReport(r: ModerationReportItem): ReportRecord {
     reasonCode,
     severity: isResolved ? 'pending' : 'urgent',
     status,
-    reportedDate: r.createdAtUtc ? r.createdAtUtc.slice(0, 16).replace('T', ' ') : '2026-10-12 19:45',
-    authorName: 'Reported Member',
-    authorEmail: 'user@fpt.edu.vn',
+    reportedDate: r.createdAtUtc ? r.createdAtUtc.slice(0, 16).replace('T', ' ') : '—',
+    authorName: 'Thành viên bị báo cáo',
+    authorEmail: '—',
     authorStrikes: 0,
     contentSnippet: r.details || r.reason || 'Content reported for community guideline review.',
     resolutionDetails: r.resolvedAtUtc
@@ -457,7 +457,7 @@ export const ReportsManagementPage: FC = () => {
           onClick={() => setActiveTab('queue')}
           className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all ${
             activeTab === 'queue'
-              ? 'bg-brand-primary text-white shadow-xs'
+              ? 'bg-brand-primary text-white shadow-sm'
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
           }`}
         >
@@ -469,7 +469,7 @@ export const ReportsManagementPage: FC = () => {
           onClick={() => setActiveTab('history')}
           className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all ${
             activeTab === 'history'
-              ? 'bg-slate-900 text-white shadow-xs'
+              ? 'bg-slate-900 text-white shadow-sm'
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
           }`}
         >
@@ -512,7 +512,7 @@ export const ReportsManagementPage: FC = () => {
 
       {/* MODAL 1: Detail Preview / Inspection Modal */}
       {inspectingReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
@@ -635,7 +635,7 @@ export const ReportsManagementPage: FC = () => {
 
       {/* MODAL 2: Sanction Modal */}
       {sanctioningReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-rose-50">

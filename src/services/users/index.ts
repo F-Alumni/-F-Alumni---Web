@@ -240,10 +240,15 @@ export const usersService = {
     const res = await userApiClient.get<any[]>('/users/me/blocks')
     const list = Array.isArray(res.data) ? res.data : []
     return list.map((b: any) => ({
-      blockedUserId: b.blockedTargetUserId || b.id,
-      fullName: b.reason || 'Blocked User',
-      avatarUrl: null,
-      blockedAt: b.createdAtUtc || new Date().toISOString(),
+      blockedUserId: b.blockedTargetUserId || b.blockedUserId || b.id,
+      fullName: b.targetFullName || b.fullName || b.targetEmail || 'Người dùng đã chặn',
+      email: b.targetEmail || null,
+      avatarUrl: b.targetAvatarUrl || b.avatarUrl || null,
+      role: b.targetRole || null,
+      major: b.targetMajor || null,
+      campus: b.targetCampus || null,
+      reason: b.reason || null,
+      blockedAt: b.createdAtUtc || b.blockedAt || new Date().toISOString(),
     }))
   },
 }

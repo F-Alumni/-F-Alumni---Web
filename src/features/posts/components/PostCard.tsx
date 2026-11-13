@@ -29,6 +29,8 @@ import { ReportPostModal } from './ReportPostModal'
 import { postsService } from '@/services/posts'
 import { useAuthStore } from '@/stores/authStore'
 import { PublicProfileModal } from '@/features/users'
+import { ConfirmDialog } from '@/components/ui/dialog'
+import { formatCampusLabel } from '@/constants/campuses'
 
 export interface PostItem {
   id: string
@@ -64,21 +66,25 @@ export interface PostItem {
 
 interface PostCardProps {
   post: PostItem
+  defaultShowComments?: boolean
   onPostDeleted?: (postId: string) => void
   onPostUpdated?: (post: PostItem) => void
 }
 
-export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated }) => {
+export const PostCard: FC<PostCardProps> = ({ post, defaultShowComments = false, onPostDeleted, onPostUpdated }) => {
   const { currentUser } = useAuthStore()
 
   const [isLiked, setIsLiked] = useState(Boolean(post.hasLiked))
   const [likesCount, setLikesCount] = useState(post.likes)
   const [isSaved, setIsSaved] = useState(Boolean(post.isBookmarked))
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false)
+  const [isCommentsOpen, setIsCommentsOpen] = useState(defaultShowComments)
   const [commentsCount, setCommentsCount] = useState(post.comments)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isCopiedLink, setIsCopiedLink] = useState(false)
 
   // FO-04: Edit & Delete state
   const [isEditing, setIsEditing] = useState(false)
@@ -152,12 +158,15 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
   }
 
   const handleDeletePost = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return
+    setIsDeleting(true)
     try {
       await postsService.deletePost(post.id)
+      setIsDeleteConfirmOpen(false)
       onPostDeleted?.(post.id)
     } catch (err) {
       console.error('Failed to delete post:', err)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -230,7 +239,7 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
               type="button"
               onClick={() => setIsProfileModalOpen(true)}
               className="cursor-pointer rounded-full focus:outline-none"
-              title="Xem hồ sơ tác giả (US-05)"
+              title="Xem hồ sơ tác giả"
             >
               <Avatar
                 src={post.author.avatar}
@@ -275,7 +284,7 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
                 </span>
                 {post.campus && post.campus !== 'All' && (
                   <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                    {post.campus}
+                    {formatCampusLabel(post.campus)}
                   </span>
                 )}
               </div>
@@ -307,7 +316,7 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                       >
                         <Pencil className="h-3.5 w-3.5 text-brand-secondary" />
-                        <span>Chỉnh sửa bài viết (FO-04)</span>
+                        <span>Chỉnh sửa bài viết</span>
                       </button>
 
                       {post.type === 'QUESTION' && (
@@ -320,7 +329,7 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>{isAnswered ? 'Đánh dấu chưa giải đáp' : 'Đánh dấu đã giải đáp (FO-16)'}</span>
+                          <span>{isAnswered ? 'Đánh dấu chưa giải đáp' : 'Đánh dấu đã giải đáp'}</span>
                         </button>
                       )}
 
@@ -328,12 +337,12 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
                         type="button"
                         onClick={() => {
                           setIsMenuOpen(false)
-                          void handleDeletePost()
+                          setIsDeleteConfirmOpen(true)
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                        <span>Xóa bài viết (FO-04)</span>
+                        <span>Xóa bài viết</span>
                       </button>
                     </>
                   )}
@@ -347,7 +356,7 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
                   >
                     <Flag className="h-3.5 w-3.5" />
-                    <span>Báo cáo bài viết (FO-11)</span>
+                    <span>Báo cáo bài viết</span>
                   </button>
                 </div>
               )}
@@ -450,7 +459,7 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
               <Button
                 variant={post.attachedCard.type === 'JOB_REFERRAL' ? 'default' : 'secondary'}
                 size="sm"
-                className="shadow-xs shrink-0 rounded-full text-xs font-semibold"
+                className="shadow-sm shrink-0 rounded-full text-xs font-semibold"
               >
                 {post.attachedCard.actionLabel}
                 <ExternalLink className="ml-1 h-3 w-3" />
@@ -537,12 +546,20 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
             <button
               type="button"
               onClick={() => {
-                void navigator.clipboard.writeText(window.location.href)
+                const postUrl = `${window.location.origin}/app/posts/${post.id}`
+                void navigator.clipboard.writeText(postUrl)
+                setIsCopiedLink(true)
+                setTimeout(() => setIsCopiedLink(false), 2000)
               }}
-              className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-              title="Chia sẻ liên kết"
+              className="inline-flex items-center gap-1 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              title="Chia sẻ liên kết bài viết"
+              aria-label="Chia sẻ liên kết bài viết"
             >
-              <Share2 className="h-4 w-4" />
+              {isCopiedLink ? (
+                <Check className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Share2 className="h-4 w-4" />
+              )}
             </button>
           </div>
         </div>
@@ -566,7 +583,19 @@ export const PostCard: FC<PostCardProps> = ({ post, onPostDeleted, onPostUpdated
         onClose={() => setIsReportModalOpen(false)}
       />
 
-      {/* US-05: Author Public Profile Modal */}
+      {/* Delete Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeletePost}
+        title="Xác nhận xóa bài viết"
+        message="Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác."
+        confirmText="Xóa bài viết"
+        variant="danger"
+        isLoading={isDeleting}
+      />
+
+      {/* Author Public Profile Modal */}
       <PublicProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}

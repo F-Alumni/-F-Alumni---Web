@@ -80,7 +80,7 @@ export const Features: FC = () => {
                   <div>
                     <div className="flex items-center justify-between mb-5">
                       <div
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold shadow-xs ${
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold shadow-sm ${
                           s.highlight
                             ? 'bg-[#F27024] text-white'
                             : 'bg-orange-50 text-[#F27024] border border-orange-100'

@@ -24,6 +24,8 @@ import {
 import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
+import { ConfirmDialog } from '@/components/ui/dialog'
+import { FPT_CAMPUSES, formatCampusLabel, normalizeCampusCode } from '@/constants/campuses'
 import { usersService } from '@/services/users'
 import { authService } from '@/services/auth'
 import { postsService, type ForumPostItem } from '@/services/posts'
@@ -41,8 +43,8 @@ export const ProfilePage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const initialTab = searchParams.get('tab')
-  const [activeTab, setActiveTab] = useState<'info' | 'my_posts' | 'bookmarks'>(
-    initialTab === 'my_posts' || initialTab === 'bookmarks' ? initialTab : 'info'
+  const [activeTab, setActiveTab] = useState<'info' | 'settings' | 'my_posts' | 'bookmarks'>(
+    initialTab === 'settings' || initialTab === 'my_posts' || initialTab === 'bookmarks' ? initialTab : 'info'
   )
   const [profile, setProfile] = useState<BackendMyProfileResponse | null>(null)
   const [privacy, setPrivacy] = useState<BackendPrivacySetting | null>(null)
@@ -66,6 +68,8 @@ export const ProfilePage: FC = () => {
   const [bookmarks, setBookmarks] = useState<ForumPostItem[]>([])
   const [isLoadingPosts, setIsLoadingPosts] = useState(false)
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
+  const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null)
+  const [isDeletingPost, setIsDeletingPost] = useState(false)
 
   // Edit form state
   const [fullName, setFullName] = useState('')
@@ -77,12 +81,12 @@ export const ProfilePage: FC = () => {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab')
-    if (tabParam === 'my_posts' || tabParam === 'bookmarks' || tabParam === 'info') {
+    if (tabParam === 'settings' || tabParam === 'my_posts' || tabParam === 'bookmarks' || tabParam === 'info') {
       setActiveTab(tabParam)
     }
   }, [searchParams])
 
-  const handleTabChange = (tab: 'info' | 'my_posts' | 'bookmarks') => {
+  const handleTabChange = (tab: 'info' | 'settings' | 'my_posts' | 'bookmarks') => {
     setActiveTab(tab)
     if (tab === 'info') {
       setSearchParams({})
@@ -138,7 +142,7 @@ export const ProfilePage: FC = () => {
           setPrivacy(data.privacySetting)
           setBlockedUsers(blocked)
           setFullName(data.fullName || '')
-          setCampus(data.campus || '')
+          setCampus(normalizeCampusCode(data.campus) || 'FU-HL')
           setMajor(data.major || '')
           setBatch(data.batch || '')
           setBio(data.bio || '')
@@ -281,15 +285,19 @@ export const ProfilePage: FC = () => {
     }
   }, [activeTab, loadMyPosts, loadBookmarks])
 
-  const handleDeleteMyPost = async (postId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return
+  const handleConfirmDeletePost = async () => {
+    if (!confirmDeletePostId) return
+    setIsDeletingPost(true)
     try {
-      await postsService.deletePost(postId)
-      setMyPosts((prev) => prev.filter((p) => p.id !== postId))
+      await postsService.deletePost(confirmDeletePostId)
+      setMyPosts((prev) => prev.filter((p) => p.id !== confirmDeletePostId))
       setToastMessage('Đã xóa bài viết thành công!')
       setTimeout(() => setToastMessage(null), 3000)
+      setConfirmDeletePostId(null)
     } catch (err) {
       setErrorMessage(normalizeError(err).message)
+    } finally {
+      setIsDeletingPost(false)
     }
   }
 
@@ -351,22 +359,22 @@ export const ProfilePage: FC = () => {
                 disabled={isUploadingAvatar}
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">{profile?.fullName}</h1>
-                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-brand-secondary">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 break-words">{profile?.fullName}</h1>
+                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-brand-secondary shrink-0">
                   {profile?.role}
                 </span>
                 {profile?.isEmailVerified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 shrink-0">
                     <IconShieldCheck className="h-3.5 w-3.5" />
                     Verified
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
-                <IconMail className="h-4 w-4 text-slate-400" />
-                {profile?.email}
+              <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5 min-w-0">
+                <IconMail className="h-4 w-4 text-slate-400 shrink-0" />
+                <span className="truncate">{profile?.email}</span>
               </p>
               <p className="text-xs text-slate-400 mt-1">
                 Thành viên từ {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '2026'}
@@ -376,11 +384,14 @@ export const ProfilePage: FC = () => {
 
           <Button
             variant="outline"
-            onClick={() => setIsEditing(!isEditing)}
-            className="border-slate-200 gap-1.5"
+            onClick={() => {
+              if (activeTab !== 'info') handleTabChange('info')
+              setIsEditing(!isEditing)
+            }}
+            className="border-slate-200 gap-1.5 shrink-0"
           >
             <IconEdit className="h-4 w-4" />
-            <span>{isEditing ? 'Hủy chỉnh sửa' : 'Chỉnh sửa hồ sơ (US-04)'}</span>
+            <span>{isEditing ? 'Hủy chỉnh sửa' : 'Chỉnh sửa hồ sơ'}</span>
           </Button>
         </div>
 
@@ -388,27 +399,27 @@ export const ProfilePage: FC = () => {
         {profile?.bio && !isEditing && (
           <div className="mt-6 pt-6 border-t border-slate-100">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Giới thiệu bản thân</h3>
-            <p className="text-sm text-slate-700 leading-relaxed">{profile.bio}</p>
+            <p className="text-sm text-slate-700 leading-relaxed break-words">{profile.bio}</p>
           </div>
         )}
 
-        {/* US-11: Google Calendar Booking Link */}
+        {/* Google Calendar Booking Link */}
         {profile?.googleCalendarUrl && !isEditing && (
           <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                 <IconCalendarEvent className="h-5 w-5" />
               </div>
-              <div>
-                <p className="text-xs font-bold text-slate-800">Lịch hẹn cố vấn Google Calendar (US-11)</p>
-                <p className="text-xs text-slate-500 truncate max-w-md">{profile.googleCalendarUrl}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-slate-800">Lịch hẹn cố vấn Google Calendar</p>
+                <p className="text-xs text-slate-500 truncate">{profile.googleCalendarUrl}</p>
               </div>
             </div>
             <a
               href={profile.googleCalendarUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors self-start sm:self-auto shrink-0"
             >
               <span>Mở lịch hẹn Google Calendar</span>
               <IconExternalLink className="h-3.5 w-3.5" />
@@ -417,30 +428,41 @@ export const ProfilePage: FC = () => {
         )}
       </div>
 
-      {/* Navigation Tabs (FO-10, FO-09) */}
-      <div className="flex border-b border-slate-200 gap-2">
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-slate-200 gap-2 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => handleTabChange('info')}
-          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 ${
+          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 whitespace-nowrap shrink-0 ${
             activeTab === 'info'
               ? 'border-brand-primary text-brand-primary'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          Thông tin cá nhân & Bảo mật
+          Hồ sơ & Học vấn
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabChange('settings')}
+          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 whitespace-nowrap shrink-0 ${
+            activeTab === 'settings'
+              ? 'border-brand-primary text-brand-primary'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Bảo mật & Riêng tư
         </button>
         <button
           type="button"
           onClick={() => handleTabChange('my_posts')}
-          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 flex items-center gap-1.5 ${
+          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
             activeTab === 'my_posts'
               ? 'border-brand-primary text-brand-primary'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <IconFileText className="h-4 w-4" />
-          <span>Bài viết của tôi (FO-10)</span>
+          <span>Bài viết của tôi</span>
           {myPosts.length > 0 && (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-bold">
               {myPosts.length}
@@ -450,14 +472,14 @@ export const ProfilePage: FC = () => {
         <button
           type="button"
           onClick={() => handleTabChange('bookmarks')}
-          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 flex items-center gap-1.5 ${
+          className={`pb-3 px-3 text-xs sm:text-sm font-semibold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
             activeTab === 'bookmarks'
               ? 'border-brand-primary text-brand-primary'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <IconBookmark className="h-4 w-4" />
-          <span>Bài viết đã lưu (FO-09)</span>
+          <span>Bài viết đã lưu</span>
           {bookmarks.length > 0 && (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-bold">
               {bookmarks.length}
@@ -471,7 +493,7 @@ export const ProfilePage: FC = () => {
           {/* Edit Profile Form */}
           {isEditing ? (
             <form onSubmit={handleSaveProfile} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-              <h2 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Cập nhật thông tin hồ sơ (US-04, US-11)</h2>
+              <h2 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Cập nhật thông tin hồ sơ</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -492,11 +514,11 @@ export const ProfilePage: FC = () => {
                     onChange={(e) => setCampus(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
                   >
-                    <option value="Hòa Lạc">Hòa Lạc</option>
-                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                    <option value="Đà Nẵng">Đà Nẵng</option>
-                    <option value="Cần Thơ">Cần Thơ</option>
-                    <option value="Quy Nhơn">Quy Nhơn</option>
+                    {FPT_CAMPUSES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -524,7 +546,7 @@ export const ProfilePage: FC = () => {
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Liên kết đặt lịch Google Calendar (US-11 - Tùy chọn)
+                    Liên kết đặt lịch Google Calendar (Tùy chọn)
                   </label>
                   <input
                     type="url"
@@ -569,7 +591,9 @@ export const ProfilePage: FC = () => {
                   <IconBuildingCommunity className="h-4 w-4 text-brand-secondary" />
                   <span>Cơ sở (Campus)</span>
                 </div>
-                <p className="text-base font-bold text-slate-900">{profile?.campus || 'Chưa cập nhật'}</p>
+                <p className="text-base font-bold text-slate-900">
+                  {profile?.campus ? formatCampusLabel(profile.campus) : 'Chưa cập nhật'}
+                </p>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-1">
@@ -589,13 +613,17 @@ export const ProfilePage: FC = () => {
               </div>
             </div>
           )}
+        </>
+      )}
 
-          {/* Privacy Controls Section (US-09) */}
+      {(activeTab === 'info' || activeTab === 'settings') && (
+        <>
+          {/* Privacy Controls Section */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-              <IconLock className="h-5 w-5 text-brand-secondary" />
+              <IconLock className="h-5 w-5 text-brand-secondary shrink-0" />
               <div>
-                <h2 className="text-base font-bold text-slate-900">Cài đặt Quyền riêng tư & Hiển thị (US-09)</h2>
+                <h2 className="text-base font-bold text-slate-900">Cài đặt Quyền riêng tư & Hiển thị</h2>
                 <p className="text-xs text-slate-500">Kiểm soát những thông tin hiển thị trên hồ sơ công khai của bạn</p>
               </div>
             </div>
@@ -665,12 +693,12 @@ export const ProfilePage: FC = () => {
             )}
           </div>
 
-          {/* US-07: Change Password Section */}
+          {/* Change Password Section */}
           <form onSubmit={handleChangePassword} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-              <IconKey className="h-5 w-5 text-brand-primary" />
+              <IconKey className="h-5 w-5 text-brand-primary shrink-0" />
               <div>
-                <h2 className="text-base font-bold text-slate-900">Đổi mật khẩu bảo mật (US-07)</h2>
+                <h2 className="text-base font-bold text-slate-900">Đổi mật khẩu bảo mật</h2>
                 <p className="text-xs text-slate-500">Cập nhật mật khẩu định kỳ để bảo vệ tài khoản FPT Alumni của bạn</p>
               </div>
             </div>
@@ -723,12 +751,12 @@ export const ProfilePage: FC = () => {
             </div>
           </form>
 
-          {/* US-10: Blocked Users Management */}
+          {/* Blocked Users Management */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-              <IconShieldX className="h-5 w-5 text-rose-500" />
+              <IconShieldX className="h-5 w-5 text-rose-500 shrink-0" />
               <div>
-                <h2 className="text-base font-bold text-slate-900">Danh sách tài khoản đã chặn (US-10)</h2>
+                <h2 className="text-base font-bold text-slate-900">Danh sách tài khoản đã chặn</h2>
                 <p className="text-xs text-slate-500">Những người dùng bị chặn sẽ không thể nhắn tin hoặc thấy bạn trong tìm kiếm</p>
               </div>
             </div>
@@ -738,17 +766,19 @@ export const ProfilePage: FC = () => {
             ) : (
               <div className="divide-y divide-slate-100">
                 {blockedUsers.map((item) => (
-                  <div key={item.blockedUserId} className="flex items-center justify-between py-2.5">
-                    <div className="flex items-center gap-3">
+                  <div key={item.blockedUserId} className="flex items-center justify-between gap-3 py-2.5">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Avatar
                         src={item.avatarUrl || undefined}
-                        fallback={item.fullName.slice(0, 2).toUpperCase()}
+                        fallback={(item.fullName || 'U').slice(0, 2).toUpperCase()}
                         size="sm"
                       />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800">{item.fullName}</p>
-                        <p className="text-[11px] text-slate-400">
-                          Đã chặn ngày {new Date(item.blockedAt).toLocaleDateString()}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{item.fullName}</p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {[item.email, item.campus ? formatCampusLabel(item.campus) : null]
+                            .filter(Boolean)
+                            .join(' • ') || `Đã chặn ngày ${new Date(item.blockedAt).toLocaleDateString()}`}
                         </p>
                       </div>
                     </div>
@@ -757,7 +787,7 @@ export const ProfilePage: FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleUnblockUser(item.blockedUserId)}
-                      className="text-xs border-slate-200 text-slate-700 hover:bg-slate-50"
+                      className="text-xs border-slate-200 text-slate-700 hover:bg-slate-50 shrink-0"
                     >
                       Bỏ chặn
                     </Button>
@@ -769,7 +799,7 @@ export const ProfilePage: FC = () => {
         </>
       )}
 
-      {/* Tab: My Posts (FO-10) */}
+      {/* Tab: My Posts */}
       {activeTab === 'my_posts' && (
         <div className="space-y-4">
           {isLoadingPosts ? (
@@ -793,25 +823,25 @@ export const ProfilePage: FC = () => {
                   className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3 hover:border-slate-300 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-brand-primary">
                           {post.postType}
                         </span>
                         <span className="text-xs text-slate-400">• {new Date(post.createdAt).toLocaleDateString()}</span>
                         {post.campus && (
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                            {post.campus}
+                            {formatCampusLabel(post.campus)}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-base font-bold text-slate-900">{post.title}</h3>
+                      <h3 className="text-base font-bold text-slate-900 break-words">{post.title}</h3>
                     </div>
 
                     <button
                       type="button"
-                      onClick={() => handleDeleteMyPost(post.id)}
-                      className="rounded-lg p-2 text-rose-500 hover:bg-rose-50 transition-colors"
+                      onClick={() => setConfirmDeletePostId(post.id)}
+                      className="rounded-lg p-2 text-rose-500 hover:bg-rose-50 transition-colors shrink-0"
                       title="Xóa bài viết của tôi"
                     >
                       <IconTrash className="h-4 w-4" />
@@ -837,7 +867,7 @@ export const ProfilePage: FC = () => {
         </div>
       )}
 
-      {/* Tab: Bookmarks (FO-09) */}
+      {/* Tab: Bookmarks */}
       {activeTab === 'bookmarks' && (
         <div className="space-y-4">
           {isLoadingBookmarks ? (
@@ -890,6 +920,15 @@ export const ProfilePage: FC = () => {
           )}
         </div>
       )}
+      <ConfirmDialog
+        isOpen={Boolean(confirmDeletePostId)}
+        onClose={() => !isDeletingPost && setConfirmDeletePostId(null)}
+        onConfirm={handleConfirmDeletePost}
+        title="Xóa bài viết"
+        message="Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác."
+        confirmText="Xóa bài viết"
+        isLoading={isDeletingPost}
+      />
     </div>
   )
 }

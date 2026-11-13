@@ -20,8 +20,11 @@ import {
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
+import { ROLES } from '@/constants/roles'
+import { FPT_CAMPUSES, formatCampusLabel } from '@/constants/campuses'
 import { useAuthStore } from '@/stores/authStore'
 import { authService } from '@/services/auth'
+import { signInWithFirebaseGoogle } from '@/services/auth/firebase'
 import type { AuthResponse } from '@/types/auth.types'
 import { normalizeError } from '@/lib/errorHandler'
 import fAlumniLogo from '@/assets/f-alumni-logo.png'
@@ -49,7 +52,7 @@ export const RegisterForm: FC = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [campus, setCampus] = useState('FPT Hoa Lac (Hanoi)')
+  const [campus, setCampus] = useState<string>('FU-HL')
   const [major, setMajor] = useState('Software Engineering (SE)')
   const [gradYear, setGradYear] = useState('2025')
   const [studentId, setStudentId] = useState('')
@@ -81,22 +84,49 @@ export const RegisterForm: FC = () => {
     e.preventDefault()
     setError(null)
     if (!fullName.trim()) {
-      setError('Please enter your full name')
+      setError('Vui lòng nhập họ và tên đầy đủ')
       return
     }
-    if (!email.trim() || !email.includes('@')) {
-      setError('Please enter a valid email address')
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
+      setError('Vui lòng nhập địa chỉ email hợp lệ')
+      return
+    }
+    if (!normalizedEmail.endsWith('@fpt.edu.vn') && !normalizedEmail.endsWith('@fe.edu.vn')) {
+      setError('Hệ thống chỉ chấp nhận email thuộc Đại học FPT (@fpt.edu.vn hoặc @fe.edu.vn)')
       return
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+      setError('Mật khẩu phải có ít nhất 6 ký tự')
       return
     }
     if (confirmPassword && password !== confirmPassword) {
-      setError('Passwords do not match')
+      setError('Mật khẩu xác nhận không khớp')
       return
     }
     setStep(2)
+  }
+
+  const handleGoogleQuickAuth = async () => {
+    setError(null)
+    setIsSubmitting(true)
+    try {
+      const fbUser = await signInWithFirebaseGoogle()
+      const res = await authService.googleLogin(fbUser)
+      setAuth({ token: res.token, user: res.user })
+      if (res.user.role === ROLES.ADMIN || res.user.role === ROLES.MODERATOR) {
+        navigate(ROUTES.ADMIN.DASHBOARD)
+      } else {
+        navigate(ROUTES.APP.HOME)
+      }
+    } catch (err: unknown) {
+      setError(
+        normalizeError(err).message ||
+          'Đăng nhập nhanh bằng Google (@fpt.edu.vn) không thành công.'
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Step 2 validation
@@ -172,13 +202,7 @@ export const RegisterForm: FC = () => {
     }
   }
 
-  const campuses = [
-    'FPT Hoa Lac (Hanoi)',
-    'FPT Da Nang',
-    'FPT TP. Ho Chi Minh',
-    'FPT Can Tho',
-    'FPT Quy Nhon',
-  ]
+  const campuses = FPT_CAMPUSES
 
   const majors = [
     'Software Engineering (SE)',
@@ -214,19 +238,19 @@ export const RegisterForm: FC = () => {
       ? (firstWord.charAt(0) + lastWord.charAt(0)).toUpperCase()
       : (fullName.slice(0, 2) || 'FP').toUpperCase()
     const firstName = lastWord || 'FPTer'
-    const displayCampus = campus.replace(' (Hanoi)', '')
+    const displayCampus = formatCampusLabel(campus)
     const displayMajor = major.split(' (')[0]
 
     return (
       <div className="w-full space-y-3.5 py-1 text-center animate-in fade-in zoom-in-95 duration-300">
         {/* Celebratory Badge Header */}
         <div className="space-y-1.5">
-          <div className="relative mx-auto flex h-13 w-13 items-center justify-center">
+          <div className="relative mx-auto flex h-14 w-14 items-center justify-center">
             <div className="absolute inset-0 rounded-2xl bg-emerald-500/20 blur-md animate-pulse" />
-            <div className="relative flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/25">
+            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/25">
               <ShieldCheck size={28} stroke={2} />
             </div>
-            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-xs ring-2 ring-white">
+            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-sm ring-2 ring-white">
               <Sparkles size={11} stroke={2.5} />
             </div>
           </div>
@@ -322,7 +346,7 @@ export const RegisterForm: FC = () => {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-amber-900">
-                Xác minh địa chỉ Email (US-03)
+                Xác minh địa chỉ Email
               </span>
               {otpPreview && (
                 <button
@@ -330,7 +354,7 @@ export const RegisterForm: FC = () => {
                   onClick={() => setOtpCode(otpPreview)}
                   className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-[10px] font-bold text-amber-950 hover:bg-amber-300"
                 >
-                  Mã OTP Demo: {otpPreview}
+                  Dùng mã OTP: {otpPreview}
                 </button>
               )}
             </div>
@@ -353,7 +377,7 @@ export const RegisterForm: FC = () => {
               <Button
                 type="submit"
                 disabled={isVerifyingOtp}
-                className="rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-xs font-bold text-white px-4 h-9.5"
+                className="rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-xs font-bold text-white px-4 h-10"
               >
                 {isVerifyingOtp ? 'Đang xác minh...' : 'Xác minh Email'}
               </Button>
@@ -368,7 +392,7 @@ export const RegisterForm: FC = () => {
                 }
                 navigate(ROUTES.APP.HOME)
               }}
-              className="w-full h-10.5 rounded-xl bg-gradient-to-r from-brand-primary via-[#e86317] to-brand-primary-hover hover:opacity-95 text-xs sm:text-sm font-bold text-white shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all"
+              className="w-full h-11 rounded-xl bg-gradient-to-r from-brand-primary via-[#e86317] to-brand-primary-hover hover:opacity-95 text-xs sm:text-sm font-bold text-white shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all"
             >
               <span>Vào trang chủ Cộng đồng FPT</span>
               <ArrowRight size={16} stroke={2} />
@@ -377,7 +401,7 @@ export const RegisterForm: FC = () => {
             <Button
               variant="outline"
               onClick={() => navigate(ROUTES.AUTH.LOGIN)}
-              className="w-full h-9.5 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2"
+              className="w-full h-10 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2"
             >
               <IconLogin size={15} stroke={1.8} className="text-slate-500" />
               <span>Quay lại trang Đăng nhập</span>
@@ -485,16 +509,14 @@ export const RegisterForm: FC = () => {
       {/* STEP 1: Basic Information */}
       {step === 1 && (
         <form onSubmit={handleStep1Next} className="space-y-2.5">
-          {/* Google Quick Registration */}
+          {/* Google Quick Registration via Firebase SSO */}
           <button
             type="button"
+            disabled={isSubmitting}
             onClick={() => {
-              setFullName('Nguyen Van A')
-              setEmail('anguyen@fpt.edu.vn')
-              setPassword('FPTalumni2026!')
-              setConfirmPassword('FPTalumni2026!')
+              void handleGoogleQuickAuth()
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus:outline-none"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none disabled:opacity-60"
           >
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
               <path
@@ -514,7 +536,7 @@ export const RegisterForm: FC = () => {
                 fill="#EA4335"
               />
             </svg>
-            <span>Auto-fill with Google SSO</span>
+            <span>Đăng ký / Đăng nhập nhanh bằng Google (@fpt.edu.vn)</span>
           </button>
 
           <div className="relative my-0.5">
@@ -631,7 +653,7 @@ export const RegisterForm: FC = () => {
           <div className="pt-1">
             <Button
               type="submit"
-              className="w-full h-10 rounded-xl bg-brand-secondary hover:bg-[#004e8a] text-xs sm:text-sm font-bold text-white shadow-xs transition-all flex items-center justify-center gap-2"
+              className="w-full h-10 rounded-xl bg-brand-secondary hover:bg-[#004e8a] text-xs sm:text-sm font-bold text-white shadow-sm transition-all flex items-center justify-center gap-2"
             >
               <span>Continue to Academic Info</span>
               <ArrowRight size={16} stroke={2} />
@@ -655,8 +677,8 @@ export const RegisterForm: FC = () => {
               className="block w-full rounded-xl border border-slate-200 bg-[#F1F5F9] py-2 px-3 text-xs sm:text-sm text-slate-900 focus:border-brand-secondary focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-secondary/20 transition-all"
             >
               {campuses.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+                <option key={c.value} value={c.value}>
+                  {c.label}
                 </option>
               ))}
             </select>
@@ -728,7 +750,7 @@ export const RegisterForm: FC = () => {
             </Button>
             <Button
               type="submit"
-              className="w-2/3 h-10 rounded-xl bg-brand-secondary hover:bg-[#004e8a] text-xs sm:text-sm font-bold text-white shadow-xs flex items-center justify-center gap-1.5"
+              className="w-2/3 h-10 rounded-xl bg-brand-secondary hover:bg-[#004e8a] text-xs sm:text-sm font-bold text-white shadow-sm flex items-center justify-center gap-1.5"
             >
               <span>Continue</span>
               <ArrowRight size={16} stroke={2} />
@@ -749,7 +771,7 @@ export const RegisterForm: FC = () => {
                 onClick={() => setAccountType('STUDENT')}
                 className={`relative flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all ${
                   accountType === 'STUDENT'
-                    ? 'border-brand-secondary bg-brand-secondary/5 ring-1.5 ring-brand-secondary shadow-xs'
+                    ? 'border-brand-secondary bg-brand-secondary/5 ring-2 ring-brand-secondary/70 shadow-sm'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
@@ -784,7 +806,7 @@ export const RegisterForm: FC = () => {
                 onClick={() => setAccountType('ALUMNI')}
                 className={`relative flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all ${
                   accountType === 'ALUMNI'
-                    ? 'border-brand-primary bg-brand-primary/5 ring-1.5 ring-brand-primary shadow-xs'
+                    ? 'border-brand-primary bg-brand-primary/5 ring-2 ring-brand-primary/70 shadow-sm'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
@@ -848,7 +870,7 @@ export const RegisterForm: FC = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-2/3 h-10 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-xs sm:text-sm font-bold text-white shadow-xs flex items-center justify-center gap-1.5"
+              className="w-2/3 h-10 rounded-xl bg-gradient-to-r from-brand-secondary to-[#004e8a] hover:from-[#004e8a] hover:to-brand-secondary text-xs sm:text-sm font-bold text-white shadow-sm flex items-center justify-center gap-1.5"
             >
               {isSubmitting ? (
                 <>

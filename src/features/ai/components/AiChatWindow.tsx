@@ -9,12 +9,14 @@ import {
   ChevronUp,
   Bot,
   Loader2,
+  History,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { aiService, type CitationItem } from '@/services/ai'
+import { aiService, type CitationItem, type AiConversationDto } from '@/services/ai'
 import { useAuthStore } from '@/stores/authStore'
+import { normalizeCampusCode } from '@/constants/campuses'
 import { cn } from '@/lib/utils'
 
 interface ChatMessage {
@@ -41,11 +43,13 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
   const { currentUser } = useAuthStore()
 
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [historyList, setHistoryList] = useState<AiConversationDto[]>([])
+  const [showHistory, setShowHistory] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
       sender: 'assistant',
-      text: `Xin chào ${currentUser?.name || 'bạn'}! 👋\n\nMình là Trợ lý AI FPT Alumni Connect. Mình được huấn luyện để giải đáp các thắc mắc về quy chế đào tạo, định hướng OJT, kết nối mạng lưới cựu sinh viên các ngành (KTPM, QTKD, AI, Ngôn ngữ, TTDPT) và kho tri thức diễn đàn.\n\nBạn đang cần hỗ trợ vấn đề gì hôm nay?`,
+      text: `Xin chào ${currentUser?.name || 'bạn'}!\n\nMình là Trợ lý AI FPT Alumni Connect. Mình hỗ trợ giải đáp các thắc mắc về quy chế đào tạo, định hướng OJT, kết nối mạng lưới cựu sinh viên và kho tri thức diễn đàn.\n\nBạn đang cần hỗ trợ vấn đề gì hôm nay?`,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     },
   ])
@@ -64,10 +68,52 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
     if (isOpen) {
       scrollToBottom()
       setTimeout(() => inputRef.current?.focus(), 150)
+      aiService
+        .getConversations()
+        .then((list) => setHistoryList(list || []))
+        .catch(() => {})
     }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (isOpen) scrollToBottom()
   }, [isOpen, messages, isLoading])
 
   if (!isOpen) return null
+
+  const handleLoadConversation = async (id: string) => {
+    setIsLoading(true)
+    setShowHistory(false)
+    try {
+      const detail = await aiService.getConversationById(id)
+      setConversationId(detail.id)
+      const mapped: ChatMessage[] = (detail.messages || []).map((m, idx) => ({
+        id: m.id || `hist-${idx}`,
+        sender: (m.role || '').toLowerCase() === 'user' ? 'user' : 'assistant',
+        text: m.content,
+        citations: m.citations,
+        timestamp: m.createdAt
+          ? new Date(m.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+          : '',
+      }))
+      setMessages(
+        mapped.length > 0
+          ? mapped
+          : [
+              {
+                id: 'empty',
+                sender: 'assistant',
+                text: 'Cuộc trò chuyện này chưa có nội dung.',
+                timestamp: '',
+              },
+            ]
+      )
+    } catch (err) {
+      console.error('Failed to load AI conversation:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || input).trim()
@@ -91,7 +137,7 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
       const res = await aiService.ask({
         question: query,
         conversationId,
-        campus: currentUser?.campus || 'FU-HCM',
+        campus: normalizeCampusCode(currentUser?.campus) || 'FU-HL',
         major: currentUser?.department || 'SE',
       })
 
@@ -127,6 +173,7 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
 
   const handleResetChat = () => {
     setConversationId(null)
+    setShowHistory(false)
     setMessages([
       {
         id: `welcome-${Date.now()}`,
@@ -142,18 +189,18 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
   }
 
   return (
-    <div className="fixed bottom-24 right-6 z-50 flex h-[560px] w-[390px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl transition-all animate-in zoom-in-95 duration-200">
+    <div className="fixed bottom-24 right-4 lg:right-6 z-50 flex h-[540px] max-h-[calc(100vh-120px)] w-[390px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl transition-all animate-in zoom-in-95 duration-200">
       {/* 1. Header */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-brand-primary via-[#ff782e] to-brand-secondary px-4 py-3 text-white">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 shadow-xs backdrop-blur-xs">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 shadow-sm backdrop-blur-sm">
             <Sparkles className="h-5 w-5 text-white animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
               <h3 className="text-sm font-bold leading-none">FPT AI Assistant</h3>
               <Badge className="bg-emerald-400/90 text-emerald-950 px-1.5 py-0 text-[10px] font-bold hover:bg-emerald-400">
-                RAG v1.0
+                RAG
               </Badge>
             </div>
             <p className="mt-0.5 text-[11px] text-white/80 font-medium">Hỏi đáp quy chế & Kết nối Alumni</p>
@@ -163,9 +210,19 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center gap-1">
           <button
             type="button"
+            onClick={() => setShowHistory(!showHistory)}
+            className="rounded-lg p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+            title="Lịch sử hội thoại"
+            aria-label="Lịch sử hội thoại"
+          >
+            <History className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
             onClick={handleResetChat}
             className="rounded-lg p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
             title="Làm mới cuộc trò chuyện"
+            aria-label="Làm mới cuộc trò chuyện"
           >
             <RotateCcw className="h-4 w-4" />
           </button>
@@ -174,14 +231,44 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="rounded-lg p-1.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
             title="Đóng cửa sổ chat"
+            aria-label="Đóng cửa sổ chat"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
       </div>
 
+      {/* History Drawer */}
+      {showHistory && (
+        <div className="border-b border-slate-200 bg-slate-50 max-h-44 overflow-y-auto p-2 space-y-1">
+          <p className="px-2 py-1 text-[10px] font-bold uppercase text-slate-400">Cuộc trò chuyện trước đây</p>
+          {historyList.length === 0 ? (
+            <p className="px-2 py-2 text-xs text-slate-400">Chưa có lịch sử hội thoại nào.</p>
+          ) : (
+            historyList.map((conv) => (
+              <button
+                key={conv.id}
+                type="button"
+                onClick={() => void handleLoadConversation(conv.id)}
+                className={cn(
+                  'w-full text-left rounded-lg px-2.5 py-1.5 text-xs transition-colors flex items-center justify-between',
+                  conversationId === conv.id
+                    ? 'bg-brand-primary/10 text-brand-primary font-semibold'
+                    : 'text-slate-700 hover:bg-white'
+                )}
+              >
+                <span className="truncate">{conv.title || 'Hội thoại AI'}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">
+                  {new Date(conv.lastMessageAt || conv.createdAt).toLocaleDateString('vi-VN')}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+
       {/* 2. Chat Messages Viewport */}
-      <div className="flex-1 space-y-3.5 overflow-y-auto p-4 text-xs scrollbar-thin scrollbar-thumb-slate-200">
+      <div className="flex-1 space-y-3.5 overflow-y-auto p-4 text-xs">
         {messages.map((msg) => {
           const isUser = msg.sender === 'user'
 
@@ -207,15 +294,14 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
                   className={cn(
                     'rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-wrap',
                     isUser
-                      ? 'bg-gradient-to-r from-brand-primary to-[#ff782e] text-white rounded-br-xs shadow-xs'
-                      : 'bg-slate-100 text-slate-800 rounded-bl-xs border border-slate-200/60'
+                      ? 'bg-gradient-to-r from-brand-primary to-[#ff782e] text-white rounded-br-sm shadow-sm'
+                      : 'bg-slate-100 text-slate-800 rounded-bl-sm border border-slate-200/60'
                   )}
                 >
                   {msg.text}
                 </div>
               </div>
 
-              {/* Citations Accordion (if response has RAG citations) */}
               {!isUser && msg.citations && msg.citations.length > 0 && (
                 <div className="ml-8 mt-1 max-w-[85%] rounded-xl border border-blue-200 bg-blue-50/60 p-2.5 text-[11px]">
                   <button
@@ -225,7 +311,7 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
                   >
                     <span className="flex items-center gap-1.5">
                       <BookOpen className="h-3.5 w-3.5 text-brand-secondary" />
-                      Nguồn trích dẫn ({msg.citations.length} tài liệu xác thực)
+                      Nguồn trích dẫn ({msg.citations.length} tài liệu)
                     </span>
                     {expandedCitationMessageId === msg.id ? (
                       <ChevronUp className="h-3.5 w-3.5" />
@@ -237,11 +323,11 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
                   {expandedCitationMessageId === msg.id && (
                     <div className="mt-2 space-y-2 border-t border-blue-200/80 pt-2">
                       {msg.citations.map((cite, idx) => (
-                        <div key={idx} className="rounded-lg bg-white/90 p-2 text-slate-700 shadow-2xs">
+                        <div key={idx} className="rounded-lg bg-white/90 p-2 text-slate-700 shadow-sm">
                           <div className="flex items-center justify-between font-bold text-slate-900">
                             <span>{cite.sourceTitle}</span>
                             {cite.programCode && (
-                              <span className="rounded bg-slate-100 px-1 py-0.2 text-[9px] text-slate-600">
+                              <span className="rounded bg-slate-100 px-1 py-0.5 text-[9px] text-slate-600">
                                 {cite.programCode}
                               </span>
                             )}
@@ -266,13 +352,12 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
           )
         })}
 
-        {/* Loading Indicator */}
         {isLoading && (
           <div className="flex items-start gap-2">
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
               <Bot className="h-3.5 w-3.5" />
             </div>
-            <div className="flex items-center gap-2 rounded-2xl bg-slate-100 px-3.5 py-2.5 text-xs text-slate-500 rounded-bl-xs border border-slate-200/60">
+            <div className="flex items-center gap-2 rounded-2xl bg-slate-100 px-3.5 py-2.5 text-xs text-slate-500 rounded-bl-sm border border-slate-200/60">
               <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-primary" />
               <span>AI đang truy vấn tri thức và trích xuất tài liệu...</span>
             </div>
@@ -282,7 +367,6 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 3. Quick Prompt Chips (When not many messages) */}
       {messages.length <= 2 && (
         <div className="border-t border-slate-100 bg-slate-50/70 px-3 py-2">
           <p className="mb-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -295,7 +379,7 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={() => handleSendMessage(prompt)}
                 disabled={isLoading}
-                className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-2xs transition-colors hover:border-brand-primary hover:text-brand-primary"
+                className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm transition-colors hover:border-brand-primary hover:text-brand-primary"
               >
                 {prompt}
               </button>
@@ -304,7 +388,6 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
         </div>
       )}
 
-      {/* 4. Chat Input Form */}
       <div className="border-t border-slate-200 bg-white p-3">
         <form
           onSubmit={(e) => {
@@ -320,14 +403,15 @@ export const AiChatWindow: FC<AiChatWindowProps> = ({ isOpen, onClose }) => {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Nhập câu hỏi học thuật, OJT hoặc tìm Alumni..."
             disabled={isLoading}
-            className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-hidden"
+            className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none"
           />
 
           <Button
             type="submit"
             size="sm"
             disabled={!input.trim() || isLoading}
-            className="h-8.5 w-8.5 shrink-0 rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50 p-0"
+            className="h-9 w-9 shrink-0 rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50 p-0"
+            aria-label="Gửi câu hỏi"
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>

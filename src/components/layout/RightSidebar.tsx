@@ -24,6 +24,7 @@ import {
   type EventRsvpStatus,
 } from '@/services/opportunities'
 import { useAuthStore } from '@/stores/authStore'
+import { formatCampusLabel } from '@/constants/campuses'
 
 interface DisplayMentor {
   id: string
@@ -66,9 +67,7 @@ export const RightSidebar: FC = () => {
             name: m.fullName,
             role: m.jobTitle ? `${m.jobTitle} @ ${m.currentCompany}` : m.skills || 'Alumni Mentor',
             major: `Khoa ${m.major || 'CNTT'}`,
-            avatar:
-              m.avatarUrl ||
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=256',
+            avatar: m.avatarUrl || '',
             isVerified: true,
             matchScore: m.matchScore,
             mentorship: true,
@@ -77,7 +76,7 @@ export const RightSidebar: FC = () => {
           return
         }
       } catch (err) {
-        console.warn('AI Mentor recommendation API unavailable, using fallback list:', err)
+        console.warn('AI Mentor recommendation API unavailable:', err)
       } finally {
         if (isMounted) setIsLoadingMentors(false)
       }
@@ -235,7 +234,7 @@ export const RightSidebar: FC = () => {
                         </span>
                       )}
                       {alum.mentorship && (
-                        <span className="py-0.2 inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 text-[9px] font-semibold text-emerald-700">
+                        <span className="py-0.5 inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 text-[9px] font-semibold text-emerald-700">
                           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
                           Accepting Mentees
                         </span>
@@ -307,7 +306,7 @@ export const RightSidebar: FC = () => {
                 >
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <Badge className="bg-brand-secondary/90 text-white px-1.5 py-0 text-[10px]">
-                      {evt.campus || 'Toàn quốc'}
+                      {formatCampusLabel(evt.campus) || 'Toàn quốc'}
                     </Badge>
                     <span className="flex items-center gap-1 text-[10px] font-bold text-brand-primary">
                       <Clock className="h-2.5 w-2.5" />

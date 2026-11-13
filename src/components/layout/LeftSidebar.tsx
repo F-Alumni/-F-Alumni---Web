@@ -11,7 +11,8 @@ import {
   Bot,
   Sparkles,
   CheckCircle2,
-  Coins,
+  ShieldCheck,
+  MapPin,
   MessageSquare,
   ArrowUpRight,
 } from 'lucide-react'
@@ -19,26 +20,28 @@ import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ROUTES } from '@/constants/routes'
+import { formatCampusLabel } from '@/constants/campuses'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 
 export const LeftSidebar: FC = () => {
   const { currentUser } = useAuthStore()
 
-  const navItems = [
+  const navItems: {
+    label: string
+    icon: typeof Home
+    to: string
+    badge?: string
+    badgeVariant?: 'brand-primary'
+    badgeGradient?: boolean
+  }[] = [
     { label: 'Home', icon: Home, to: ROUTES.APP.HOME },
     { label: 'Alumni Directory', icon: GraduationCap, to: ROUTES.APP.ALUMNI },
     { label: 'Community Chat', icon: MessageSquare, to: ROUTES.APP.CHAT },
-    { label: 'Communities', icon: Users2, to: ROUTES.APP.COMMUNITIES, count: '14' },
-    { label: 'Jobs', icon: Briefcase, to: ROUTES.APP.JOBS, badge: 'New' },
+    { label: 'Communities', icon: Users2, to: ROUTES.APP.COMMUNITIES },
+    { label: 'Jobs', icon: Briefcase, to: ROUTES.APP.JOBS },
     { label: 'Internships', icon: Layers, to: ROUTES.APP.INTERNSHIPS },
-    {
-      label: 'Scholarships',
-      icon: Award,
-      to: ROUTES.APP.SCHOLARSHIPS,
-      badge: '3 open',
-      badgeVariant: 'brand-primary' as const,
-    },
+    { label: 'Scholarships', icon: Award, to: ROUTES.APP.SCHOLARSHIPS },
     { label: 'Saved', icon: Bookmark, to: ROUTES.APP.SAVED },
     {
       label: 'FPT AI Assistant',
@@ -85,26 +88,26 @@ export const LeftSidebar: FC = () => {
               {currentUser?.department || 'Kỹ thuật phần mềm'}
             </p>
             <p className="mt-0.5 text-[11px] text-slate-400">
-              {currentUser?.cohort ? `Cohort ${currentUser.cohort}` : 'Cộng đồng FPT'} •{' '}
-              {currentUser?.campus || 'Hòa Lạc'}
+              {currentUser?.cohort ? `Khóa ${currentUser.cohort}` : 'Cộng đồng FPTU'} •{' '}
+              {formatCampusLabel(currentUser?.campus) || 'Toàn hệ thống'}
             </p>
           </div>
 
-          {/* Stats Bar */}
+          {/* Account Status Summary */}
           <div className="mt-4 grid grid-cols-2 gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-2 text-center">
             <div className="flex flex-col items-center">
               <span className="flex items-center gap-1 text-xs font-bold text-slate-800">
-                <Coins className="h-3 w-3 text-yellow-500" />
-                34
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                {currentUser?.isVerified ? 'Đã xác thực' : 'Thành viên'}
               </span>
-              <span className="text-[10px] text-slate-500">Alumni Coins</span>
+              <span className="text-[10px] text-slate-500">{currentUser?.role || 'STUDENT'}</span>
             </div>
             <div className="flex flex-col items-center border-l border-slate-200">
-              <span className="flex items-center gap-1 text-xs font-bold text-slate-800">
-                <MessageSquare className="h-3 w-3 text-brand-secondary" />
-                12
+              <span className="flex items-center gap-1 text-xs font-bold text-slate-800 truncate max-w-full">
+                <MapPin className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                <span className="truncate">{currentUser?.campus || 'FPTU'}</span>
               </span>
-              <span className="text-[10px] text-slate-500">Discussions</span>
+              <span className="text-[10px] text-slate-500">Cơ sở</span>
             </div>
           </div>
 
@@ -131,7 +134,7 @@ export const LeftSidebar: FC = () => {
                   cn(
                     'group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
                     isActive
-                      ? 'shadow-xs bg-brand-primary-light font-semibold text-brand-primary'
+                      ? 'shadow-sm bg-brand-primary-light font-semibold text-brand-primary'
                       : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900'
                   )
                 }
@@ -146,12 +149,6 @@ export const LeftSidebar: FC = () => {
                   <span>{item.label}</span>
                 </div>
 
-                {item.count && (
-                  <span className="text-xs font-medium text-slate-400 group-hover:text-slate-600">
-                    {item.count}
-                  </span>
-                )}
-
                 {item.badge && !item.badgeGradient && (
                   <Badge
                     variant={item.badgeVariant ?? 'brand-primary'}
@@ -162,7 +159,7 @@ export const LeftSidebar: FC = () => {
                 )}
 
                 {item.badgeGradient && (
-                  <span className="shadow-xs inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                  <span className="shadow-sm inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white">
                     <Sparkles className="h-2.5 w-2.5" />
                     {item.badge}
                   </span>
@@ -173,11 +170,11 @@ export const LeftSidebar: FC = () => {
         </nav>
       </Card>
 
-      {/* 3. Community Circles Quick List */}
+      {/* 3. Topic Channels Quick List */}
       <Card className="border-slate-200/90 bg-white p-3 shadow-sm">
         <div className="mb-2 flex items-center justify-between px-1">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Your Communities
+            Chủ đề nổi bật
           </span>
           <NavLink
             to={ROUTES.APP.COMMUNITIES}
@@ -189,18 +186,17 @@ export const LeftSidebar: FC = () => {
 
         <ul className="space-y-1 text-xs">
           {[
-            { name: '#FPT-Software-Alumni', count: '3.4k' },
-            { name: '#FPT-Startup-Founders', count: '1.2k' },
-            { name: '#AI-Robotics-Hub', count: '890' },
-            { name: '#Capstones-Spring-26', count: '450' },
+            { name: '#SoftwareEngineering', tag: 'Software Engineering' },
+            { name: '#AI-DataScience', tag: 'AI' },
+            { name: '#OJT-Internship', tag: 'OJT' },
+            { name: '#Alumni-Mentorship', tag: 'Mentor' },
           ].map((c) => (
             <li key={c.name}>
               <NavLink
-                to={`${ROUTES.APP.COMMUNITIES}?tag=${encodeURIComponent(c.name)}`}
+                to={`${ROUTES.APP.HOME}?q=${encodeURIComponent(c.tag)}`}
                 className="flex items-center justify-between rounded-md px-2 py-1.5 text-slate-600 transition-colors hover:bg-slate-50 hover:text-brand-primary"
               >
                 <span className="truncate font-medium">{c.name}</span>
-                <span className="text-[10px] text-slate-400">{c.count}</span>
               </NavLink>
             </li>
           ))}

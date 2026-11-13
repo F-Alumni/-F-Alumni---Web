@@ -143,7 +143,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
           onClick={onClose}
         />
       )}
@@ -191,7 +191,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
                         cn(
                           'group flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold transition-all',
                           isActive
-                            ? 'bg-brand-primary/10 text-brand-primary border-l-3 border-brand-primary pl-2.5'
+                            ? 'bg-brand-primary/10 text-brand-primary border-l-4 border-brand-primary pl-2.5'
                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                         )
                       }
@@ -203,7 +203,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
                       {item.badge && (
                         <span
                           className={cn(
-                            'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
+                            'rounded-full px-1.5 py-0.5 text-[10px] font-bold',
                             item.badgeColor || 'bg-brand-primary/10 text-brand-primary'
                           )}
                         >

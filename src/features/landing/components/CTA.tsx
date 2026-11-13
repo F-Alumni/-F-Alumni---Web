@@ -7,11 +7,17 @@ import {
   IconSparkles,
 } from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
+import { ROLES } from '@/constants/roles'
 import { useAuthStore } from '@/stores/authStore'
 
 export const CTA: FC = () => {
-  const { isAuthenticated } = useAuthStore()
-  const destinationPath = isAuthenticated ? ROUTES.ADMIN.DASHBOARD : ROUTES.AUTH.LOGIN
+  const { isAuthenticated, role } = useAuthStore()
+  const isAdminOrMod = role === ROLES.ADMIN || role === ROLES.MODERATOR
+  const destinationPath = !isAuthenticated
+    ? ROUTES.AUTH.LOGIN
+    : isAdminOrMod
+      ? ROUTES.ADMIN.DASHBOARD
+      : ROUTES.APP.HOME
 
   return (
     <section className="bg-slate-50 py-16 sm:py-20 lg:py-24">
@@ -50,7 +56,13 @@ export const CTA: FC = () => {
                 to={destinationPath}
                 className="inline-flex items-center justify-center gap-2.5 px-7 py-4 text-base font-bold text-white bg-gradient-to-r from-[#F27024] to-[#E05D13] hover:from-[#E05D13] hover:to-[#C84F0E] rounded-xl shadow-lg shadow-orange-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] group"
               >
-                <span>{isAuthenticated ? 'Vào Bảng Quản Trị' : 'Đăng nhập Quản trị viên'}</span>
+                <span>
+                  {!isAuthenticated
+                    ? 'Đăng nhập / Tham gia ngay'
+                    : isAdminOrMod
+                      ? 'Vào Bảng Quản Trị'
+                      : 'Vào Cộng đồng FPT'}
+                </span>
                 <IconArrowRight size={18} stroke={2.5} className="transition-transform group-hover:translate-x-1" />
               </Link>
 

@@ -10,11 +10,17 @@ import {
   IconUsers,
 } from '@tabler/icons-react'
 import { ROUTES } from '@/constants/routes'
+import { ROLES } from '@/constants/roles'
 import { useAuthStore } from '@/stores/authStore'
 
 export const Hero: FC = () => {
-  const { isAuthenticated } = useAuthStore()
-  const destinationPath = isAuthenticated ? ROUTES.ADMIN.DASHBOARD : ROUTES.AUTH.LOGIN
+  const { isAuthenticated, role } = useAuthStore()
+  const isAdminOrMod = role === ROLES.ADMIN || role === ROLES.MODERATOR
+  const destinationPath = !isAuthenticated
+    ? ROUTES.AUTH.LOGIN
+    : isAdminOrMod
+      ? ROUTES.ADMIN.DASHBOARD
+      : ROUTES.APP.HOME
 
   return (
     <section id="hero" className="relative overflow-hidden bg-gradient-to-b from-orange-50/40 via-white to-slate-50/50 py-12 sm:py-16 lg:py-20 border-b border-slate-200/70">
@@ -29,7 +35,7 @@ export const Hero: FC = () => {
           {/* Left Column: Headline, Value Proposition and Call-to-actions */}
           <div className="lg:col-span-6 space-y-6">
             {/* Live Operational Status Badge */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white border border-orange-200/90 shadow-2xs backdrop-blur-md">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white border border-orange-200/90 shadow-sm backdrop-blur-md">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
@@ -64,13 +70,19 @@ export const Hero: FC = () => {
                 to={destinationPath}
                 className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-base font-bold text-white bg-gradient-to-r from-[#F27024] to-[#E05D13] hover:from-[#E05D13] hover:to-[#C84F0E] rounded-xl shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] group"
               >
-                <span>{isAuthenticated ? 'Vào Bảng Quản Trị ngay' : 'Đăng nhập Cổng Quản Trị'}</span>
+                <span>
+                  {!isAuthenticated
+                    ? 'Tham gia / Đăng nhập ngay'
+                    : isAdminOrMod
+                      ? 'Vào Bảng Quản Trị ngay'
+                      : 'Khám phá Cộng đồng FPT'}
+                </span>
                 <IconArrowRight size={18} stroke={2.5} className="transition-transform group-hover:translate-x-1" />
               </Link>
 
               <a
                 href="#mentoring"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 active:bg-slate-100 rounded-xl border border-slate-200/90 shadow-2xs transition-all hover:border-slate-300"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 active:bg-slate-100 rounded-xl border border-slate-200/90 shadow-sm transition-all hover:border-slate-300"
               >
                 <IconCompass size={18} stroke={1.8} className="text-slate-500" />
                 <span>Xem tính năng quản trị</span>
@@ -79,15 +91,15 @@ export const Hero: FC = () => {
 
             {/* Institutional Stat Badges */}
             <div className="pt-4 border-t border-slate-200/80 grid grid-cols-3 gap-4 max-w-lg">
-              <div className="bg-white/80 rounded-xl p-3 border border-slate-100 shadow-2xs">
+              <div className="bg-white/80 rounded-xl p-3 border border-slate-100 shadow-sm">
                 <div className="text-xl sm:text-2xl font-black text-slate-900">5</div>
                 <div className="text-xs font-semibold text-slate-500 mt-0.5">Cơ sở toàn quốc</div>
               </div>
-              <div className="bg-white/80 rounded-xl p-3 border border-slate-100 shadow-2xs">
+              <div className="bg-white/80 rounded-xl p-3 border border-slate-100 shadow-sm">
                 <div className="text-xl sm:text-2xl font-black text-slate-900">40.000+</div>
                 <div className="text-xs font-semibold text-slate-500 mt-0.5">Thành viên kết nối</div>
               </div>
-              <div className="bg-white/80 rounded-xl p-3 border border-slate-100 shadow-2xs">
+              <div className="bg-white/80 rounded-xl p-3 border border-slate-100 shadow-sm">
                 <div className="text-xl sm:text-2xl font-black text-[#F27024]">100%</div>
                 <div className="text-xs font-semibold text-slate-500 mt-0.5">Xác minh bằng cấp</div>
               </div>
