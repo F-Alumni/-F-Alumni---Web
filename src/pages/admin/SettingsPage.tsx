@@ -75,6 +75,37 @@ export const SettingsPage: FC = () => {
     }
   }
 
+  // AD-10: Diagnostic RAG & Intent Booster
+  const [boostQuery, setBoostQuery] = useState('')
+  const [boostMajor, setBoostMajor] = useState('All')
+  const [boostCampus, setBoostCampus] = useState('All')
+  const boostTopK = 5
+  const [boostResult, setBoostResult] = useState<any>(null)
+  const [isTestingBoost, setIsTestingBoost] = useState(false)
+  const [boostError, setBoostError] = useState<string | null>(null)
+
+  const handleTestBoost = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!boostQuery.trim()) return
+    setIsTestingBoost(true)
+    setBoostError(null)
+    setBoostResult(null)
+    try {
+      const res = await aiService.testBoost(
+        boostQuery.trim(),
+        boostMajor === 'All' ? undefined : boostMajor,
+        boostCampus,
+        boostTopK
+      )
+      setBoostResult(res)
+      setToastMessage('Đã chẩn đoán AI Boost thành công!')
+    } catch {
+      setBoostError('Không thể thực hiện chẩn đoán AI Boost. Vui lòng kiểm tra AI Service.')
+    } finally {
+      setIsTestingBoost(false)
+    }
+  }
+
   const handleUploadKnowledgeDoc = async (e: FormEvent) => {
     e.preventDefault()
     if (!ragFile) return
@@ -462,6 +493,85 @@ export const SettingsPage: FC = () => {
               </Button>
             </div>
           </form>
+
+          {/* AD-10: Diagnostic RAG & Intent Booster */}
+          <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+            <div className="flex items-center gap-2">
+              <IconSparkles size={16} className="text-orange-500" />
+              <span className="text-xs font-bold text-slate-800">
+                Chẩn đoán RAG & Intent Booster (Gemini 2.5 Flash /boost)
+              </span>
+            </div>
+
+            <form onSubmit={handleTestBoost} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    value={boostQuery}
+                    onChange={(e) => setBoostQuery(e.target.value)}
+                    placeholder="Nhập câu hỏi test: VD: hoc phi hola nganh se la bao nhieu..."
+                    className="w-full h-8 rounded-lg border border-slate-200 px-3 text-xs text-slate-800 focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+                <div>
+                  <select
+                    value={boostMajor}
+                    onChange={(e) => setBoostMajor(e.target.value)}
+                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-800 focus:outline-none"
+                  >
+                    <option value="All">Khoa: Tất cả</option>
+                    <option value="SE">Khoa: SE</option>
+                    <option value="AI">Khoa: AI</option>
+                    <option value="IA">Khoa: IA</option>
+                  </select>
+                </div>
+                <div>
+                  <select
+                    value={boostCampus}
+                    onChange={(e) => setBoostCampus(e.target.value)}
+                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-800 focus:outline-none"
+                  >
+                    <option value="All">Campus: Tất cả</option>
+                    <option value="FU-HL">Hòa Lạc</option>
+                    <option value="FU-HCM">TP. HCM</option>
+                    <option value="FU-DN">Đà Nẵng</option>
+                  </select>
+                </div>
+                <div>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={isTestingBoost || !boostQuery.trim()}
+                    className="w-full h-8 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5"
+                  >
+                    {isTestingBoost ? (
+                      <IconLoader2 size={13} className="animate-spin" />
+                    ) : (
+                      <IconSparkles size={13} />
+                    )}
+                    <span>Chẩn đoán</span>
+                  </Button>
+                </div>
+              </div>
+
+              {boostError && (
+                <p className="text-xs text-rose-600 font-medium">{boostError}</p>
+              )}
+
+              {boostResult && (
+                <div className="rounded-xl border border-slate-200 bg-slate-900 text-slate-100 p-3.5 text-xs font-mono space-y-2 overflow-x-auto">
+                  <div className="flex items-center justify-between text-slate-400 border-b border-slate-800 pb-1.5 text-[11px]">
+                    <span>DIAGNOSTIC BOOST RESULT</span>
+                    <span className="text-emerald-400 font-bold">200 OK</span>
+                  </div>
+                  <pre className="text-[11px] leading-relaxed whitespace-pre-wrap">
+                    {JSON.stringify(boostResult, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </form>
+          </div>
         </Card>
 
         {/* System Announcements Management (AD-08) */}

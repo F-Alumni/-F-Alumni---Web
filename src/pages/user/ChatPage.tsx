@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, type FC } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   IconMessageCircle,
+  IconMessageDots,
   IconSend,
   IconPlus,
   IconUsers,
@@ -359,45 +360,89 @@ export const ChatPage: FC = () => {
   const activeRoom = rooms.find((r) => r.id === activeRoomId)
 
   return (
-    <div className="h-[calc(100vh-140px)] rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col md:flex-row">
-      {/* Sidebar: Rooms List */}
-      <div className="w-full md:w-80 border-r border-slate-200 flex flex-col h-full bg-slate-50/50">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <IconMessageCircle className="h-5 w-5 text-brand-secondary" />
-            <h2 className="font-bold text-slate-900 text-sm">Discussions & Chat</h2>
+    <div className="space-y-4">
+      {/* 1. Unified Page Header Card */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary">
+            <IconMessageDots className="h-6 w-6" />
           </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setIsDirectChatOpen(true)}
-              title="New 1-1 Chat"
-              className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-            >
-              <IconUser className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setIsCreateGroupOpen(true)}
-              title="Create Group Room"
-              className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-            >
-              <IconPlus className="h-4 w-4" />
-            </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-slate-900">Trò chuyện & Thảo luận Cộng đồng</h1>
+              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Realtime SignalR
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Trò chuyện trực tiếp 1-1 với cựu sinh viên và tham gia các phòng thảo luận chuyên môn thời gian thực.
+            </p>
           </div>
         </div>
 
-        {/* Rooms Listing */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-          {isLoadingRooms ? (
-            <div className="p-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-              <IconLoader2 className="h-4 w-4 animate-spin" />
-              <span>Loading rooms...</span>
+        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setIsDirectChatOpen(true)}
+            title="Nhắn tin trực tiếp"
+            className="h-9 px-3.5 rounded-xl border-slate-200/90 text-xs font-semibold text-slate-700 hover:text-brand-primary hover:border-brand-primary/40 inline-flex items-center gap-1.5 transition-colors"
+          >
+            <IconUser className="h-4 w-4" />
+            <span>Nhắn tin 1-1</span>
+          </Button>
+
+          <Button
+            onClick={() => setIsCreateGroupOpen(true)}
+            title="Tạo nhóm thảo luận"
+            className="h-9 px-3.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-xs transition-colors"
+          >
+            <IconPlus className="h-4 w-4" />
+            <span>Tạo nhóm</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* 2. Main Chat Container */}
+      <div className="h-[calc(100vh-230px)] min-h-[520px] rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden flex flex-col md:flex-row">
+        {/* Sidebar: Rooms List */}
+        <div className="w-full md:w-80 border-r border-slate-200 flex flex-col h-full bg-slate-50/50">
+          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <IconMessageCircle className="h-5 w-5 text-brand-secondary" />
+              <h2 className="font-bold text-slate-900 text-sm">Hộp thư & Hội thoại</h2>
             </div>
-          ) : rooms.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-400">
-              No chat rooms found.
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setIsDirectChatOpen(true)}
+                title="Nhắn tin 1-1"
+                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+              >
+                <IconUser className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setIsCreateGroupOpen(true)}
+                title="Tạo nhóm mới"
+                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+              >
+                <IconPlus className="h-4 w-4" />
+              </button>
             </div>
-          ) : (
+          </div>
+
+          {/* Rooms Listing */}
+          <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+            {isLoadingRooms ? (
+              <div className="p-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                <IconLoader2 className="h-4 w-4 animate-spin" />
+                <span>Đang tải danh sách...</span>
+              </div>
+            ) : rooms.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-400">
+                Chưa có cuộc trò chuyện nào.
+              </div>
+            ) : (
             rooms.map((room) => {
               const isSelected = room.id === activeRoomId
               const isGroup = room.roomType === 'Group'
@@ -481,7 +526,7 @@ export const ChatPage: FC = () => {
               <div className="flex items-center gap-2">
                 {typingUser && (
                   <span className="text-xs text-brand-secondary font-medium italic animate-pulse mr-2">
-                    {typingUser} is typing...
+                    {typingUser} đang nhập tin nhắn...
                   </span>
                 )}
 
@@ -495,7 +540,7 @@ export const ChatPage: FC = () => {
                       setSearchQuery('')
                     }
                   }}
-                  title="Tìm kiếm tin nhắn (CH-08)"
+                  title="Tìm kiếm tin nhắn trong phòng"
                   className={`rounded-lg p-1.5 transition-colors ${
                     isSearchingHistory
                       ? 'bg-brand-secondary/10 text-brand-secondary'
@@ -510,7 +555,7 @@ export const ChatPage: FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsRoomMenuOpen(!isRoomMenuOpen)}
-                    title="Tùy chọn hội thoại (CH-09)"
+                    title="Tùy chọn hội thoại"
                     className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                   >
                     <IconDotsVertical className="h-4 w-4" />
@@ -549,7 +594,7 @@ export const ChatPage: FC = () => {
               </div>
             </div>
 
-            {/* CH-08: In-room Search Bar */}
+            {/* In-room Search Bar */}
             {isSearchingHistory && (
               <div className="px-6 py-2.5 bg-slate-100/80 border-b border-slate-200 flex items-center gap-2">
                 <IconSearch className="h-4 w-4 text-slate-400 shrink-0" />
@@ -585,17 +630,17 @@ export const ChatPage: FC = () => {
             <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/30">
               {isLoadingMessages ? (
                 <div className="flex h-full items-center justify-center text-xs text-slate-400 gap-2">
-                  <IconLoader2 className="h-5 w-5 animate-spin" />
-                  <span>Loading messages...</span>
+                  <IconLoader2 className="h-5 w-5 animate-spin text-brand-primary" />
+                  <span>Đang tải tin nhắn...</span>
                 </div>
               ) : (filteredMessages || messages).length === 0 ? (
                 <div className="flex flex-col h-full items-center justify-center text-slate-400 space-y-2">
                   <IconMessageCircle className="h-10 w-10 text-slate-200" />
                   <p className="text-sm font-medium text-slate-600">
-                    {filteredMessages ? 'Không tìm thấy tin nhắn phù hợp' : 'No messages yet'}
+                    {filteredMessages ? 'Không tìm thấy tin nhắn phù hợp' : 'Chưa có tin nhắn nào'}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {filteredMessages ? 'Thử tìm kiếm với từ khóa khác' : 'Say hello and start the community conversation!'}
+                    {filteredMessages ? 'Thử tìm kiếm với từ khóa khác' : 'Gửi lời chào để bắt đầu cuộc trò chuyện cộng đồng!'}
                   </p>
                 </div>
               ) : (
@@ -610,7 +655,7 @@ export const ChatPage: FC = () => {
                     >
                       <div className="flex items-center gap-1.5 mb-1 text-[11px] text-slate-400">
                         <span className="font-semibold text-slate-600">
-                          {isMine ? 'You' : msg.senderName}
+                          {isMine ? 'Bạn' : msg.senderName}
                         </span>
                         <span>•</span>
                         <span>
@@ -727,17 +772,18 @@ export const ChatPage: FC = () => {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
             <IconMessageCircle className="h-12 w-12 text-slate-200 mb-2" />
-            <p className="text-sm font-medium">Select a room to begin chatting</p>
+            <p className="text-sm font-medium">Chọn một cuộc trò chuyện để bắt đầu nhắn tin</p>
           </div>
         )}
       </div>
+    </div>
 
       {/* Modal: Create Group Room */}
       {isCreateGroupOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Create Group Discussion</h3>
+              <h3 className="font-bold text-slate-900 text-base">Tạo nhóm thảo luận mới</h3>
               <button
                 onClick={() => setIsCreateGroupOpen(false)}
                 className="text-slate-400 hover:text-slate-600"
@@ -748,34 +794,34 @@ export const ChatPage: FC = () => {
 
             <form onSubmit={handleCreateGroup} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Room Name</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Tên nhóm</label>
                 <input
                   type="text"
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
-                  placeholder="e.g. FPT Capstone Project Mentorship"
+                  placeholder="VD: Nhóm ôn thi Capstone ĐH FPT"
                   required
                   className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Major Focus (Optional)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Chuyên ngành (Tùy chọn)</label>
                 <input
                   type="text"
                   value={newGroupMajor}
                   onChange={(e) => setNewGroupMajor(e.target.value)}
-                  placeholder="e.g. Kỹ thuật phần mềm"
+                  placeholder="VD: Kỹ thuật phần mềm (SE)"
                   className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-brand-primary focus:outline-none"
                 />
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setIsCreateGroupOpen(false)}>
-                  Cancel
+                  Hủy
                 </Button>
-                <Button type="submit" className="bg-brand-secondary text-white hover:bg-brand-secondary/90">
-                  Create Room
+                <Button type="submit" className="bg-brand-primary text-white hover:bg-brand-primary/90">
+                  Tạo nhóm
                 </Button>
               </div>
             </form>
@@ -788,7 +834,7 @@ export const ChatPage: FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Start Direct Message</h3>
+              <h3 className="font-bold text-slate-900 text-base">Nhắn tin trực tiếp 1-1</h3>
               <button
                 onClick={() => setIsDirectChatOpen(false)}
                 className="text-slate-400 hover:text-slate-600"
@@ -803,7 +849,7 @@ export const ChatPage: FC = () => {
                 type="text"
                 value={userSearchQuery}
                 onChange={(e) => handleSearchUsers(e.target.value)}
-                placeholder="Search by student or alumni name..."
+                placeholder="Tìm kiếm theo tên cựu sinh viên, sinh viên..."
                 className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2 text-sm focus:border-brand-primary focus:outline-none"
               />
             </div>
@@ -811,12 +857,12 @@ export const ChatPage: FC = () => {
             <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
               {isSearchingUsers ? (
                 <div className="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                  <IconLoader2 className="h-4 w-4 animate-spin" />
-                  <span>Searching directory...</span>
+                  <IconLoader2 className="h-4 w-4 animate-spin text-brand-primary" />
+                  <span>Đang tìm kiếm thành viên...</span>
                 </div>
               ) : searchResults.length === 0 ? (
                 <div className="p-4 text-center text-xs text-slate-400">
-                  {userSearchQuery ? 'No members found' : 'Type a name to search members'}
+                  {userSearchQuery ? 'Không tìm thấy thành viên phù hợp' : 'Nhập tên để tìm kiếm thành viên'}
                 </div>
               ) : (
                 searchResults.map((user) => (
@@ -837,9 +883,9 @@ export const ChatPage: FC = () => {
                     <Button
                       size="sm"
                       onClick={() => handleStartDirectChat(user)}
-                      className="bg-brand-secondary text-white text-xs h-7 px-2.5"
+                      className="bg-brand-primary text-white text-xs h-7 px-2.5 hover:bg-brand-primary/90"
                     >
-                      Chat
+                      Nhắn tin
                     </Button>
                   </div>
                 ))

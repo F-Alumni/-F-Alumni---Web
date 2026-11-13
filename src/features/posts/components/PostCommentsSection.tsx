@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, type FC } from 'react'
 import {
-  Send,
-  CheckCircle2,
-  Loader2,
-  MessageSquare,
-  Award,
-  Flag,
-} from 'lucide-react'
+  IconSend,
+  IconCircleCheck,
+  IconLoader2,
+  IconMessageDots,
+  IconAward,
+  IconFlag,
+} from '@tabler/icons-react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +21,7 @@ interface PostCommentsSectionProps {
   postAuthorId?: string
   isQuestion?: boolean
   onCommentAdded?: () => void
+  onAnswerAccepted?: () => void
 }
 
 export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
@@ -28,6 +29,7 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
   postAuthorId,
   isQuestion = false,
   onCommentAdded,
+  onAnswerAccepted,
 }) => {
   const { currentUser } = useAuthStore()
 
@@ -82,6 +84,7 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
           isAcceptedAnswer: c.id === commentId,
         }))
       )
+      onAnswerAccepted?.()
     } catch (err) {
       console.error('Failed to accept answer:', err)
     } finally {
@@ -96,7 +99,7 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
       {/* Comments List Header */}
       <div className="flex items-center justify-between text-xs font-bold text-slate-700">
         <span className="flex items-center gap-1.5">
-          <MessageSquare className="h-3.5 w-3.5 text-brand-secondary" />
+          <IconMessageDots className="h-3.5 w-3.5 text-brand-secondary" />
           Bình luận ({comments.length})
         </span>
       </div>
@@ -104,7 +107,7 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
       {/* Comments Stream */}
       {isLoading ? (
         <div className="flex items-center justify-center py-6 text-slate-400">
-          <Loader2 className="h-4 w-4 animate-spin text-brand-primary mr-2" />
+          <IconLoader2 className="h-4 w-4 animate-spin text-brand-primary mr-2" />
           <span className="text-xs">Đang tải bình luận...</span>
         </div>
       ) : comments.length === 0 ? (
@@ -144,9 +147,8 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
                           {comment.authorName}
                         </span>
                         {isAccepted && (
-                          <Badge className="bg-emerald-600 text-white gap-0.5 px-1.5 py-0 text-[10px] font-bold">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Best Answer
+                          <Badge className="bg-emerald-600 text-white p-1 rounded-full" title="Câu trả lời chính xác nhất (Best Answer)" aria-label="Best Answer">
+                            <IconCircleCheck className="h-3 w-3" />
                           </Badge>
                         )}
                       </div>
@@ -169,15 +171,15 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
                         variant="outline"
                         onClick={() => handleAcceptAnswer(comment.id)}
                         disabled={acceptingCommentId === comment.id}
-                        className="h-6 text-[10px] font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 gap-1 rounded-lg"
-                        title="Chọn bình luận này làm câu trả lời chính xác nhất"
+                        className="h-6 w-6 p-0 text-emerald-700 border-emerald-300 hover:bg-emerald-50 rounded-lg inline-flex items-center justify-center"
+                        title="Chọn bình luận này làm câu trả lời chính xác nhất (BR-03)"
+                        aria-label="Chấp nhận câu trả lời"
                       >
                         {acceptingCommentId === comment.id ? (
-                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          <IconLoader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <Award className="h-3 w-3 text-emerald-600" />
+                          <IconAward className="h-3.5 w-3.5 text-emerald-600" />
                         )}
-                        <span>Chấp nhận</span>
                       </Button>
                     )}
 
@@ -188,7 +190,7 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
                       className="rounded-lg p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
                       title="Báo cáo bình luận vi phạm (FO-11)"
                     >
-                      <Flag className="h-3.5 w-3.5" />
+                      <IconFlag className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
@@ -231,12 +233,14 @@ export const PostCommentsSection: FC<PostCommentsSectionProps> = ({
             size="sm"
             onClick={handleAddComment}
             disabled={!newCommentText.trim() || isSubmitting}
-            className="h-8.5 w-8.5 shrink-0 rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover p-0"
+            title="Gửi bình luận"
+            aria-label="Gửi bình luận"
+            className="h-8.5 w-8.5 shrink-0 rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover p-0 inline-flex items-center justify-center"
           >
             {isSubmitting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Send className="h-3.5 w-3.5" />
+              <IconSend className="h-3.5 w-3.5" />
             )}
           </Button>
         </div>

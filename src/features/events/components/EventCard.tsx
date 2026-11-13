@@ -1,13 +1,13 @@
 import { useState, type FC } from 'react'
 import {
-  Calendar,
-  MapPin,
-  Users,
-  Check,
-  Star,
-  Loader2,
-  Share2,
-} from 'lucide-react'
+  IconCalendar,
+  IconMapPin,
+  IconUsers,
+  IconCheck,
+  IconStar,
+  IconLoader2,
+  IconShare,
+} from '@tabler/icons-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -81,7 +81,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-white/80">
-              <Calendar className="h-12 w-12 text-white/40" />
+              <IconCalendar className="h-12 w-12 text-white/40" />
             </div>
           )}
 
@@ -101,7 +101,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
               className="rounded-full bg-slate-900/60 p-2 text-white shadow-sm backdrop-blur-xs transition-colors hover:bg-slate-900/80"
               title="Sao chép liên kết sự kiện"
             >
-              <Share2 className="h-3.5 w-3.5" />
+              <IconShare className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -110,7 +110,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
         <div className="p-4.5 space-y-3">
           {/* Date & Time */}
           <div className="flex items-center gap-2 text-xs font-bold text-brand-primary">
-            <Calendar className="h-4 w-4 shrink-0" />
+            <IconCalendar className="h-4 w-4 shrink-0" />
             <span>
               {formattedDate} • {formattedTime}
             </span>
@@ -128,7 +128,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
 
           {/* Location */}
           <div className="flex items-center gap-2 text-xs text-slate-500">
-            <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
+            <IconMapPin className="h-4 w-4 shrink-0 text-slate-400" />
             <span className="line-clamp-1">{event.location}</span>
           </div>
 
@@ -138,7 +138,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
             onClick={() => setIsAttendeesModalOpen(true)}
             className="flex items-center gap-2 text-xs text-slate-600 hover:text-brand-secondary transition-colors"
           >
-            <Users className="h-4 w-4 text-slate-400" />
+            <IconUsers className="h-4 w-4 text-slate-400" />
             <span className="font-semibold text-slate-800">{goingCount} người sẽ tham gia</span>
             <span>•</span>
             <span className="text-slate-500">{interestedCount} quan tâm</span>
@@ -153,6 +153,8 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
                 variant={currentStatus === 'Going' ? 'default' : 'outline'}
                 onClick={() => handleRsvp('Going')}
                 disabled={isRsvping}
+                title={currentStatus === 'Going' ? 'Đã đăng ký tham gia (Bấm để hủy)' : 'Đăng ký tham gia sự kiện'}
+                aria-label={currentStatus === 'Going' ? 'Đã tham gia' : 'Tham gia'}
                 className={cn(
                   'h-8.5 flex-1 gap-1.5 text-xs font-bold rounded-xl transition-all',
                   currentStatus === 'Going'
@@ -161,11 +163,11 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
                 )}
               >
                 {isRsvping && currentStatus === 'Going' ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Check className="h-3.5 w-3.5" />
+                  <IconCheck className="h-3.5 w-3.5" />
                 )}
-                <span>{currentStatus === 'Going' ? 'Đã tham gia' : 'Sẽ tham gia'}</span>
+                <span>{currentStatus === 'Going' ? 'Đã RSVP' : 'Tham gia'}</span>
               </Button>
 
               {/* Interested Button */}
@@ -174,6 +176,8 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
                 variant={currentStatus === 'Interested' ? 'secondary' : 'outline'}
                 onClick={() => handleRsvp('Interested')}
                 disabled={isRsvping}
+                title={currentStatus === 'Interested' ? 'Đã quan tâm (Bấm để hủy)' : 'Quan tâm sự kiện'}
+                aria-label={currentStatus === 'Interested' ? 'Đã quan tâm' : 'Quan tâm'}
                 className={cn(
                   'h-8.5 flex-1 gap-1.5 text-xs font-bold rounded-xl transition-all',
                   currentStatus === 'Interested'
@@ -182,11 +186,11 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
                 )}
               >
                 {isRsvping && currentStatus === 'Interested' ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Star className={cn('h-3.5 w-3.5', currentStatus === 'Interested' && 'fill-current')} />
+                  <IconStar className={cn('h-3.5 w-3.5', currentStatus === 'Interested' && 'fill-current')} />
                 )}
-                <span>{currentStatus === 'Interested' ? 'Đã quan tâm' : 'Quan tâm'}</span>
+                <span>{currentStatus === 'Interested' ? 'Đã lưu' : 'Quan tâm'}</span>
               </Button>
             </div>
           </div>

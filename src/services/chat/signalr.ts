@@ -46,7 +46,7 @@ class ChatHubClient {
           return localStorage.getItem('access_token') || localStorage.getItem('accessToken') || ''
         },
       })
-      .withAutomaticReconnect()
+      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Warning)
       .build()
 

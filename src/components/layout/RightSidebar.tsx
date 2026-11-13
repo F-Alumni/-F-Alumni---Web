@@ -1,16 +1,16 @@
 import { useState, useEffect, type FC } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  TrendingUp,
-  Clock,
-  Sparkles,
-  CheckCircle2,
-  ChevronRight,
-  Loader2,
-  MessageCircle,
-  Calendar,
-  Check,
-} from 'lucide-react'
+  IconTrendingUp,
+  IconClock,
+  IconSparkles,
+  IconCircleCheck,
+  IconChevronRight,
+  IconLoader2,
+  IconMessageCircle,
+  IconCalendar,
+  IconCheck,
+} from '@tabler/icons-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -188,20 +188,22 @@ export const RightSidebar: FC = () => {
       <Card className="border-slate-200/90 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-bold text-slate-900">
-            <Sparkles className="h-4 w-4 text-brand-primary animate-pulse" />
+            <IconSparkles className="h-4 w-4 text-brand-primary animate-pulse" />
             <span>AI Mentor Gợi ý</span>
           </CardTitle>
           <Link
             to={ROUTES.APP.ALUMNI}
-            className="text-[11px] font-semibold text-brand-primary hover:underline"
+            title="Xem tất cả danh bạ mentor"
+            aria-label="Xem tất cả"
+            className="text-slate-400 hover:text-brand-primary p-1 rounded-full transition-colors"
           >
-            Tất cả
+            <IconChevronRight className="h-4 w-4" />
           </Link>
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
           {isLoadingMentors ? (
             <div className="flex h-24 items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-brand-primary" />
+              <IconLoader2 className="h-5 w-5 animate-spin text-brand-primary" />
               <span className="ml-2 text-xs text-slate-400">Đang gợi ý mentor...</span>
             </div>
           ) : mentors.length === 0 ? (
@@ -223,7 +225,7 @@ export const RightSidebar: FC = () => {
                       <span className="cursor-pointer truncate text-xs font-bold text-slate-900 hover:text-brand-primary">
                         {alum.name}
                       </span>
-                      {alum.isVerified && <CheckCircle2 className="h-3 w-3 shrink-0 text-brand-secondary" />}
+                      {alum.isVerified && <IconCircleCheck className="h-3 w-3 shrink-0 text-brand-secondary" />}
                     </div>
                     <p className="truncate text-[11px] text-slate-600">{alum.role}</p>
                     <p className="mt-0.5 text-[10px] text-slate-400">{alum.major}</p>
@@ -249,15 +251,14 @@ export const RightSidebar: FC = () => {
                   size="sm"
                   onClick={() => handleConnect(alum)}
                   disabled={connectingId === alum.id}
-                  className="h-7 shrink-0 rounded-full border-slate-200 px-2.5 text-[11px] font-semibold text-slate-700 hover:border-brand-primary/40 hover:text-brand-primary"
+                  title={`Kết nối trao đổi với ${alum.name}`}
+                  aria-label={`Kết nối với ${alum.name}`}
+                  className="h-8 w-8 shrink-0 rounded-full border-slate-200 p-0 text-slate-700 hover:border-brand-primary/40 hover:text-brand-primary inline-flex items-center justify-center"
                 >
                   {connectingId === alum.id ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <>
-                      <MessageCircle className="mr-1 h-3 w-3" />
-                      Kết nối
-                    </>
+                    <IconMessageCircle className="h-4 w-4" />
                   )}
                 </Button>
               </div>
@@ -269,7 +270,7 @@ export const RightSidebar: FC = () => {
             className="flex items-center justify-center gap-1 pt-2 text-xs font-semibold text-brand-primary hover:text-brand-primary-hover hover:underline"
           >
             <span>Khám phá danh bạ cựu sinh viên FPT</span>
-            <ChevronRight className="h-3.5 w-3.5" />
+            <IconChevronRight className="h-3.5 w-3.5" />
           </Link>
         </CardContent>
       </Card>
@@ -278,7 +279,7 @@ export const RightSidebar: FC = () => {
       <Card className="border-slate-200/90 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-bold text-slate-900">
-            <Calendar className="h-4 w-4 text-brand-primary" />
+            <IconCalendar className="h-4 w-4 text-brand-primary" />
             <span>Sự Kiện Sắp Tới</span>
           </CardTitle>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -288,7 +289,7 @@ export const RightSidebar: FC = () => {
         <CardContent className="space-y-3 pt-0">
           {isLoadingEvents ? (
             <div className="flex h-20 items-center justify-center">
-              <Loader2 className="h-4 w-4 animate-spin text-brand-primary" />
+              <IconLoader2 className="h-4 w-4 animate-spin text-brand-primary" />
               <span className="ml-2 text-xs text-slate-400">Đang tải sự kiện...</span>
             </div>
           ) : events.length > 0 ? (
@@ -310,7 +311,7 @@ export const RightSidebar: FC = () => {
                       {evt.campus || 'Toàn quốc'}
                     </Badge>
                     <span className="flex items-center gap-1 text-[10px] font-bold text-brand-primary">
-                      <Clock className="h-2.5 w-2.5" />
+                      <IconClock className="h-2.5 w-2.5" />
                       {dateStr}
                     </span>
                   </div>
@@ -332,18 +333,21 @@ export const RightSidebar: FC = () => {
                       variant={isGoing ? 'default' : 'outline'}
                       onClick={() => handleRsvpInSidebar(evt.id, 'Going')}
                       disabled={rsvpingEventId === evt.id}
-                      className={`h-6 rounded-lg px-2 text-[10px] font-bold gap-1 ${
+                      title={isGoing ? 'Đã RSVP (Bấm để hủy)' : 'Đăng ký tham gia sự kiện'}
+                      aria-label={isGoing ? 'Đã RSVP' : 'Tham gia'}
+                      className={`h-7 w-7 rounded-full p-0 inline-flex items-center justify-center ${
                         isGoing
                           ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                           : 'border-slate-200 text-slate-700 hover:text-brand-primary'
                       }`}
                     >
                       {rsvpingEventId === evt.id ? (
-                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                        <IconLoader2 className="h-3 w-3 animate-spin" />
                       ) : isGoing ? (
-                        <Check className="h-2.5 w-2.5" />
-                      ) : null}
-                      <span>{isGoing ? 'Đã RSVP' : 'Tham gia'}</span>
+                        <IconCheck className="h-3.5 w-3.5" />
+                      ) : (
+                        <IconCalendar className="h-3.5 w-3.5" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -361,7 +365,7 @@ export const RightSidebar: FC = () => {
       <Card className="border-slate-200/90 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-bold text-slate-900">
-            <TrendingUp className="h-4 w-4 text-brand-secondary" />
+            <IconTrendingUp className="h-4 w-4 text-brand-secondary" />
             <span>Chuyên mục thảo luận</span>
           </CardTitle>
         </CardHeader>
@@ -383,22 +387,9 @@ export const RightSidebar: FC = () => {
         </CardContent>
       </Card>
 
-      {/* 4. Footer Mini Links */}
-      <div className="space-y-2 px-2 text-[11px] leading-relaxed text-slate-400">
-        <div className="flex flex-wrap gap-x-2 gap-y-1">
-          <Link to="/about" className="hover:underline">
-            About
-          </Link>
-          <span>•</span>
-          <Link to="/privacy" className="hover:underline">
-            Privacy
-          </Link>
-          <span>•</span>
-          <Link to="/guidelines" className="hover:underline">
-            Community Guidelines
-          </Link>
-        </div>
-        <p className="text-[10px]">© 2026 FPT University • Alumni & Student Network</p>
+      {/* 4. Footer Brand Info */}
+      <div className="px-2 text-[11px] leading-relaxed text-slate-400">
+        <p className="text-[10px]">© 2026 Đại học FPT • Mạng lưới Cựu sinh viên & Sinh viên</p>
       </div>
     </aside>
   )

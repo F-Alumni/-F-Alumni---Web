@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback, type FC } from 'react'
 import { PostCard, type PostItem } from './PostCard'
 import type { PostCategoryFilter, PostSortOption, QuestionStatusFilter } from './PostFeedFilters'
 import { postsService, type ForumPostItem } from '@/services/posts'
-import { Loader2 } from 'lucide-react'
+import { IconLoader2 } from '@tabler/icons-react'
 
 interface PostFeedProps {
+  targetPostId?: string
   category: PostCategoryFilter
   community: string
   campus?: string
@@ -66,6 +67,7 @@ function mapBackendPostToPostItem(p: ForumPostItem): PostItem {
 }
 
 export const PostFeed: FC<PostFeedProps> = ({
+  targetPostId,
   category,
   community,
   campus = 'ALL',
@@ -82,18 +84,26 @@ export const PostFeed: FC<PostFeedProps> = ({
     try {
       let postType: string | undefined
       if (category === 'QUESTIONS' || questionStatus !== 'ALL') postType = 'Question'
-      else if (category === 'JOBS' || category === 'INTERNSHIPS') postType = 'Recruitment'
+      else if (category === 'JOBS') postType = 'Recruitment'
       else if (category === 'EXPERIENCES') postType = 'Sharing'
 
       let major: string | undefined
-      if (community && community !== 'All Communities' && community !== 'Tất cả cộng đồng') {
+      if (
+        community &&
+        community !== 'ALL' &&
+        community !== 'All' &&
+        community !== 'All Communities' &&
+        community !== 'Tất cả cộng đồng' &&
+        community !== 'Tất cả chuyên ngành'
+      ) {
         const commLower = community.toLowerCase()
-        if (commLower.includes('software') || commLower.includes('(se)')) major = 'SE'
-        else if (commLower.includes('ai') || commLower.includes('intelligence')) major = 'AI'
-        else if (commLower.includes('assurance') || commLower.includes('(ia)')) major = 'IA'
-        else if (commLower.includes('design') || commLower.includes('(gd)')) major = 'GD'
-        else if (commLower.includes('international') || commLower.includes('(ib)')) major = 'IB'
-        else if (commLower.includes('business') || commLower.includes('(ba)')) major = 'BA'
+        if (community === 'SE' || commLower.includes('software') || commLower.includes('(se)')) major = 'SE'
+        else if (community === 'AI' || commLower.includes('ai') || commLower.includes('intelligence')) major = 'AI'
+        else if (community === 'IA' || commLower.includes('assurance') || commLower.includes('(ia)')) major = 'IA'
+        else if (community === 'GD' || commLower.includes('design') || commLower.includes('(gd)')) major = 'GD'
+        else if (community === 'IB' || commLower.includes('international') || commLower.includes('(ib)')) major = 'IB'
+        else if (community === 'BA' || commLower.includes('business') || commLower.includes('(ba)')) major = 'BA'
+        else major = community
       }
 
       const isAnsweredParam =
@@ -103,10 +113,20 @@ export const PostFeed: FC<PostFeedProps> = ({
           ? false
           : undefined
 
+      let campusParam: string | undefined
+      if (campus && campus !== 'ALL' && campus !== 'All' && campus !== 'Tất cả cơ sở') {
+        if (campus === 'Hòa Lạc' || campus === 'FU-HL') campusParam = 'FU-HL'
+        else if (campus === 'Hồ Chí Minh' || campus === 'TP. HCM' || campus === 'FU-HCM') campusParam = 'FU-HCM'
+        else if (campus === 'Đà Nẵng' || campus === 'FU-DN') campusParam = 'FU-DN'
+        else if (campus === 'Cần Thơ' || campus === 'FU-CT') campusParam = 'FU-CT'
+        else if (campus === 'Quy Nhơn' || campus === 'FU-QN') campusParam = 'FU-QN'
+        else campusParam = campus
+      }
+
       const res = await postsService.getPosts({
         postType,
         major,
-        campus: campus && campus !== 'ALL' ? campus : undefined,
+        campus: campusParam,
         search: searchKeyword.trim() || undefined,
         isAnswered: isAnsweredParam,
         sort: sortBy,
@@ -115,6 +135,26 @@ export const PostFeed: FC<PostFeedProps> = ({
       })
 
       let rawItems = res?.items || []
+
+      // If deep linking to a specific post ID, ensure it is fetched and placed first
+      if (targetPostId) {
+        const foundIndex = rawItems.findIndex((p) => p.id === targetPostId)
+        if (foundIndex > 0) {
+          const removed = rawItems.splice(foundIndex, 1)
+          if (removed[0]) {
+            rawItems.unshift(removed[0])
+          }
+        } else if (foundIndex === -1) {
+          try {
+            const singlePost = await postsService.getPostById(targetPostId)
+            if (singlePost) {
+              rawItems.unshift(singlePost)
+            }
+          } catch (fetchErr) {
+            console.warn(`Could not fetch target post ${targetPostId}:`, fetchErr)
+          }
+        }
+      }
 
       // Client-side filter/sort reinforcement so UI filters always respond accurately
       if (campus && campus !== 'ALL') {
@@ -149,7 +189,7 @@ export const PostFeed: FC<PostFeedProps> = ({
     } finally {
       setIsLoading(false)
     }
-  }, [category, community, campus, searchKeyword, sortBy, questionStatus])
+  }, [category, community, campus, searchKeyword, sortBy, questionStatus, targetPostId])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -161,7 +201,7 @@ export const PostFeed: FC<PostFeedProps> = ({
   if (isLoading) {
     return (
       <div className="flex h-40 items-center justify-center rounded-xl border border-slate-200 bg-white">
-        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
+        <IconLoader2 className="h-6 w-6 animate-spin text-brand-primary" />
         <span className="ml-2 text-xs font-semibold text-slate-500">Đang tải bảng tin diễn đàn...</span>
       </div>
     )
@@ -174,6 +214,8 @@ export const PostFeed: FC<PostFeedProps> = ({
           <PostCard
             key={post.id}
             post={post}
+            isTargetPost={post.id === targetPostId}
+            initialOpenComments={post.id === targetPostId}
             onPostDeleted={(deletedId) => setPosts((prev) => prev.filter((p) => p.id !== deletedId))}
             onPostUpdated={(updatedPost) =>
               setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)))

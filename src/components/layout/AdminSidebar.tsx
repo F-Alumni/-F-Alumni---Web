@@ -7,6 +7,9 @@ import {
   IconChartBar,
   IconSettings,
   IconArticle,
+  IconUserCheck,
+  IconBuildingCommunity,
+  IconBriefcase,
   IconX,
   type Icon as TablerIcon,
 } from '@tabler/icons-react'
@@ -77,17 +80,35 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({ isOpen = false, onClose })
           icon: IconUsers,
           allowedRoles: [ROLES.ADMIN, 'FACULTY'],
         },
+        {
+          label: 'Alumni Verification',
+          to: ROUTES.ADMIN.ALUMNI_VERIFICATION,
+          icon: IconUserCheck,
+          allowedRoles: [ROLES.ADMIN],
+        },
       ],
     },
     {
-      title: 'COMMUNITY FORUM',
-      allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR],
+      title: 'CONTENT & COMMUNITIES',
+      allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR, 'FACULTY'],
       items: [
+        {
+          label: 'Communities',
+          to: ROUTES.ADMIN.COMMUNITIES,
+          icon: IconBuildingCommunity,
+          allowedRoles: [ROLES.ADMIN, 'FACULTY'],
+        },
         {
           label: 'Forum Posts',
           to: ROUTES.ADMIN.POSTS,
           icon: IconArticle,
           allowedRoles: [ROLES.ADMIN, ROLES.MODERATOR],
+        },
+        {
+          label: 'Opportunities',
+          to: ROUTES.ADMIN.OPPORTUNITIES,
+          icon: IconBriefcase,
+          allowedRoles: [ROLES.ADMIN, 'FACULTY'],
         },
       ],
     },

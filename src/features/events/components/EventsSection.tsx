@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, type FC } from 'react'
-import { Calendar, Loader2, RefreshCw } from 'lucide-react'
+import { IconCalendar, IconLoader2, IconRefresh } from '@tabler/icons-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { opportunitiesService, type CommunityEventItem } from '@/services/opportunities'
@@ -45,7 +45,7 @@ export const EventsSection: FC = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
-              <Calendar className="h-5 w-5" />
+              <IconCalendar className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">Sự Kiện & Workshop Cộng Đồng</h2>
@@ -60,7 +60,7 @@ export const EventsSection: FC = () => {
             disabled={isLoading}
             className="h-8 gap-1.5 text-xs text-slate-600 hover:text-brand-primary"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <IconRefresh className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             <span>Làm mới</span>
           </Button>
         </div>
@@ -87,12 +87,12 @@ export const EventsSection: FC = () => {
       {/* Events Stream */}
       {isLoading ? (
         <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+          <IconLoader2 className="h-8 w-8 animate-spin text-brand-primary" />
           <p className="mt-2 text-xs text-slate-500">Đang tải danh sách sự kiện...</p>
         </div>
       ) : events.length === 0 ? (
         <Card className="border-dashed border-slate-200 bg-white/70 p-8 text-center shadow-xs">
-          <Calendar className="mx-auto h-10 w-10 text-slate-300" />
+          <IconCalendar className="mx-auto h-10 w-10 text-slate-300" />
           <h3 className="mt-2 text-sm font-bold text-slate-700">Chưa có sự kiện nào sắp tới</h3>
           <p className="mt-1 text-xs text-slate-500">
             Các buổi Workshop và Alumni Meetup mới nhất sẽ được thông báo tại đây.

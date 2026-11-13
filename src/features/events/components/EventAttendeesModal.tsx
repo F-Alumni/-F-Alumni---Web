@@ -1,5 +1,5 @@
 import { useState, useEffect, type FC } from 'react'
-import { X, Users, Loader2, Check, Star } from 'lucide-react'
+import { IconX, IconUsers, IconLoader2, IconCheck, IconStar } from '@tabler/icons-react'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -56,7 +56,7 @@ export const EventAttendeesModal: FC<EventAttendeesModalProps> = ({
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5 bg-slate-50">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
-              <Users className="h-4 w-4" />
+              <IconUsers className="h-4 w-4" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">Danh sách người tham dự</h3>
@@ -67,7 +67,7 @@ export const EventAttendeesModal: FC<EventAttendeesModalProps> = ({
             onClick={onClose}
             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
           >
-            <X className="h-4 w-4" />
+            <IconX className="h-4 w-4" />
           </button>
         </div>
 
@@ -75,7 +75,7 @@ export const EventAttendeesModal: FC<EventAttendeesModalProps> = ({
         <div className="max-h-96 overflow-y-auto p-4 space-y-4">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-              <Loader2 className="h-6 w-6 animate-spin text-brand-primary mb-2" />
+              <IconLoader2 className="h-6 w-6 animate-spin text-brand-primary mb-2" />
               <p className="text-xs">Đang tải danh sách...</p>
             </div>
           ) : attendees.length === 0 ? (
@@ -88,7 +88,7 @@ export const EventAttendeesModal: FC<EventAttendeesModalProps> = ({
               {goingAttendees.length > 0 && (
                 <div>
                   <h4 className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 mb-2">
-                    <Check className="h-3.5 w-3.5" />
+                    <IconCheck className="h-3.5 w-3.5" />
                     Sẽ tham gia ({goingAttendees.length})
                   </h4>
                   <div className="space-y-2">
@@ -123,7 +123,7 @@ export const EventAttendeesModal: FC<EventAttendeesModalProps> = ({
               {interestedAttendees.length > 0 && (
                 <div>
                   <h4 className="flex items-center gap-1.5 text-xs font-bold text-blue-700 mb-2">
-                    <Star className="h-3.5 w-3.5" />
+                    <IconStar className="h-3.5 w-3.5" />
                     Quan tâm ({interestedAttendees.length})
                   </h4>
                   <div className="space-y-2">

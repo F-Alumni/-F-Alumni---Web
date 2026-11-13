@@ -1,17 +1,19 @@
 import { useState, useMemo, type FC } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   IconCheck,
   IconX,
-  IconFileCheck,
   IconEye,
-  IconDownload,
   IconRefresh,
   IconAlertTriangle,
+  IconMailCheck,
+  IconMailX,
+  IconLoader2,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge, DataTable, type Column } from '@/components/admin'
 import { ROUTES } from '@/constants/routes'
-import { useAdminUsers } from '@/features/admin'
+import { useAdminUsers, useSuspendUserMutation, useUnsuspendUserMutation } from '@/features/admin'
 import type { AdminUserSummary } from '@/types/admin.types'
 
 interface VerificationRequest {
@@ -21,14 +23,14 @@ interface VerificationRequest {
   studentId: string
   major: string
   cohort: string
-  gradYear: string
-  documentName: string
+  emailVerified: boolean
   submissionDate: string
   status: 'pending' | 'approved' | 'rejected'
 }
 
 function adaptAdminUserToVerification(u: AdminUserSummary): VerificationRequest {
   const isPending = !u.emailVerified || u.status === 'PendingVerification'
+  const isSuspended = u.status === 'Suspended'
   return {
     id: u.id,
     fullName: u.fullName,
@@ -36,15 +38,15 @@ function adaptAdminUserToVerification(u: AdminUserSummary): VerificationRequest 
     studentId: u.studentCode || u.studentId || u.id.slice(0, 8).toUpperCase(),
     major: u.major || 'Software Engineering',
     cohort: u.batch || 'K15',
-    gradYear: '2023',
-    documentName: `Diploma_${u.studentCode || 'FPT'}.pdf`,
+    emailVerified: Boolean(u.emailVerified),
     submissionDate: u.createdAtUtc ? u.createdAtUtc.slice(0, 10) : '2026-10-10',
-    status: isPending ? 'pending' : 'approved',
+    status: isSuspended ? 'rejected' : isPending ? 'pending' : 'approved',
   }
 }
 
 export const AlumniVerificationPage: FC = () => {
-  const [statusOverrides, setStatusOverrides] = useState<Record<string, 'approved' | 'rejected'>>({})
+  const navigate = useNavigate()
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
 
   // Fetch alumni user records from Admin Service
   const { data: alumniData, isLoading, isError, refetch } = useAdminUsers({
@@ -52,22 +54,44 @@ export const AlumniVerificationPage: FC = () => {
     pageSize: 50,
   })
 
+  const suspendMutation = useSuspendUserMutation()
+  const unsuspendMutation = useUnsuspendUserMutation()
+
   const requests = useMemo(() => {
     if (alumniData && alumniData.items && alumniData.items.length > 0) {
-      return alumniData.items.map(adaptAdminUserToVerification).map((r) => {
-        const override = statusOverrides[r.id]
-        return override ? { ...r, status: override } : r
-      })
+      return alumniData.items.map(adaptAdminUserToVerification)
     }
     return []
-  }, [alumniData, statusOverrides])
+  }, [alumniData])
 
-  const handleApprove = (id: string) => {
-    setStatusOverrides((prev) => ({ ...prev, [id]: 'approved' }))
+  const handleApprove = async (id: string) => {
+    setActionLoadingId(id)
+    try {
+      await unsuspendMutation.mutateAsync({
+        id,
+        payload: { reason: 'Admin verified alumni academic status' },
+      })
+      await refetch()
+    } catch (err) {
+      console.warn('Failed to verify alumni:', err)
+    } finally {
+      setActionLoadingId(null)
+    }
   }
 
-  const handleReject = (id: string) => {
-    setStatusOverrides((prev) => ({ ...prev, [id]: 'rejected' }))
+  const handleReject = async (id: string) => {
+    setActionLoadingId(id)
+    try {
+      await suspendMutation.mutateAsync({
+        id,
+        payload: { reason: 'Admin rejected verification credentials' },
+      })
+      await refetch()
+    } catch (err) {
+      console.warn('Failed to reject verification:', err)
+    } finally {
+      setActionLoadingId(null)
+    }
   }
 
   const columns: Column<VerificationRequest>[] = [
@@ -87,7 +111,7 @@ export const AlumniVerificationPage: FC = () => {
       render: (r) => (
         <div className="flex flex-col">
           <span className="font-mono font-bold text-slate-800">{r.studentId}</span>
-          <span className="text-[11px] text-slate-500">{r.cohort} • Graduated {r.gradYear}</span>
+          <span className="text-[11px] text-slate-500">{r.cohort}</span>
         </div>
       ),
     },
@@ -97,13 +121,19 @@ export const AlumniVerificationPage: FC = () => {
       render: (r) => <span className="font-medium text-slate-700">{r.major}</span>,
     },
     {
-      key: 'documentName',
-      header: 'Verification Document',
+      key: 'emailVerified',
+      header: 'Account Verification',
       render: (r) => (
-        <div className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1 text-xs text-slate-700 hover:border-brand-primary">
-          <IconFileCheck size={15} stroke={1.8} className="text-brand-secondary shrink-0" />
-          <span className="max-w-[140px] truncate font-medium text-[11px]">{r.documentName}</span>
-          <IconDownload size={14} stroke={1.8} className="text-slate-400 hover:text-slate-600 cursor-pointer" />
+        <div className="flex items-center gap-1.5 text-xs">
+          {r.emailVerified ? (
+            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+              <IconMailCheck size={14} className="shrink-0" /> Email Verified
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+              <IconMailX size={14} className="shrink-0" /> Unverified Email
+            </span>
+          )}
         </div>
       ),
     },
@@ -121,42 +151,54 @@ export const AlumniVerificationPage: FC = () => {
       key: 'actions',
       header: 'Decision',
       className: 'text-right w-64',
-      render: (r) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 w-[68px] text-xs border-slate-200 hover:text-brand-primary justify-center shrink-0"
-            title="Preview credentials"
-          >
-            <IconEye size={14} stroke={1.8} className="mr-1" />
-            View
-          </Button>
-          {r.status === 'pending' && (
-            <>
-              <Button
-                size="sm"
-                onClick={() => handleApprove(r.id)}
-                className="h-7 w-[84px] rounded-md bg-brand-accent px-2 text-xs font-semibold text-white hover:bg-emerald-600 shadow-xs justify-center shrink-0"
-                title="Verify and grant Alumni badge"
-              >
-                <IconCheck size={14} stroke={1.8} className="mr-1" />
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleReject(r.id)}
-                className="h-7 w-[76px] rounded-md border-rose-200 px-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 justify-center shrink-0"
-                title="Reject verification request"
-              >
-                <IconX size={14} stroke={1.8} className="mr-1" />
-                Reject
-              </Button>
-            </>
-          )}
-        </div>
-      ),
+      render: (r) => {
+        const isActionLoading = actionLoadingId === r.id
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(ROUTES.ADMIN.USERS)}
+              className="h-7 w-[68px] text-xs border-slate-200 hover:text-brand-primary justify-center shrink-0"
+              title="View user details in User Management"
+            >
+              <IconEye size={14} stroke={1.8} className="mr-1" />
+              View
+            </Button>
+            {r.status === 'pending' && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => handleApprove(r.id)}
+                  disabled={isActionLoading}
+                  className="h-7 w-[84px] rounded-md bg-brand-accent px-2 text-xs font-semibold text-white hover:bg-emerald-600 shadow-xs justify-center shrink-0"
+                  title="Verify and grant Alumni status"
+                >
+                  {isActionLoading ? (
+                    <IconLoader2 size={14} className="animate-spin" />
+                  ) : (
+                    <>
+                      <IconCheck size={14} stroke={1.8} className="mr-1" />
+                      Approve
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleReject(r.id)}
+                  disabled={isActionLoading}
+                  className="h-7 w-[76px] rounded-md border-rose-200 px-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 justify-center shrink-0"
+                  title="Reject verification request"
+                >
+                  <IconX size={14} stroke={1.8} className="mr-1" />
+                  Reject
+                </Button>
+              </>
+            )}
+          </div>
+        )
+      },
     },
   ]
 

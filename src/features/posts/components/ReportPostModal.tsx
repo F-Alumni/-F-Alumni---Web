@@ -1,5 +1,11 @@
 import { useState, type FC } from 'react'
-import { AlertTriangle, X, ShieldAlert, Loader2, Check } from 'lucide-react'
+import {
+  IconAlertTriangle,
+  IconX,
+  IconShieldExclamation,
+  IconLoader2,
+  IconCheck,
+} from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { postsService } from '@/services/posts'
 
@@ -60,7 +66,7 @@ export const ReportPostModal: FC<ReportPostModalProps> = ({
         <div className="flex items-center justify-between border-b border-rose-100 bg-rose-50 px-5 py-3.5">
           <div className="flex items-center gap-2 text-rose-800">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white">
-              <ShieldAlert className="h-4 w-4" />
+              <IconShieldExclamation className="h-4 w-4" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">Báo cáo bài viết vi phạm</h3>
@@ -71,7 +77,7 @@ export const ReportPostModal: FC<ReportPostModalProps> = ({
             onClick={onClose}
             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
           >
-            <X className="h-4 w-4" />
+            <IconX className="h-4 w-4" />
           </button>
         </div>
 
@@ -80,7 +86,7 @@ export const ReportPostModal: FC<ReportPostModalProps> = ({
           {isSuccess ? (
             <div className="flex flex-col items-center justify-center py-6 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-3">
-                <Check className="h-6 w-6 stroke-[2.5]" />
+                <IconCheck className="h-6 w-6 stroke-[2.5]" />
               </div>
               <h4 className="text-sm font-bold text-slate-900">Báo cáo đã được ghi nhận</h4>
               <p className="mt-1 text-xs text-slate-500 max-w-xs">
@@ -151,9 +157,9 @@ export const ReportPostModal: FC<ReportPostModalProps> = ({
                   className="h-8 text-xs bg-rose-600 text-white hover:bg-rose-700 gap-1.5"
                 >
                   {isSubmitting ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <IconAlertTriangle className="h-3.5 w-3.5" />
                   )}
                   <span>Gửi báo cáo</span>
                 </Button>

@@ -87,4 +87,15 @@ export const aiService = {
     const res = await aiApiClient.post<RagIngestResult>('/ai/rag/ingest', payload || {})
     return res.data
   },
+
+  /**
+   * Diagnostic RAG intent boost & retrieval inspection.
+   * GET /api/v1/ai/boost?q=...&major=...&campus=...
+   */
+  async testBoost(query: string, major?: string, campus = 'All', topK = 5): Promise<any> {
+    const res = await aiApiClient.get<any>('/ai/boost', {
+      params: { q: query, major, campus, topK },
+    })
+    return res.data
+  },
 }

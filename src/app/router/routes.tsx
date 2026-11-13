@@ -1,9 +1,9 @@
 import type { RouteObject } from 'react-router-dom'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { ROLES } from '@/constants/roles'
 import { AdminLayout, AuthLayout, UserLayout } from '@/layouts'
-import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
+import { LoginPage, RegisterPage, ForgotPasswordPage, VerifyEmailPage } from '@/pages/auth'
 import {
   DashboardPage,
   UsersManagementPage,
@@ -11,6 +11,9 @@ import {
   ReportsManagementPage,
   AnalyticsPage,
   SettingsPage,
+  CommunitiesManagementPage,
+  OpportunitiesManagementPage,
+  AlumniVerificationPage,
 } from '@/pages/admin'
 import {
   HomePage,
@@ -22,6 +25,7 @@ import {
   NotificationsPage,
 } from '@/pages/user'
 import { LandingPage } from '@/pages/LandingPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
 import { ProtectedRoute, PublicRoute, RoleGuard, RootRedirect } from './guards'
 
 /**
@@ -63,7 +67,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'verify-email',
-            element: <Outlet />,
+            element: <VerifyEmailPage />,
           },
           {
             path: 'forgot-password',
@@ -148,15 +152,27 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'communities',
-            element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, 'FACULTY']}>
+                <CommunitiesManagementPage />
+              </RoleGuard>
+            ),
           },
           {
             path: 'opportunities',
-            element: <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN, 'FACULTY']}>
+                <OpportunitiesManagementPage />
+              </RoleGuard>
+            ),
           },
           {
             path: 'alumni-verification',
-            element: <Navigate to={ROUTES.ADMIN.USERS} replace />,
+            element: (
+              <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+                <AlumniVerificationPage />
+              </RoleGuard>
+            ),
           },
         ],
       },
@@ -177,6 +193,14 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'home',
+            element: <HomePage />,
+          },
+          {
+            path: 'posts/:id',
+            element: <HomePage />,
+          },
+          {
+            path: 'posts/:postId',
             element: <HomePage />,
           },
           {
@@ -232,9 +256,9 @@ export const routes: RouteObject[] = [
     ],
   },
 
-  // 5. Fallback Wildcard Route
+  // 5. Fallback Wildcard Route (Web 404 Not Found)
   {
     path: '*',
-    element: <RootRedirect />,
+    element: <NotFoundPage />,
   },
 ]

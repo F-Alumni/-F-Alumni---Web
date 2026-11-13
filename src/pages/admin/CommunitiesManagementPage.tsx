@@ -17,6 +17,7 @@ import { ROUTES } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { USER_TYPES } from '@/constants/userTypes'
 import { communitiesService, type ForumCategoryItem } from '@/services/communities'
+import { useCreateAnnouncementMutation } from '@/features/admin'
 
 export interface CommunityRecord {
   id: string
@@ -58,6 +59,8 @@ function adaptForumCategory(cat: ForumCategoryItem): CommunityRecord {
 export const CommunitiesManagementPage: FC = () => {
   const { role, userType, currentUser } = useAuthStore()
   const isFaculty = role !== 'ADMIN' && role !== 'MODERATOR' && userType === USER_TYPES.FACULTY
+
+  const createAnnouncementMutation = useCreateAnnouncementMutation()
 
   // Pin Announcement Modal State
   const [pinTargetCommunity, setPinTargetCommunity] = useState<CommunityRecord | null>(null)
@@ -111,17 +114,32 @@ export const CommunitiesManagementPage: FC = () => {
     }
   }
 
-  const handleSavePinAnnouncement = (e: FormEvent) => {
+  const handleSavePinAnnouncement = async (e: FormEvent) => {
     e.preventDefault()
     if (!pinTargetCommunity) return
+
+    const trimmedTitle = announcementTitle.trim()
+    const trimmedBody = announcementBody.trim()
+
+    try {
+      await createAnnouncementMutation.mutateAsync({
+        title: trimmedTitle,
+        content: trimmedBody || `${trimmedTitle} - Thông báo khoa gửi đến cộng đồng ${pinTargetCommunity.name}`,
+        type: 'CommunityNotice',
+        priority: 'Normal',
+        isPublished: true,
+      })
+    } catch (err) {
+      console.warn('Failed to publish announcement to backend:', err)
+    }
 
     setLocalOverrides((prev) => ({
       ...prev,
       [pinTargetCommunity.id]: {
         ...(prev[pinTargetCommunity.id] || {}),
         pinnedAnnouncement: {
-          title: announcementTitle.trim(),
-          body: announcementBody.trim(),
+          title: trimmedTitle,
+          body: trimmedBody,
           pinnedBy: currentUser?.name || 'Faculty Coordinator',
           duration: pinDuration,
           expiresAt: '2026-12-31',

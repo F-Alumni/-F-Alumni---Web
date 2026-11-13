@@ -304,13 +304,27 @@ export const authService = {
   },
 
   /**
-   * US-03: Verify email address with 6-digit OTP code and receive session JWT token.
+   * US-03: Verify email address with 6-digit OTP code or direct token and receive session JWT token.
    * Matches BE contract: POST /api/v1/auth/verify-email -> AuthTokenResponse
    */
-  async verifyEmail(email: string, otpCode: string): Promise<AuthResponse> {
+  async verifyEmail(
+    emailOrPayload: string | { email: string; token?: string; otpCode?: string },
+    otpCodeOrToken?: string
+  ): Promise<AuthResponse> {
+    let email = ''
+    let code = ''
+
+    if (typeof emailOrPayload === 'string') {
+      email = emailOrPayload.trim().toLowerCase()
+      code = (otpCodeOrToken || '').trim()
+    } else {
+      email = (emailOrPayload.email || '').trim().toLowerCase()
+      code = (emailOrPayload.otpCode || emailOrPayload.token || '').trim()
+    }
+
     const res = await userApiClient.post('/auth/verify-email', {
-      email: email.trim().toLowerCase(),
-      otpCode: otpCode.trim(),
+      email,
+      otpCode: code,
     })
 
     const beData = res.data?.data || res.data

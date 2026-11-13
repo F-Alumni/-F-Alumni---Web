@@ -1,6 +1,6 @@
 import { useState, useEffect, type FC } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { MessageSquare, Calendar } from 'lucide-react'
+import { useSearchParams, useParams } from 'react-router-dom'
+import { IconMessageDots, IconCalendar } from '@tabler/icons-react'
 import {
   PostComposer,
   PostFeedFilters,
@@ -19,9 +19,12 @@ export type HomeTab = 'FEED' | 'EVENTS'
  */
 export const HomePage: FC = () => {
   const [searchParams] = useSearchParams()
+  const { id, postId } = useParams<{ id?: string; postId?: string }>()
+  const targetPostId = id || postId
+
   const [activeTab, setActiveTab] = useState<HomeTab>('FEED')
   const [activeCategory, setActiveCategory] = useState<PostCategoryFilter>('ALL')
-  const [selectedCommunity, setSelectedCommunity] = useState<string>('Tất cả cộng đồng')
+  const [selectedCommunity, setSelectedCommunity] = useState<string>('ALL')
   const [selectedCampus, setSelectedCampus] = useState<string>('ALL')
   const [searchKeyword, setSearchKeyword] = useState<string>(searchParams.get('q') || '')
   const [sortBy, setSortBy] = useState<PostSortOption>('latest')
@@ -29,6 +32,9 @@ export const HomePage: FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
+    if (targetPostId) {
+      setActiveTab('FEED')
+    }
     const qParam = searchParams.get('q')
     if (qParam !== null) {
       setSearchKeyword(qParam)
@@ -45,7 +51,7 @@ export const HomePage: FC = () => {
         }
       }, 150)
     }
-  }, [searchParams])
+  }, [searchParams, targetPostId])
 
   const handlePostCreated = () => {
     setRefreshTrigger((prev) => prev + 1)
@@ -58,36 +64,37 @@ export const HomePage: FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('FEED')}
+          title="Bảng tin & Thảo luận cộng đồng"
+          aria-label="Bảng tin & Thảo luận"
           className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all ${
             activeTab === 'FEED'
               ? 'bg-gradient-to-r from-brand-primary to-[#ff782e] text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}
         >
-          <MessageSquare className="h-4 w-4" />
-          <span>Bảng tin & Thảo luận</span>
+          <IconMessageDots className="h-4 w-4" />
+          <span>Bảng tin</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('EVENTS')}
+          title="Sự kiện & Workshop (RSVP)"
+          aria-label="Sự kiện & Workshop"
           className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all ${
             activeTab === 'EVENTS'
               ? 'bg-gradient-to-r from-brand-secondary to-[#004e8a] text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}
         >
-          <Calendar className="h-4 w-4" />
-          <span>Sự kiện & Workshop (RSVP)</span>
+          <IconCalendar className="h-4 w-4" />
+          <span>Sự kiện</span>
         </button>
       </div>
 
       {activeTab === 'FEED' ? (
         <>
-          {/* 2. "What's on your mind?" Post Composer */}
-          <PostComposer onPostCreated={handlePostCreated} />
-
-          {/* 3. Category, Community, Campus, Search, Sort & Question Status Filter Bar */}
+          {/* 1. Category, Community, Campus, Search, Sort & Question Status Filter Bar */}
           <PostFeedFilters
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
@@ -103,8 +110,12 @@ export const HomePage: FC = () => {
             onQuestionStatusChange={setQuestionStatus}
           />
 
-          {/* 4. Community Feed Stream */}
+          {/* 2. "What's on your mind?" Post Composer */}
+          <PostComposer onPostCreated={handlePostCreated} />
+
+          {/* 3. Community Feed Stream */}
           <PostFeed
+            targetPostId={targetPostId}
             category={activeCategory}
             community={selectedCommunity}
             campus={selectedCampus}

@@ -1,18 +1,18 @@
 import { useState, useEffect, useRef, type FC } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  Sparkles,
-  HelpCircle,
-  Briefcase,
-  Award,
-  Send,
-  Loader2,
-  AlertCircle,
-  ImagePlus,
-  X,
-  GraduationCap,
-  Building2,
-} from 'lucide-react'
+  IconSparkles,
+  IconHelpCircle,
+  IconBriefcase,
+  IconAward,
+  IconSend,
+  IconLoader2,
+  IconAlertCircle,
+  IconPhotoPlus,
+  IconX,
+  IconSchool,
+  IconBuilding,
+} from '@tabler/icons-react'
 import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -125,10 +125,10 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
   }
 
   const postTypes = [
-    { id: 'EXPERIENCE', label: 'Chia sẻ kinh nghiệm', icon: Sparkles, color: 'text-amber-500' },
-    { id: 'QUESTION', label: 'Hỏi đáp Q&A', icon: HelpCircle, color: 'text-brand-secondary' },
-    { id: 'JOB', label: 'Việc làm & OJT', icon: Briefcase, color: 'text-brand-accent' },
-    { id: 'SCHOLARSHIP', label: 'Học bổng', icon: Award, color: 'text-brand-primary' },
+    { id: 'EXPERIENCE', label: 'Chia sẻ kinh nghiệm', icon: IconSparkles, color: 'text-amber-500' },
+    { id: 'QUESTION', label: 'Hỏi đáp Q&A', icon: IconHelpCircle, color: 'text-brand-secondary' },
+    { id: 'JOB', label: 'Việc làm & OJT', icon: IconBriefcase, color: 'text-brand-accent' },
+    { id: 'SCHOLARSHIP', label: 'Học bổng', icon: IconAward, color: 'text-brand-primary' },
   ]
 
   return (
@@ -136,7 +136,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
       <div className="p-4">
         {errorMessage && (
           <div className="mb-3 flex items-center gap-2 rounded-lg bg-rose-50 p-2.5 text-xs text-rose-700 border border-rose-200">
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+            <IconAlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -165,7 +165,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
                 {/* FO-02: Target Major & Campus Audience Selectors */}
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700">
-                    <GraduationCap className="h-3.5 w-3.5 text-brand-primary shrink-0" />
+                    <IconSchool className="h-3.5 w-3.5 text-brand-primary shrink-0" />
                     <span className="font-semibold text-slate-500">Chuyên ngành:</span>
                     <select
                       value={targetMajor}
@@ -183,7 +183,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
                   </div>
 
                   <div className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700">
-                    <Building2 className="h-3.5 w-3.5 text-brand-secondary shrink-0" />
+                    <IconBuilding className="h-3.5 w-3.5 text-brand-secondary shrink-0" />
                     <span className="font-semibold text-slate-500">Cơ sở:</span>
                     <select
                       value={targetCampus}
@@ -226,7 +226,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
                       className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/75 text-white hover:bg-rose-600 transition-colors"
                       title="Xóa ảnh"
                     >
-                      <X className="h-3 w-3" />
+                      <IconX className="h-3 w-3" />
                     </button>
                   </div>
                 ))}
@@ -250,14 +250,15 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
                     setSelectedType(type.id)
                     setIsExpanded(true)
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                  title={type.label}
+                  aria-label={type.label}
+                  className={`inline-flex items-center justify-center rounded-full p-2 transition-all ${
                     isSelected
-                      ? 'shadow-xs bg-slate-900 text-white'
+                      ? 'shadow-xs bg-slate-900 text-white ring-1 ring-slate-900'
                       : 'bg-slate-100/70 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900'
                   }`}
                 >
-                  <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-white' : type.color}`} />
-                  <span>{type.label}</span>
+                  <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : type.color}`} />
                 </button>
               )
             })}
@@ -267,15 +268,15 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingImage}
-              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-full bg-emerald-50 p-2 text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
               title="Đính kèm hình ảnh minh họa (FO-03)"
+              aria-label="Đính kèm hình ảnh minh họa"
             >
               {isUploadingImage ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-600" />
+                <IconLoader2 className="h-4 w-4 animate-spin text-emerald-600" />
               ) : (
-                <ImagePlus className="h-3.5 w-3.5 text-emerald-600" />
+                <IconPhotoPlus className="h-4 w-4 text-emerald-600" />
               )}
-              <span>Đính kèm ảnh</span>
             </button>
             <input
               ref={fileInputRef}
@@ -292,18 +293,14 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
               onClick={handleSubmit}
               disabled={!content.trim() || isSubmitting || isUploadingImage}
               size="sm"
-              className="shadow-xs rounded-full bg-brand-primary px-4 text-xs font-semibold text-white hover:bg-brand-primary-hover disabled:opacity-40"
+              title="Đăng bài viết (FO-01)"
+              aria-label="Đăng bài viết"
+              className="shadow-xs rounded-full bg-brand-primary h-9 w-9 p-0 text-white hover:bg-brand-primary-hover disabled:opacity-40 inline-flex items-center justify-center"
             >
               {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  Đang đăng...
-                </>
+                <IconLoader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Send className="mr-1.5 h-3.5 w-3.5" />
-                  Đăng bài
-                </>
+                <IconSend className="h-4 w-4" />
               )}
             </Button>
           </div>

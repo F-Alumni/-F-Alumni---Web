@@ -1,17 +1,17 @@
 import { useState, useEffect, type FC } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Bell,
-  CheckCircle2,
-  Heart,
-  MessageCircle,
-  MessageSquare,
-  Trash2,
-  Check,
-  Clock,
-  ArrowRight,
-  Loader2,
-} from 'lucide-react'
+  IconBell,
+  IconCircleCheck,
+  IconHeart,
+  IconMessageCircle,
+  IconMessageDots,
+  IconTrash,
+  IconCheck,
+  IconClock,
+  IconArrowRight,
+  IconLoader2,
+} from '@tabler/icons-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -68,18 +68,22 @@ export const NotificationsPage: FC = () => {
             <Button
               onClick={() => void markAllAsRead()}
               variant="secondary"
-              className="h-8 rounded-xl text-xs font-semibold"
+              title="Đánh dấu tất cả đã đọc"
+              aria-label="Đánh dấu tất cả đã đọc"
+              className="h-8 w-8 rounded-full p-0 inline-flex items-center justify-center text-brand-primary"
             >
-              <Check className="mr-1 h-3.5 w-3.5 text-brand-primary" /> Đánh dấu đã đọc
+              <IconCheck className="h-4 w-4" />
             </Button>
           )}
 
           <Button
             onClick={() => void deleteRead()}
             variant="ghost"
-            className="h-8 rounded-xl text-xs text-slate-500 hover:text-rose-600"
+            title="Dọn dẹp thông báo đã đọc"
+            aria-label="Dọn dẹp thông báo đã đọc"
+            className="h-8 w-8 rounded-full p-0 inline-flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50"
           >
-            <Trash2 className="mr-1 h-3.5 w-3.5" /> Dọn dẹp
+            <IconTrash className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -111,12 +115,12 @@ export const NotificationsPage: FC = () => {
       <div className="space-y-2.5">
         {isLoading && notifications.length === 0 ? (
           <Card className="p-12 text-center bg-white border-slate-200 flex items-center justify-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin text-brand-primary" />
+            <IconLoader2 className="h-5 w-5 animate-spin text-brand-primary" />
             <span className="text-xs font-medium text-slate-500">Đang tải thông báo từ hệ thống...</span>
           </Card>
         ) : filtered.length === 0 ? (
           <Card className="p-12 text-center bg-white border-slate-200">
-            <Bell className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+            <IconBell className="mx-auto h-8 w-8 text-slate-300 mb-2" />
             <p className="text-xs font-medium text-slate-500">Không có thông báo nào trong mục này.</p>
           </Card>
         ) : (
@@ -145,15 +149,15 @@ export const NotificationsPage: FC = () => {
                     : 'bg-emerald-100 text-emerald-700'
                 }`}
               >
-                {item.type === 'post_like' && <Heart className="h-5 w-5" />}
+                {item.type === 'post_like' && <IconHeart className="h-5 w-5" />}
                 {(item.type === 'post_comment' || item.type === 'comment_reply') && (
-                  <MessageCircle className="h-5 w-5" />
+                  <IconMessageCircle className="h-5 w-5" />
                 )}
-                {item.type === 'chat_message' && <MessageSquare className="h-5 w-5" />}
+                {item.type === 'chat_message' && <IconMessageDots className="h-5 w-5" />}
                 {item.type !== 'post_like' &&
                   item.type !== 'post_comment' &&
                   item.type !== 'comment_reply' &&
-                  item.type !== 'chat_message' && <CheckCircle2 className="h-5 w-5" />}
+                  item.type !== 'chat_message' && <IconCircleCheck className="h-5 w-5" />}
               </div>
 
               {/* Content */}
@@ -163,16 +167,15 @@ export const NotificationsPage: FC = () => {
                     {item.title}
                   </h3>
                   <span className="text-[10px] text-slate-400 font-medium shrink-0 flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <IconClock className="h-3 w-3" />
                     {formatNotificationTime(item.createdAt)}
                   </span>
                 </div>
 
                 <p className="text-xs text-slate-600 leading-relaxed">{item.message}</p>
 
-                <div className="pt-1 flex items-center gap-1 text-[11px] font-bold text-brand-primary">
-                  <span>Xem chi tiết</span>
-                  <ArrowRight className="h-3 w-3" />
+                <div className="pt-1 flex items-center justify-end">
+                  <IconArrowRight className="h-3.5 w-3.5 text-brand-primary" />
                 </div>
               </div>
 
