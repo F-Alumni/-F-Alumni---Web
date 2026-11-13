@@ -812,7 +812,7 @@ export const OpportunitiesPage: FC<OpportunitiesPageProps> = ({ defaultTab = 'al
             major: selectedMentorForProfile.major,
             role: 'Alumni',
             bio: selectedMentorForProfile.bio,
-            campus: 'FU-HCM',
+            campus: '',
             batch: null,
           }}
         />

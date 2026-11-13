@@ -36,10 +36,10 @@ function adaptAdminUserToVerification(u: AdminUserSummary): VerificationRequest 
     fullName: u.fullName,
     email: u.email,
     studentId: u.studentCode || u.studentId || u.id.slice(0, 8).toUpperCase(),
-    major: u.major || 'Software Engineering',
-    cohort: u.batch || 'K15',
+    major: u.major || 'Chưa cập nhật',
+    cohort: u.batch || 'Chưa cập nhật',
     emailVerified: Boolean(u.emailVerified),
-    submissionDate: u.createdAtUtc ? u.createdAtUtc.slice(0, 10) : '2026-10-10',
+    submissionDate: u.createdAtUtc ? u.createdAtUtc.slice(0, 10) : new Date().toISOString().slice(0, 10),
     status: isSuspended ? 'rejected' : isPending ? 'pending' : 'approved',
   }
 }

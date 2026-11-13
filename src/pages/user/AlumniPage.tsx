@@ -264,15 +264,15 @@ export const AlumniPage: FC = () => {
                 <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <div className="flex items-center gap-1.5">
                     <IconSchool className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span className="font-medium text-slate-800">{alumni.major || 'Software Engineering'}</span>
+                    <span className="font-medium text-slate-800">{alumni.major || 'Chưa cập nhật ngành'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <IconBuildingCommunity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>Campus {alumni.campus || 'Hòa Lạc'}</span>
+                    <span>{alumni.campus ? `Campus ${alumni.campus}` : 'Chưa cập nhật cơ sở'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <IconCalendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>Khóa {alumni.batch || 'K14'}</span>
+                    <span>{alumni.batch ? `Khóa ${alumni.batch}` : 'Chưa cập nhật khóa'}</span>
                   </div>
                 </div>
 

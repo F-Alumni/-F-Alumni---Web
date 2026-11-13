@@ -42,7 +42,7 @@ function adaptForumPost(p: ForumPostItem): PostRecord {
     likesCount: p.likeCount || 0,
     commentsCount: p.commentCount || 0,
     status: 'active',
-    createdAt: p.createdAt ? p.createdAt.slice(0, 16).replace('T', ' ') : '2026-10-10 10:15',
+    createdAt: p.createdAt ? p.createdAt.slice(0, 16).replace('T', ' ') : new Date().toISOString().slice(0, 16).replace('T', ' '),
   }
 }
 

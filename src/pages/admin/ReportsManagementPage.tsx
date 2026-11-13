@@ -76,7 +76,7 @@ function adaptModerationReport(r: ModerationReportItem): ReportRecord {
     reasonCode,
     severity: isResolved ? 'pending' : 'urgent',
     status,
-    reportedDate: r.createdAtUtc ? r.createdAtUtc.slice(0, 16).replace('T', ' ') : '2026-10-12 19:45',
+    reportedDate: r.createdAtUtc ? r.createdAtUtc.slice(0, 16).replace('T', ' ') : new Date().toISOString().slice(0, 16).replace('T', ' '),
     authorName: 'Reported Member',
     authorEmail: 'user@fpt.edu.vn',
     authorStrikes: 0,

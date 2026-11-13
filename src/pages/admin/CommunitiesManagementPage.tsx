@@ -48,11 +48,11 @@ function adaptForumCategory(cat: ForumCategoryItem): CommunityRecord {
     id: cat.id,
     name: cat.name,
     category,
-    membersCount: 1250,
-    leader: 'Faculty Academic Board',
+    membersCount: 0,
+    leader: 'Ban quản trị Chuyên mục',
     isPrivate: false,
     status: 'active',
-    createdAt: '2024-01-15',
+    createdAt: new Date().toISOString().slice(0, 10),
   }
 }
 

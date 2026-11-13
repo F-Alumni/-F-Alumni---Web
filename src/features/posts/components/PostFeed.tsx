@@ -43,9 +43,7 @@ function mapBackendPostToPostItem(p: ForumPostItem): PostItem {
     author: {
       id: p.authorId,
       name: p.authorName || 'FPT Alumni',
-      avatar:
-        p.authorAvatarUrl ||
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+      avatar: p.authorAvatarUrl || '',
       role: p.major ? `Khoa ${p.major}` : 'Thành viên cựu SV',
       major: p.major || 'FPT University',
       isVerified: true,

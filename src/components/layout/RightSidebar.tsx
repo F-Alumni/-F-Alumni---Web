@@ -66,9 +66,7 @@ export const RightSidebar: FC = () => {
             name: m.fullName,
             role: m.jobTitle ? `${m.jobTitle} @ ${m.currentCompany}` : m.skills || 'Alumni Mentor',
             major: `Khoa ${m.major || 'CNTT'}`,
-            avatar:
-              m.avatarUrl ||
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=256',
+            avatar: m.avatarUrl || '',
             isVerified: true,
             matchScore: m.matchScore,
             mentorship: true,
@@ -77,7 +75,7 @@ export const RightSidebar: FC = () => {
           return
         }
       } catch (err) {
-        console.warn('AI Mentor recommendation API unavailable, using fallback list:', err)
+        console.warn('AI Mentor recommendation API unavailable:', err)
       } finally {
         if (isMounted) setIsLoadingMentors(false)
       }

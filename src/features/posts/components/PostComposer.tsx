@@ -144,7 +144,7 @@ export const PostComposer: FC<PostComposerProps> = ({ onPostCreated }) => {
         {/* Top: Avatar & Composer Input */}
         <div className="flex items-start gap-3">
           <Avatar
-            src={currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256'}
+            src={currentUser?.avatarUrl || undefined}
             fallback={(currentUser?.name || 'ME').slice(0, 2).toUpperCase()}
             size="md"
             isVerified

@@ -87,11 +87,11 @@ export const LeftSidebar: FC = () => {
               )}
             </h2>
             <p className="text-xs font-medium text-slate-600">
-              {currentUser?.department || 'Kỹ thuật phần mềm'}
+              {currentUser?.department || 'Thành viên FPT'}
             </p>
             <p className="mt-0.5 text-[11px] text-slate-400">
-              {currentUser?.cohort ? `Cohort ${currentUser.cohort}` : 'Cộng đồng FPT'} •{' '}
-              {currentUser?.campus || 'Hòa Lạc'}
+              {currentUser?.cohort ? `Cohort ${currentUser.cohort}` : 'Cộng đồng FPT'}
+              {currentUser?.campus ? ` • Campus ${currentUser.campus}` : ''}
             </p>
           </div>
 
