@@ -33,7 +33,7 @@ import type { BackendUserSummary } from '@/types/user.types'
 export const ChatPage: FC = () => {
   const { currentUser } = useAuthStore()
   const [searchParams] = useSearchParams()
-  const roomIdParam = searchParams.get('roomId')
+  const roomIdParam = searchParams.get('roomId') || searchParams.get('conversationId')
 
   const [rooms, setRooms] = useState<BackendChatRoom[]>([])
   const [activeRoomId, setActiveRoomId] = useState<string | null>(roomIdParam)

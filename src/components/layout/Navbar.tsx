@@ -3,8 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { authService } from '@/services/auth'
-import { notificationsService, type NotificationItemDto } from '@/services/notifications'
-import { notificationHubClient } from '@/services/notifications/signalr'
+import { formatNotificationTime } from '@/services/notifications'
 import { FPT_CAMPUSES, normalizeCampusCode } from '@/constants/campuses'
 import {
   Search,
@@ -17,6 +16,8 @@ import {
   LogOut,
   CheckCircle2,
   Calendar,
+  Heart,
+  MessageCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -112,8 +113,15 @@ const CampusDropdown = () => {
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [notifications, setNotifications] = useState<NotificationItemDto[]>([])
-  const { unreadCount, setUnreadCount, incrementUnreadCount } = useNotificationStore()
+  const { isAuthenticated, currentUser } = useAuthStore()
+  const {
+    items: notifications,
+    unreadCount,
+    loadNotifications,
+    markAsRead,
+    markAllAsRead,
+    startRealtime,
+  } = useNotificationStore()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
 
@@ -128,58 +136,17 @@ const NotificationDropdown = () => {
   }, [])
 
   useEffect(() => {
-    let isMounted = true
-
-    const loadInitial = async () => {
-      try {
-        const res = await notificationsService.getNotifications({ page: 1, pageSize: 10 })
-        if (!isMounted) return
-        setNotifications(res.items || [])
-        setUnreadCount(res.unreadCount ?? (res.items || []).filter((n) => !n.isRead).length)
-      } catch (err) {
-        console.error('Failed to load notifications:', err)
-      }
-    }
-
-    void loadInitial()
-    void notificationHubClient.startConnection()
-
-    const unsubscribe = notificationHubClient.onReceiveNotification((incoming) => {
-      setNotifications((prev) => [incoming, ...prev.filter((n) => n.id !== incoming.id)].slice(0, 15))
-      incrementUnreadCount()
-    })
-
+    if (!isAuthenticated || !currentUser?.id) return
+    void loadNotifications()
+    const stop = startRealtime()
     return () => {
-      isMounted = false
-      unsubscribe()
+      stop()
     }
-  }, [setUnreadCount, incrementUnreadCount])
+  }, [isAuthenticated, currentUser?.id, loadNotifications, startRealtime])
 
   const handleMarkAllRead = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    try {
-      await notificationsService.markAllAsRead()
-      setUnreadCount(0)
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
-    } catch (err) {
-      console.error('Failed to mark all notifications read:', err)
-    }
-  }
-
-  const handleNotificationClick = async (item: NotificationItemDto) => {
-    setIsOpen(false)
-    if (!item.isRead) {
-      try {
-        await notificationsService.markAsRead(item.id)
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
-        )
-        setUnreadCount(Math.max(0, unreadCount - 1))
-      } catch {
-        // Ignore non-fatal mark-read failure while navigating
-      }
-    }
-    navigate(item.link || ROUTES.APP.NOTIFICATIONS)
+    void markAllAsRead()
   }
 
   return (
@@ -223,44 +190,49 @@ const NotificationDropdown = () => {
 
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 py-1">
             {notifications.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-400">
-                Bạn chưa có thông báo nào.
+              <div className="px-4 py-8 text-center text-xs text-slate-500">
+                Chưa có thông báo mới.
               </div>
             ) : (
-              notifications.map((item) => {
-                const lowerType = (item.type || '').toLowerCase()
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => void handleNotificationClick(item)}
-                    className={`flex items-start gap-3 p-3 transition-colors hover:bg-slate-50 cursor-pointer rounded-xl ${
-                      !item.isRead ? 'bg-orange-50/40' : ''
-                    }`}
-                  >
-                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100">
-                      {lowerType.includes('event') ? (
-                        <Calendar className="h-4 w-4 text-brand-primary" />
-                      ) : lowerType.includes('job') || lowerType.includes('recruit') ? (
-                        <Briefcase className="h-4 w-4 text-brand-secondary" />
-                      ) : lowerType.includes('chat') || lowerType.includes('message') ? (
-                        <MessageSquare className="h-4 w-4 text-blue-600" />
-                      ) : (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-900 leading-snug">{item.title}</p>
-                      <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">{item.message}</p>
-                      <span className="text-[10px] text-slate-400 mt-1 block">
-                        {new Date(item.createdAt).toLocaleString('vi-VN')}
-                      </span>
-                    </div>
-                    {!item.isRead && (
-                      <span className="h-2 w-2 rounded-full bg-brand-primary shrink-0 mt-1.5" />
+              notifications.slice(0, 12).map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    void markAsRead(item.id)
+                    setIsOpen(false)
+                    navigate(item.link || ROUTES.APP.NOTIFICATIONS)
+                  }}
+                  className={`flex items-start gap-3 p-3 transition-colors hover:bg-slate-50 cursor-pointer rounded-xl ${
+                    !item.isRead ? 'bg-orange-50/40' : ''
+                  }`}
+                >
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                    {item.type === 'chat_message' ? (
+                      <MessageSquare className="h-4 w-4 text-brand-secondary" />
+                    ) : item.type === 'post_like' ? (
+                      <Heart className="h-4 w-4 text-rose-500" />
+                    ) : item.type === 'post_comment' || item.type === 'comment_reply' ? (
+                      <MessageCircle className="h-4 w-4 text-brand-primary" />
+                    ) : item.type === 'event' ? (
+                      <Calendar className="h-4 w-4 text-brand-primary" />
+                    ) : item.type === 'job' ? (
+                      <Briefcase className="h-4 w-4 text-brand-secondary" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     )}
                   </div>
-                )
-              })
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-900 leading-snug">{item.title}</p>
+                    <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">{item.message}</p>
+                    <span className="text-[10px] text-slate-400 mt-1 block">
+                      {formatNotificationTime(item.createdAt)}
+                    </span>
+                  </div>
+                  {!item.isRead && (
+                    <span className="h-2 w-2 rounded-full bg-brand-primary shrink-0 mt-1.5" />
+                  )}
+                </div>
+              ))
             )}
           </div>
 
@@ -290,6 +262,7 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
     } catch {
       // Ignore
     } finally {
+      useNotificationStore.getState().reset()
       clearAuth()
       navigate(ROUTES.AUTH.LOGIN)
     }
