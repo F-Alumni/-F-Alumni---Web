@@ -6,6 +6,7 @@ import {
   IconLoader2,
   IconRefresh,
   IconCheck,
+  IconPlus,
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -13,7 +14,7 @@ import {
   opportunitiesService,
   type CommunityEventItem,
 } from '@/services/opportunities'
-import { EventCard } from '@/features/events'
+import { EventCard, CreateEventModal } from '@/features/events'
 
 type EventFilterTab = 'ALL' | 'UPCOMING' | 'MY_RSVPS'
 
@@ -23,6 +24,7 @@ export const EventsPage: FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCampus, setSelectedCampus] = useState<string>('ALL')
   const [filterTab, setFilterTab] = useState<EventFilterTab>('ALL')
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true)
@@ -102,6 +104,14 @@ export const EventsPage: FC = () => {
             className="h-9 w-9 rounded-full border-slate-200/90 text-slate-600 hover:text-brand-primary hover:border-brand-primary/40 p-0 inline-flex items-center justify-center transition-colors"
           >
             <IconRefresh className={`h-4 w-4 ${isLoading ? 'animate-spin text-brand-primary' : ''}`} />
+          </Button>
+
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="h-9 px-3.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+          >
+            <IconPlus className="h-4 w-4" />
+            <span>Tạo sự kiện</span>
           </Button>
         </div>
       </div>
@@ -184,7 +194,7 @@ export const EventsPage: FC = () => {
           <p className="mt-2 text-xs text-slate-500">Đang tải danh sách sự kiện...</p>
         </div>
       ) : filteredEvents.length === 0 ? (
-        <Card className="rounded-2xl border-dashed border-slate-200 bg-white p-12 text-center shadow-xs space-y-2">
+        <Card className="rounded-2xl border-dashed border-slate-200 bg-white p-12 text-center shadow-xs space-y-3">
           <IconCalendar className="mx-auto h-12 w-12 text-slate-300" />
           <h3 className="text-sm font-bold text-slate-800">Không tìm thấy sự kiện nào</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
@@ -192,8 +202,17 @@ export const EventsPage: FC = () => {
               ? 'Không có sự kiện nào khớp với từ khóa tìm kiếm. Vui lòng thử từ khóa khác.'
               : filterTab === 'MY_RSVPS'
               ? 'Bạn chưa đăng ký tham gia sự kiện nào. Hãy khám phá các sự kiện và nhấn Tham gia!'
-              : 'Hiện chưa có sự kiện nào trong danh mục này.'}
+              : 'Hiện chưa có sự kiện nào trong danh mục này. Bạn có thể là người đầu tiên tạo sự kiện mới!'}
           </p>
+          <div className="pt-2">
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="h-9 px-4 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+            >
+              <IconPlus className="h-4 w-4" />
+              <span>Tạo sự kiện mới</span>
+            </Button>
+          </div>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -202,6 +221,13 @@ export const EventsPage: FC = () => {
           ))}
         </div>
       )}
+
+      {/* 4. Create Event Modal */}
+      <CreateEventModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => void fetchEvents()}
+      />
     </div>
   )
 }
