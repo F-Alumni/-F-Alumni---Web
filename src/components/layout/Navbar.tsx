@@ -442,7 +442,7 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
 
   // Active unread chat message check for center tab badge
   const hasUnreadChat =
-    notifications.some((n) => !n.isRead && n.type === 'chat_message') || true
+    notifications.some((n) => !n.isRead && n.type === 'chat_message')
 
   // Standard Facebook Web Center Navigation Tabs
   const navTabs = [

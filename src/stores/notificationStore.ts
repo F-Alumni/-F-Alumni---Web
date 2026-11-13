@@ -92,12 +92,16 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   startRealtime: () => {
-    const unsubscribe = notificationHubClient.subscribe((incoming) => {
+    const unsubNotification = notificationHubClient.subscribe((incoming) => {
       get().pushIncoming(incoming)
+    })
+    const unsubUnread = notificationHubClient.subscribeUnreadCount((count) => {
+      set({ unreadCount: count })
     })
     void notificationHubClient.startConnection()
     return () => {
-      unsubscribe()
+      unsubNotification()
+      unsubUnread()
     }
   },
 
