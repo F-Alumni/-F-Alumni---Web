@@ -291,8 +291,20 @@ export async function uploadImageViaBackend(
       bytes: payload.bytes || file.size,
     }
   } catch (err: any) {
-    const normalized = normalizeError(err)
-    throw new Error(normalized.message || 'Không thể tải lên hình ảnh.')
+    // If backend endpoint fails or is unreachable, gracefully fallback to direct signed Cloudinary upload
+    try {
+      console.warn(
+        'Backend media upload endpoint unavailable, falling back to direct Cloudinary signed upload:',
+        err
+      )
+      const directResult = await uploadDirectlyToCloudinary(file)
+      return directResult
+    } catch (directErr: any) {
+      const normalized = normalizeError(err)
+      throw new Error(
+        normalized.message || directErr?.message || 'Không thể tải lên hình ảnh tới Cloudinary.'
+      )
+    }
   } finally {
     isUploadInProgress = false
   }

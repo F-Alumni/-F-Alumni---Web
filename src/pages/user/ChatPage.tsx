@@ -24,6 +24,7 @@ import { chatService } from '@/services/chat'
 import { chatHubClient } from '@/services/chat/signalr'
 import { usersService } from '@/services/users'
 import { useAuthStore } from '@/stores/authStore'
+import { validateImageFile } from '@/services/media'
 import type { BackendChatRoom, BackendChatMessage } from '@/types/chat.types'
 import type { BackendUserSummary } from '@/types/user.types'
 
@@ -180,10 +181,17 @@ export const ChatPage: FC = () => {
   // Image Selection Handler (CH-07)
   const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setSelectedImage(file)
-      setImagePreviewUrl(URL.createObjectURL(file))
+    if (!file) return
+
+    const validation = validateImageFile(file)
+    if (!validation.isValid) {
+      alert(validation.error || 'Tệp hình ảnh không hợp lệ.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
     }
+
+    setSelectedImage(file)
+    setImagePreviewUrl(URL.createObjectURL(file))
   }
 
   const handleRemoveImage = () => {

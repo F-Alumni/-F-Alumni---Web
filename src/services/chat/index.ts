@@ -1,4 +1,5 @@
-import { chatApiClient, userApiClient } from '@/services/api/apiClient'
+import { chatApiClient } from '@/services/api/apiClient'
+import { uploadImageViaBackend } from '@/services/media'
 import type {
   BackendChatRoom,
   BackendChatMessage,
@@ -166,16 +167,12 @@ export const chatService = {
   },
 
   /**
-   * CH-07: Upload image to Cloudinary via User Service media endpoint.
+   * CH-07: Upload image to Cloudinary via User Service media endpoint with direct Cloudinary fallback.
    * Matches BE contract: POST /api/v1/users/media/upload
    */
   async uploadChatMedia(file: File): Promise<string> {
-    const formData = new FormData()
-    formData.append('file', file)
-    const res = await userApiClient.post<any>('/users/media/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    return res.data?.secureUrl || res.data?.url || ''
+    const res = await uploadImageViaBackend(file, '/users/media/upload')
+    return res.secureUrl
   },
 }
 
