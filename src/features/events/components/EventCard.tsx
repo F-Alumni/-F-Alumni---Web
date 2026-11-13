@@ -10,6 +10,7 @@ import {
   IconShare,
   IconCalendarPlus,
   IconInfoCircle,
+  IconTrash,
 } from '@tabler/icons-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import {
 } from '@/services/opportunities'
 import { EventAttendeesModal } from './EventAttendeesModal'
 import { EventDetailModal } from './EventDetailModal'
+import { useAuthStore } from '@/stores/authStore'
 
 interface EventCardProps {
   event: CommunityEventItem
@@ -43,10 +45,14 @@ function getEventGradient(key: string) {
 }
 
 export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
+  const currentUser = useAuthStore((s) => s.currentUser)
+  const isCreator = Boolean(currentUser?.id && event.creatorId === currentUser.id)
+
   const [currentStatus, setCurrentStatus] = useState<string | null>(event.myStatus || null)
   const [goingCount, setGoingCount] = useState(event.goingCount || 0)
   const [interestedCount, setInterestedCount] = useState(event.interestedCount || 0)
   const [isRsvping, setIsRsvping] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [isAttendeesModalOpen, setIsAttendeesModalOpen] = useState(false)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -67,6 +73,22 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
       console.error('RSVP failed:', err)
     } finally {
       setIsRsvping(false)
+    }
+  }
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa sự kiện "${event.title}" không?`)) {
+      return
+    }
+    setIsDeleting(true)
+    try {
+      await opportunitiesService.deleteEvent(event.id)
+      onRsvpSuccess?.()
+    } catch (err) {
+      console.error('Delete event failed:', err)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -151,8 +173,21 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
               </span>
             </div>
 
-            {/* Quick Share on Banner */}
-            <div className="absolute right-3 top-3">
+            {/* Quick Actions on Banner */}
+            <div className="absolute right-3 top-3 flex items-center gap-1.5">
+              {isCreator && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="rounded-full bg-rose-600/80 hover:bg-rose-700 p-2 text-white shadow-xs backdrop-blur-md border border-white/20 transition-all cursor-pointer"
+                  title="Xóa sự kiện của tôi"
+                  aria-label="Xóa"
+                >
+                  {isDeleting ? <IconLoader2 className="h-3.5 w-3.5 animate-spin" /> : <IconTrash className="h-3.5 w-3.5" />}
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={(e) => {
@@ -262,6 +297,12 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
               size="sm"
               onClick={() => handleRsvp('Going')}
               disabled={isRsvping}
+              title={
+                currentStatus === 'Going'
+                  ? 'Đã đăng ký tham gia (Bấm lại để hủy tham gia)'
+                  : 'Đăng ký tham gia sự kiện'
+              }
+              aria-label={currentStatus === 'Going' ? 'Đã tham gia' : 'Tham gia'}
               className={`h-8.5 flex-1 gap-1 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 currentStatus === 'Going'
                   ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
@@ -281,6 +322,12 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
               size="sm"
               onClick={() => handleRsvp('Interested')}
               disabled={isRsvping}
+              title={
+                currentStatus === 'Interested'
+                  ? 'Đã quan tâm (Bấm lại để hủy quan tâm)'
+                  : 'Lưu sự kiện vào danh sách quan tâm'
+              }
+              aria-label={currentStatus === 'Interested' ? 'Đã quan tâm' : 'Quan tâm'}
               className={`h-8.5 flex-1 gap-1 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 currentStatus === 'Interested'
                   ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 shadow-xs'
