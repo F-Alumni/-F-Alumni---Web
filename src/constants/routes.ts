@@ -21,6 +21,8 @@ export const ROUTES = {
   APP: {
     ROOT: '/app',
     HOME: '/app/home',
+    EVENTS: '/app/events',
+    EVENT_DETAIL: '/app/events/:eventId',
     COMMUNITIES: '/app/communities',
     COMMUNITY_DETAIL: '/app/communities/:communityId',
     POSTS_CREATE: '/app/posts/create',

@@ -8,7 +8,6 @@ import {
   IconSmartHome,
   IconUsers,
   IconBriefcase,
-  IconBuildingCommunity,
   IconMessageDots,
   IconCirclePlus,
   IconBell,
@@ -458,6 +457,12 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
         pathname.startsWith('/app/posts'),
     },
     {
+      label: 'Sự kiện & Workshop',
+      href: ROUTES.APP.EVENTS,
+      icon: IconCalendar,
+      isActive: (pathname: string) => pathname.startsWith(ROUTES.APP.EVENTS),
+    },
+    {
       label: 'Danh bạ Cựu sinh viên',
       href: ROUTES.APP.ALUMNI,
       icon: IconUsers,
@@ -471,12 +476,6 @@ export const Navbar: FC<NavbarProps> = ({ onOpenCreatePost }) => {
         pathname.startsWith(ROUTES.APP.JOBS) ||
         pathname.startsWith(ROUTES.APP.INTERNSHIPS) ||
         pathname.startsWith(ROUTES.APP.SCHOLARSHIPS),
-    },
-    {
-      label: 'Nhóm & Cộng đồng',
-      href: ROUTES.APP.COMMUNITIES,
-      icon: IconBuildingCommunity,
-      isActive: (pathname: string) => pathname.startsWith(ROUTES.APP.COMMUNITIES),
     },
     {
       label: 'Trò chuyện & Tin nhắn',

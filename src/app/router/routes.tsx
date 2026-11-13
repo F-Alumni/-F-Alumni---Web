@@ -17,11 +17,11 @@ import {
 } from '@/pages/admin'
 import {
   HomePage,
+  EventsPage,
   AlumniPage,
   ChatPage,
   ProfilePage,
   OpportunitiesPage,
-  CommunitiesPage,
   NotificationsPage,
 } from '@/pages/user'
 import { LandingPage } from '@/pages/LandingPage'
@@ -204,8 +204,12 @@ export const routes: RouteObject[] = [
             element: <HomePage />,
           },
           {
+            path: 'events',
+            element: <EventsPage />,
+          },
+          {
             path: 'communities',
-            element: <CommunitiesPage />,
+            element: <Navigate to="/app/events" replace />,
           },
           {
             path: 'alumni',
