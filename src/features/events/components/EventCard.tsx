@@ -5,11 +5,13 @@ import {
   IconUsers,
   IconCheck,
   IconStar,
+  IconStarFilled,
   IconLoader2,
   IconShare,
+  IconCalendarPlus,
+  IconInfoCircle,
 } from '@tabler/icons-react'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   opportunitiesService,
@@ -17,11 +19,27 @@ import {
   type EventRsvpStatus,
 } from '@/services/opportunities'
 import { EventAttendeesModal } from './EventAttendeesModal'
-import { cn } from '@/lib/utils'
+import { EventDetailModal } from './EventDetailModal'
 
 interface EventCardProps {
   event: CommunityEventItem
   onRsvpSuccess?: () => void
+}
+
+const GRADIENT_PALETTES = [
+  'from-slate-900 via-indigo-950 to-blue-900',
+  'from-[#1B365D] via-[#0d3b66] to-[#F27024]',
+  'from-teal-950 via-cyan-900 to-slate-900',
+  'from-slate-950 via-purple-950 to-indigo-950',
+]
+
+function getEventGradient(key: string) {
+  let hash = 0
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash << 5) - hash + key.charCodeAt(i)
+    hash |= 0
+  }
+  return GRADIENT_PALETTES[Math.abs(hash) % GRADIENT_PALETTES.length]
 }
 
 export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
@@ -30,22 +48,19 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
   const [interestedCount, setInterestedCount] = useState(event.interestedCount || 0)
   const [isRsvping, setIsRsvping] = useState(false)
   const [isAttendeesModalOpen, setIsAttendeesModalOpen] = useState(false)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
 
   const handleRsvp = async (newStatus: EventRsvpStatus) => {
-    // If clicking the same status, toggle to 'NotGoing'
     const targetStatus: EventRsvpStatus = currentStatus === newStatus ? 'NotGoing' : newStatus
-
     setIsRsvping(true)
     try {
       await opportunitiesService.rsvpEvent(event.id, targetStatus)
-
-      // Optimistic count adjustment
       if (currentStatus === 'Going') setGoingCount((prev) => Math.max(0, prev - 1))
       if (currentStatus === 'Interested') setInterestedCount((prev) => Math.max(0, prev - 1))
-
       if (targetStatus === 'Going') setGoingCount((prev) => prev + 1)
       if (targetStatus === 'Interested') setInterestedCount((prev) => prev + 1)
-
       setCurrentStatus(targetStatus === 'NotGoing' ? null : targetStatus)
       onRsvpSuccess?.()
     } catch (err) {
@@ -55,144 +70,255 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
     }
   }
 
-  // Format date and time
+  const handleShare = () => {
+    void navigator.clipboard.writeText(window.location.href)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
+  }
+
+  // Date parsing
   const startDate = new Date(event.startTime)
-  const formattedDate = startDate.toLocaleDateString('vi-VN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'numeric',
-    year: 'numeric',
-  })
+  const dayNumber = startDate.getDate()
+  const monthShort = `THG ${startDate.getMonth() + 1}`
+  const weekdayShort = startDate.toLocaleDateString('vi-VN', { weekday: 'short' })
   const formattedTime = startDate.toLocaleTimeString('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
   })
 
+  // Google Calendar URL
+  const toGCalIso = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toISOString().replace(/-|:|\.\d\d\d/g, '')
+    } catch {
+      return ''
+    }
+  }
+  const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+    event.title
+  )}&dates=${toGCalIso(event.startTime)}/${toGCalIso(
+    event.endTime
+  )}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(
+    event.location
+  )}`
+
+  const hasCustomBanner = Boolean(event.bannerUrl && !imageError)
+  const bgGradient = getEventGradient(event.id || event.title)
+
   return (
     <>
-      <Card className="overflow-hidden border-slate-200/90 bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md">
-        {/* Event Banner */}
-        <div className="relative h-44 w-full overflow-hidden bg-gradient-to-r from-brand-secondary to-[#004e8a]">
-          {event.bannerUrl ? (
-            <img
-              src={event.bannerUrl}
-              alt={event.title}
-              className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-white/80">
-              <IconCalendar className="h-12 w-12 text-white/40" />
-            </div>
-          )}
+      <Card className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg">
+        <div>
+          {/* 1. Event Banner / Visual Header */}
+          <div className="relative h-44 w-full overflow-hidden bg-slate-900 cursor-pointer" onClick={() => setIsDetailModalOpen(true)}>
+            {hasCustomBanner ? (
+              <img
+                src={event.bannerUrl}
+                alt=""
+                onError={() => setImageError(true)}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              /* Fallback: Deterministic Abstract Mesh Banner */
+              <div className={`relative h-full w-full bg-gradient-to-br ${bgGradient} flex items-center justify-center overflow-hidden`}>
+                <svg className="absolute inset-0 h-full w-full opacity-15" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id={`grid-${event.id}`} width="20" height="20" patternUnits="userSpaceOnUse">
+                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-white" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill={`url(#grid-${event.id})`} />
+                </svg>
 
-          {/* Badges on Banner */}
-          <div className="absolute left-3 top-3 flex items-center gap-1.5">
-            <Badge className="bg-brand-primary/95 text-white shadow-sm text-[11px] font-bold">
-              {event.campus || 'Toàn quốc'}
-            </Badge>
+                <div className="relative flex flex-col items-center justify-center text-center p-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-md mb-1.5 transition-transform group-hover:scale-110">
+                    <IconCalendar className="h-5 w-5 text-brand-primary" />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/90">
+                    {event.campus && event.campus !== 'All' ? event.campus : 'FPT Alumni Connect'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Subtle bottom gradient overlay for readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 pointer-events-none" />
+
+            {/* Badges on Banner */}
+            <div className="absolute left-3 top-3 flex items-center gap-1.5">
+              <span className="rounded-full bg-white/90 backdrop-blur-md border border-white/40 px-2.5 py-0.5 text-[11px] font-bold text-slate-800 shadow-xs">
+                {event.campus && event.campus !== 'All' ? event.campus : 'Toàn quốc'}
+              </span>
+            </div>
+
+            {/* Quick Share on Banner */}
+            <div className="absolute right-3 top-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleShare()
+                }}
+                className="rounded-full bg-black/40 hover:bg-black/60 p-2 text-white shadow-xs backdrop-blur-md border border-white/20 transition-all cursor-pointer"
+                title={isCopied ? 'Đã sao chép liên kết!' : 'Sao chép liên kết'}
+                aria-label="Chia sẻ"
+              >
+                {isCopied ? <IconCheck className="h-3.5 w-3.5 text-emerald-400" /> : <IconShare className="h-3.5 w-3.5" />}
+              </button>
+            </div>
           </div>
 
-          <div className="absolute right-3 top-3">
-            <button
-              type="button"
-              onClick={() => {
-                void navigator.clipboard.writeText(window.location.href)
-              }}
-              className="rounded-full bg-slate-900/60 p-2 text-white shadow-sm backdrop-blur-xs transition-colors hover:bg-slate-900/80"
-              title="Sao chép liên kết sự kiện"
-            >
-              <IconShare className="h-3.5 w-3.5" />
-            </button>
+          {/* 2. Event Info Body */}
+          <div className="p-4 space-y-3">
+            {/* Facebook / Lu.ma Style Date Leaf & Title Header */}
+            <div className="flex items-start gap-3">
+              {/* Date Leaf Badge */}
+              <div className="flex flex-col items-center justify-center shrink-0 w-12 rounded-xl overflow-hidden border border-slate-200/90 shadow-2xs bg-white text-center">
+                <div className="w-full bg-brand-primary py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                  {monthShort}
+                </div>
+                <div className="py-1 text-lg font-black text-slate-900 leading-none">
+                  {dayNumber}
+                </div>
+              </div>
+
+              {/* Title & Time */}
+              <div className="min-w-0 flex-1">
+                <div className="text-[11px] font-bold text-brand-primary tracking-wide">
+                  {weekdayShort.toUpperCase()} • {formattedTime} (GMT+7)
+                </div>
+                <h3
+                  onClick={() => setIsDetailModalOpen(true)}
+                  className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug hover:text-brand-primary cursor-pointer transition-colors mt-0.5"
+                  title={event.title}
+                >
+                  {event.title}
+                </h3>
+              </div>
+            </div>
+
+            {/* Host info */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="text-slate-400">Tổ chức bởi</span>
+              <span className="font-semibold text-slate-700 line-clamp-1">
+                {event.creatorName || 'Ban liên lạc Cựu sinh viên FPT'}
+              </span>
+            </div>
+
+            {/* Description excerpt */}
+            <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+              {event.description}
+            </p>
+
+            {/* Location */}
+            <div className="flex items-center gap-2 text-xs text-slate-500 pt-0.5">
+              <IconMapPin className="h-4 w-4 shrink-0 text-slate-400" />
+              <span className="line-clamp-1">{event.location}</span>
+            </div>
+
+            {/* Social Proof: Attendees & Capacity */}
+            <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
+              <button
+                type="button"
+                onClick={() => setIsAttendeesModalOpen(true)}
+                className="flex items-center gap-2 text-xs text-slate-600 hover:text-brand-primary transition-colors cursor-pointer group"
+              >
+                {/* Overlapping avatar badges */}
+                <div className="flex items-center -space-x-1.5">
+                  <div className="h-5.5 w-5.5 rounded-full ring-2 ring-white bg-brand-primary/15 text-brand-primary text-[10px] font-bold flex items-center justify-center">
+                    {event.creatorName?.charAt(0) || 'F'}
+                  </div>
+                  {goingCount > 0 ? (
+                    <div className="h-5.5 w-5.5 rounded-full ring-2 ring-white bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center justify-center">
+                      <IconCheck className="h-3 w-3" />
+                    </div>
+                  ) : (
+                    <div className="h-5.5 w-5.5 rounded-full ring-2 ring-white bg-slate-100 text-slate-500 text-[10px] flex items-center justify-center">
+                      <IconUsers className="h-3 w-3" />
+                    </div>
+                  )}
+                </div>
+                <span className="font-semibold text-slate-800 group-hover:text-brand-primary">
+                  {goingCount} tham gia
+                </span>
+                <span className="text-slate-300">•</span>
+                <span className="text-slate-500">{interestedCount} quan tâm</span>
+              </button>
+
+              {event.maxAttendees && (
+                <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  Tối đa {event.maxAttendees}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Event Info Body */}
-        <div className="p-4.5 space-y-3">
-          {/* Date & Time */}
-          <div className="flex items-center gap-2 text-xs font-bold text-brand-primary">
-            <IconCalendar className="h-4 w-4 shrink-0" />
-            <span>
-              {formattedDate} • {formattedTime}
-            </span>
+        {/* 3. Action Buttons Footer */}
+        <div className="border-t border-slate-100 bg-slate-50/50 p-3 flex items-center justify-between gap-1.5">
+          <div className="flex items-center gap-1.5 flex-1">
+            {/* Going Button */}
+            <Button
+              size="sm"
+              onClick={() => handleRsvp('Going')}
+              disabled={isRsvping}
+              className={`h-8.5 flex-1 gap-1 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                currentStatus === 'Going'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-0'
+              }`}
+            >
+              {isRsvping && currentStatus === 'Going' ? (
+                <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <IconCheck className="h-3.5 w-3.5" />
+              )}
+              <span>{currentStatus === 'Going' ? 'Đã tham gia' : 'Tham gia'}</span>
+            </Button>
+
+            {/* Interested Button */}
+            <Button
+              size="sm"
+              onClick={() => handleRsvp('Interested')}
+              disabled={isRsvping}
+              className={`h-8.5 flex-1 gap-1 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                currentStatus === 'Interested'
+                  ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-0'
+              }`}
+            >
+              {isRsvping && currentStatus === 'Interested' ? (
+                <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : currentStatus === 'Interested' ? (
+                <IconStarFilled className="h-3.5 w-3.5 text-amber-500" />
+              ) : (
+                <IconStar className="h-3.5 w-3.5" />
+              )}
+              <span>{currentStatus === 'Interested' ? 'Đã quan tâm' : 'Quan tâm'}</span>
+            </Button>
           </div>
 
-          {/* Title & Description */}
-          <div>
-            <h3 className="text-base font-bold text-slate-900 leading-snug hover:text-brand-primary transition-colors line-clamp-2">
-              {event.title}
-            </h3>
-            <p className="mt-1 text-xs text-slate-600 line-clamp-2 leading-relaxed">
-              {event.description}
-            </p>
-          </div>
+          {/* Quick Calendar & Detail Actions */}
+          <div className="flex items-center gap-1 shrink-0">
+            <a
+              href={gCalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-8.5 w-8.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-brand-primary flex items-center justify-center transition-colors"
+              title="Thêm vào Google Calendar"
+            >
+              <IconCalendarPlus className="h-4 w-4" />
+            </a>
 
-          {/* Location */}
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <IconMapPin className="h-4 w-4 shrink-0 text-slate-400" />
-            <span className="line-clamp-1">{event.location}</span>
-          </div>
-
-          {/* Attendees Summary */}
-          <button
-            type="button"
-            onClick={() => setIsAttendeesModalOpen(true)}
-            className="flex items-center gap-2 text-xs text-slate-600 hover:text-brand-secondary transition-colors"
-          >
-            <IconUsers className="h-4 w-4 text-slate-400" />
-            <span className="font-semibold text-slate-800">{goingCount} người sẽ tham gia</span>
-            <span>•</span>
-            <span className="text-slate-500">{interestedCount} quan tâm</span>
-          </button>
-
-          {/* RSVP Action Buttons */}
-          <div className="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 flex-1">
-              {/* Going Button */}
-              <Button
-                size="sm"
-                variant={currentStatus === 'Going' ? 'default' : 'outline'}
-                onClick={() => handleRsvp('Going')}
-                disabled={isRsvping}
-                title={currentStatus === 'Going' ? 'Đã đăng ký tham gia (Bấm để hủy)' : 'Đăng ký tham gia sự kiện'}
-                aria-label={currentStatus === 'Going' ? 'Đã tham gia' : 'Tham gia'}
-                className={cn(
-                  'h-8.5 flex-1 gap-1.5 text-xs font-bold rounded-xl transition-all',
-                  currentStatus === 'Going'
-                    ? 'bg-brand-primary text-white hover:bg-brand-primary-hover shadow-xs ring-2 ring-brand-primary/20'
-                    : 'border-slate-200 text-slate-700 hover:border-brand-primary hover:text-brand-primary'
-                )}
-              >
-                {isRsvping && currentStatus === 'Going' ? (
-                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <IconCheck className="h-3.5 w-3.5" />
-                )}
-                <span>{currentStatus === 'Going' ? 'Đã RSVP' : 'Tham gia'}</span>
-              </Button>
-
-              {/* Interested Button */}
-              <Button
-                size="sm"
-                variant={currentStatus === 'Interested' ? 'secondary' : 'outline'}
-                onClick={() => handleRsvp('Interested')}
-                disabled={isRsvping}
-                title={currentStatus === 'Interested' ? 'Đã quan tâm (Bấm để hủy)' : 'Quan tâm sự kiện'}
-                aria-label={currentStatus === 'Interested' ? 'Đã quan tâm' : 'Quan tâm'}
-                className={cn(
-                  'h-8.5 flex-1 gap-1.5 text-xs font-bold rounded-xl transition-all',
-                  currentStatus === 'Interested'
-                    ? 'bg-blue-100 text-brand-secondary border-blue-200 shadow-xs ring-2 ring-blue-200'
-                    : 'border-slate-200 text-slate-700 hover:border-brand-secondary hover:text-brand-secondary'
-                )}
-              >
-                {isRsvping && currentStatus === 'Interested' ? (
-                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <IconStar className={cn('h-3.5 w-3.5', currentStatus === 'Interested' && 'fill-current')} />
-                )}
-                <span>{currentStatus === 'Interested' ? 'Đã lưu' : 'Quan tâm'}</span>
-              </Button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsDetailModalOpen(true)}
+              className="h-8.5 w-8.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-brand-primary flex items-center justify-center transition-colors cursor-pointer"
+              title="Xem thông tin chi tiết sự kiện"
+              aria-label="Chi tiết"
+            >
+              <IconInfoCircle className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </Card>
@@ -203,6 +329,14 @@ export const EventCard: FC<EventCardProps> = ({ event, onRsvpSuccess }) => {
         eventTitle={event.title}
         isOpen={isAttendeesModalOpen}
         onClose={() => setIsAttendeesModalOpen(false)}
+      />
+
+      {/* Full Event Detail Modal */}
+      <EventDetailModal
+        event={event}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        onRsvpChange={onRsvpSuccess}
       />
     </>
   )
