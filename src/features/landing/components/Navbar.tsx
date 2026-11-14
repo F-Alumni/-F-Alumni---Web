@@ -90,7 +90,7 @@ export const Navbar: FC = () => {
               to={ROUTES.AUTH.LOGIN}
               className="inline-flex items-center gap-2 px-4 py-2 text-xs lg:text-sm font-bold text-white bg-[#F27024] hover:bg-[#d95d16] rounded-xl shadow-xs shadow-orange-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
-              <span>Đăng nhập Quản trị</span>
+              <span>Đăng nhập</span>
               <IconArrowRight size={15} stroke={2.2} />
             </Link>
           )}
@@ -144,7 +144,7 @@ export const Navbar: FC = () => {
               to={destinationPath}
               className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-bold text-white bg-[#F27024] rounded-xl shadow-xs"
             >
-              <span>{isAuthenticated ? 'Vào Bảng Quản Trị' : 'Đăng nhập Quản trị viên'}</span>
+              <span>{isAuthenticated ? 'Vào Bảng Quản Trị' : 'Đăng nhập'}</span>
               <IconArrowRight size={16} stroke={2} />
             </Link>
           </div>

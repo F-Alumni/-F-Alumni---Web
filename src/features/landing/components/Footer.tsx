@@ -70,7 +70,7 @@ export const Footer: FC = () => {
               to={ROUTES.AUTH.LOGIN}
               className="font-semibold text-[#F27024] hover:underline"
             >
-              Đăng nhập Quản trị
+              Đăng nhập
             </Link>
           </div>
         </div>
